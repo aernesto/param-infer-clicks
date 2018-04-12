@@ -1,0 +1,47 @@
+1.
+generate a DB of 10,000 independent trials per condition.
+h=1; T=2;
+SNR=(0.5:0.5:10)';
+BEST_GAMMA=[
+   2.0848
+   2.5828
+   3.3143
+   4.2789
+   5.4162
+   6.7457
+   8.1371
+   9.7199
+  11.3937
+  13.2381
+  15.1327
+  17.2771
+  19.5909
+  22.0435
+  24.6947
+  27.7241
+  30.5711
+  33.5354
+  36.7966
+  40.3143];
+
+(recall BEST_GAMMA=1.45333 + 0.670241*SNR + 0.34324*SNR^2- 0.00275835*SNR^3)
+
+where SNR here is our S variable.
+
+fix lambda_low to 30 and find lambda_high that corresponds.
+then again for lambda_low = 15 and lambda_low = 1.
+
+1bis. to start with, produce trials on the fly and discard them...
+
+2. 
+produce a parallel database of model responses, with the linear deterministic
+model (if evidence =0 at end of trial, signal it and exclude trial from
+experiment).
+
+3. 
+for each trial, indicate and store the cutoff value of gamma
+plot their distribution for each condition.
+divide analysis between left rays and right rays.
+
+4. 
+try to find what features render a trial very vs little informative.
