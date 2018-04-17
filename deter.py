@@ -168,19 +168,20 @@ def get_range_acceptable_gammas(trains, dec):
     given the data from a single trial, returns the range of acceptable gammas
     the idea is to convert
     """
-    left_clicks = [Fraction.from_float(x).limit_denominator(20) for x in trains[0]]
-    right_clicks = [Fraction.from_float(x).limit_denominator(20) for x in trains[1]]
+    left_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[0]]
+    right_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[1]]
 
     denominators = [x.denominator for x in left_clicks] + [x.denominator for x in right_clicks]
-
+    print(denominators)
     clicks_lcm = lcm(denominators)
-
+    print('lcm is %i' % clicks_lcm)
     numerators = [(x.numerator * clicks_lcm / x.denominator, -1) for x in left_clicks] + \
                  [(x.numerator * clicks_lcm / x.denominator, 1) for x in right_clicks]
 
     numerators.sort(key=lambda tup: tup[0])  # sorts in place according to decreasing numerator value
 
     num_array = np.array(numerators)  # col 0 = nums, col 1 = idx
+    print(num_array)
     if num_array.size == 0:
         powers = np.array([])
     else:
@@ -190,6 +191,7 @@ def get_range_acceptable_gammas(trains, dec):
         for i in range(len(num_array)):
             powers[int(num_array[i, 0])] = int(num_array[i, 1])
     powers = np.flip(powers, 0)
+    print('powers has length %i' % len(powers))
     return powers
 
 
@@ -202,8 +204,6 @@ if __name__ == '__main__':
     ll = 30  # low click rate
     stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
     d = decide(stim_train, gamma)
-    range_gammas = get_range_acceptable_gammas(stim_train, d)
-    if range_gammas is None:
-        print('None')
-    else:
-        print(range_gammas)
+    range_gammas = get_range_acceptable_gammas((np.array([0.2857142857142857, 0.3333333333]),
+                                                np.array([99/100])), d)
+    print(range_gammas)
