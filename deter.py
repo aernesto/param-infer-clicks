@@ -6,6 +6,7 @@ The script contains two types of functions.
 
 """
 import numpy as np
+import matplotlib.pyplot as plt
 from fractions import Fraction
 from math import gcd
 
@@ -14,18 +15,18 @@ from math import gcd
 """
 
 
-def lcm(numbers):
-    """computes the least common multiple of a list of positive integers"""
-    # check that all numbers are integers
-    if all([isinstance(x, int) and x > 0 for x in numbers]):
-        m = 1
-        # compute lcm iteratively
-        for n in numbers:
-            m = int(n * m / gcd(n, m))
-        return m
-    else:
-        print('some numbers are not positive integers')
-        return None
+# def lcm(numbers):
+#     """computes the least common multiple of a list of positive integers"""
+#     # check that all numbers are integers
+#     if all([isinstance(x, int) and x > 0 for x in numbers]):
+#         m = 1
+#         # compute lcm iteratively
+#         for n in numbers:
+#             m = int(n * m / gcd(n, m))
+#         return m
+#     else:
+#         print('some numbers are not positive integers')
+#         return None
 
 
 def get_lambda_high(lambda_low, s):
@@ -202,8 +203,14 @@ if __name__ == '__main__':
     T = 2
     h = 1
     ll = 30  # low click rate
-    gamma_range = np.linspace(0, 50, 1000)
-    for trial in range(500):
+    num_gammas = 1000
+    gamma_range = np.linspace(0, 50, num_gammas)
+    num_trials = 500
+    # all_gammas = np.zeros((num_gammas, num_trials))
+    all_gammas = gamma_range.copy()
+    for j in range(num_trials - 1):
+        all_gammas = np.c_[all_gammas, gamma_range]
+    for trial in range(num_trials):
         stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
         d = decide(stim_train, gamma)
         # range_gammas = cov_trains2poly(np.array([0.2857142857142857, 0.3333333333]), np.array([99/100])))
@@ -214,7 +221,10 @@ if __name__ == '__main__':
                     print('0 DEC for following gamma ' + str(gamma_range[i]))
                 if model_dec != d:
                     gamma_range[i] = np.nan
+                    all_gammas[i, trial:] = np.nan
     print('there are %f valid values' % (gamma_range.size - np.sum(np.isnan(gamma_range))))
     for i in range(gamma_range.size):
         if not np.isnan(gamma_range[i]):
             print(gamma_range[i])
+    plt.plot(all_gammas.transpose(), 'b-')
+    plt.show()
