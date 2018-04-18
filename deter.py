@@ -163,47 +163,58 @@ def decide(click_trains, discounting_rate, init_cond=0):
 #     return init_sign, end_sign, switches
 
 
-def get_range_acceptable_gammas(trains, dec):
-    """
-    given the data from a single trial, returns the range of acceptable gammas
-    the idea is to convert
-    """
-    left_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[0]]
-    right_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[1]]
-
-    denominators = [x.denominator for x in left_clicks] + [x.denominator for x in right_clicks]
-    print(denominators)
-    clicks_lcm = lcm(denominators)
-    print('lcm is %i' % clicks_lcm)
-    numerators = [(x.numerator * clicks_lcm / x.denominator, -1) for x in left_clicks] + \
-                 [(x.numerator * clicks_lcm / x.denominator, 1) for x in right_clicks]
-
-    numerators.sort(key=lambda tup: tup[0])  # sorts in place according to decreasing numerator value
-
-    num_array = np.array(numerators)  # col 0 = nums, col 1 = idx
-    print(num_array)
-    if num_array.size == 0:
-        powers = np.array([])
-    else:
-        max_power = int(num_array[-1][0])
-        print(max_power)
-        powers = np.zeros(max_power + 1)
-        for i in range(len(num_array)):
-            powers[int(num_array[i, 0])] = int(num_array[i, 1])
-    powers = np.flip(powers, 0)
-    print('powers has length %i' % len(powers))
-    return powers
+# def cov_trains2poly(trains):
+#     """
+#     given the data from a single trial, returns the range of acceptable gammas
+#     the idea is to convert
+#     """
+#     left_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[0]]
+#     right_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[1]]
+#
+#     denominators = [x.denominator for x in left_clicks] + [x.denominator for x in right_clicks]
+#     print(denominators)
+#     clicks_lcm = lcm(denominators)
+#     print('lcm is %i' % clicks_lcm)
+#     numerators = [(x.numerator * clicks_lcm / x.denominator, -1) for x in left_clicks] + \
+#                  [(x.numerator * clicks_lcm / x.denominator, 1) for x in right_clicks]
+#
+#     numerators.sort(key=lambda tup: tup[0])  # sorts in place according to decreasing numerator value
+#
+#     num_array = np.array(numerators)  # col 0 = nums, col 1 = idx
+#     print(num_array)
+#     if num_array.size == 0:
+#         powers = np.array([])
+#     else:
+#         max_power = int(num_array[-1][0])
+#         print(max_power)
+#         powers = np.zeros(max_power + 1)
+#         for i in range(len(num_array)):
+#             powers[int(num_array[i, 0])] = int(num_array[i, 1])
+#     powers = np.flip(powers, 0)
+#     print('powers has length %i' % len(powers))
+#     return powers
 
 
 if __name__ == '__main__':
     # test code for single trial
-    S = .5
-    gamma = 2.0848
+    S = 3  #.5
+    gamma = 6.7457  #2.0848
     T = 2
     h = 1
     ll = 30  # low click rate
-    stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
-    d = decide(stim_train, gamma)
-    range_gammas = get_range_acceptable_gammas((np.array([0.2857142857142857, 0.3333333333]),
-                                                np.array([99/100])), d)
-    print(range_gammas)
+    gamma_range = np.linspace(0, 50, 1000)
+    for trial in range(500):
+        stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
+        d = decide(stim_train, gamma)
+        # range_gammas = cov_trains2poly(np.array([0.2857142857142857, 0.3333333333]), np.array([99/100])))
+        for i in range(gamma_range.size):
+            if not np.isnan(gamma_range[i]):
+                model_dec = decide(stim_train, gamma_range[i])
+                if model_dec == 0:
+                    print('0 DEC for following gamma ' + str(gamma_range[i]))
+                if model_dec != d:
+                    gamma_range[i] = np.nan
+    print('there are %f valid values' % (gamma_range.size - np.sum(np.isnan(gamma_range))))
+    for i in range(gamma_range.size):
+        if not np.isnan(gamma_range[i]):
+            print(gamma_range[i])
