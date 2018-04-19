@@ -13,8 +13,8 @@ font = {'family': 'DejaVu Sans',
         'size': 22}
 
 matplotlib.rc('font', **font)
-from fractions import Fraction
-from math import gcd
+# from fractions import Fraction
+# from math import gcd
 
 """
 ----------------------------GENERAL PURPOSE FUNCTIONS
@@ -203,50 +203,58 @@ def decide(click_trains, discounting_rate, init_cond=0):
 
 
 if __name__ == '__main__':
-    # todo: find a way to avoid sample depletion
+    # todo: better deal with sample depletion
     # test code for single trial
-    S = .5
-    gamma = 2.0848
+    a_S = [.5, 3, 8]
+    a_gamma = [2.0848, 6.7457, 27.7241]
     T = 2
     h = 1
-    ll = 30  # low click rate
-    num_sims = 40
-    for jjj in range(num_sims):
-        num_gammas = 1000
-        gamma_range = np.linspace(0, 50, num_gammas)
-        num_trials = 500
-        # all_gammas = np.zeros((num_gammas, num_trials))
-        all_gammas = gamma_range.copy()
-        for jj in range(num_trials - 1):
-            all_gammas = np.c_[all_gammas, gamma_range]
-        for trial in range(num_trials):
-            gammas_backup = gamma_range.copy()
-            if np.sum(np.isnan(gamma_range)) == num_gammas - 1:
-                break
-            stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
-            d = decide(stim_train, gamma)
-            # range_gammas = cov_trains2poly(np.array([0.2857142857142857, 0.3333333333]), np.array([99/100])))
+    a_ll = [30, 15, 1]  # low click rate
+    for jjj in range(len(a_ll)):
+        ll = a_ll[jjj]
+        for kkk in range(len(a_S)):
+            S = a_S[kkk]
+            gamma = a_gamma[kkk]
+            num_gammas = 1000
+            gamma_range = np.linspace(0, 50, num_gammas)
+            num_trials = 500
+            # all_gammas = np.zeros((num_gammas, num_trials))
+            all_gammas = gamma_range.copy()
+            for jj in range(num_trials - 1):
+                all_gammas = np.c_[all_gammas, gamma_range]
+            for trial in range(num_trials):
+                gammas_backup = gamma_range.copy()
+                if np.sum(np.isnan(gamma_range)) == num_gammas - 1:
+                    break
+                stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
+                d = decide(stim_train, gamma)
+                # range_gammas = cov_trains2poly(np.array([0.2857142857142857, 0.3333333333]), np.array([99/100])))
+                for ii in range(gamma_range.size):
+                    if not np.isnan(gamma_range[ii]):
+                        model_dec = decide(stim_train, gamma_range[ii])
+                        if model_dec == 0:
+                            print('decision=0 for gamma = ' + str(gamma_range[ii]))
+                            print('%i left clicks and %i right clicks' % (len(stim_train[0]),
+                                                                          len(stim_train[1])))
+                        if model_dec != d:
+                            gamma_range[ii] = np.nan
+                            all_gammas[ii, trial:] = np.nan
+                if all(np.isnan(gamma_range)):  # to cope with sample depletion
+                    gamma_range = gammas_backup.copy()
+                    break
+
+            print('%i valid values after %i trials' % (gamma_range.size - np.sum(np.isnan(gamma_range)), trial+1))
+            print('true gamma = %f' % gamma)
+            print('admissible gammas:')
             for ii in range(gamma_range.size):
                 if not np.isnan(gamma_range[ii]):
-                    model_dec = decide(stim_train, gamma_range[ii])
-                    if model_dec == 0:
-                        print('decision=0 for gamma = ' + str(gamma_range[ii]))
-                        print('%i left clicks and %i right clicks' % (len(stim_train[0]),
-                                                                      len(stim_train[1])))
-                    if model_dec != d:
-                        gamma_range[ii] = np.nan
-                        all_gammas[ii, trial:] = np.nan
-            if all(np.isnan(gamma_range)):  # to cope with sample depletion
-                gamma_range = gammas_backup.copy()
-                break
+                    print(gamma_range[ii])
+            idx = 3 * jjj + kkk + 1
+            plt.subplot(3, 3, idx)
+            plt.plot(all_gammas[:, :trial].transpose(), 'b-')
+            plt.ylabel('admissible gamma')
+            plt.xlabel('Trial')
+            title_string = 'S = %f; h_low = %i' % (S, ll)
+            plt.title(title_string)
 
-        print('%i valid values after %i trials' % (gamma_range.size - np.sum(np.isnan(gamma_range)), trial+1))
-        # print('true gamma = %f' % gamma)
-        # print('admissible gammas:')
-        # for ii in range(gamma_range.size):
-        #     if not np.isnan(gamma_range[ii]):
-        #         print(gamma_range[ii])
-        # plt.plot(all_gammas[:, :trial].transpose(), 'b-')
-        # plt.ylabel('admissible gamma')
-        # plt.xlabel('Trial')
-        # plt.show()
+    plt.show()
