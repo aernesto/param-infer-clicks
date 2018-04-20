@@ -21,20 +21,6 @@ matplotlib.rc('font', **font)
 """
 
 
-# def lcm(numbers):
-#     """computes the least common multiple of a list of positive integers"""
-#     # check that all numbers are integers
-#     if all([isinstance(x, int) and x > 0 for x in numbers]):
-#         m = 1
-#         # compute lcm iteratively
-#         for n in numbers:
-#             m = int(n * m / gcd(n, m))
-#         return m
-#     else:
-#         print('some numbers are not positive integers')
-#         return None
-
-
 def get_lambda_high(lambda_low, s):
     """
     returns the high click rate, given the low click rate and S as input.
@@ -143,63 +129,6 @@ def decide(click_trains, discounting_rate, init_cond=0):
     for j in click_trains[0]:
         y -= np.exp(discounting_rate * j)
     return np.sign(y)
-
-
-"""
-----------------------------FUNCTIONS USED TO INFER PARAMETERS
-"""
-
-
-# def sign_gamma(trains, gamma_range=(0, 80)):
-#     """old function used to compute the decision at several gamma values"""
-#     step = 0.01
-#     gammas = np.r_[gamma_range[0]:gamma_range[1]+step:step]
-#     init_sign = decide(trains, gammas[0])
-#     last_sign = init_sign
-#     switches = []
-#     if gammas.size > 0:
-#         for g in gammas:
-#             new_sign = decide(trains, g)
-#             if last_sign != new_sign:
-#                 switches += [g]
-#                 last_sign = new_sign
-#         end_sign = new_sign
-#     else:
-#         print('Error: gamma_range should not be empty')
-#         return None
-#     return init_sign, end_sign, switches
-
-
-# def cov_trains2poly(trains):
-#     """
-#     given the data from a single trial, returns the range of acceptable gammas
-#     the idea is to convert
-#     """
-#     left_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[0]]
-#     right_clicks = [Fraction.from_float(x).limit_denominator(100) for x in trains[1]]
-#
-#     denominators = [x.denominator for x in left_clicks] + [x.denominator for x in right_clicks]
-#     print(denominators)
-#     clicks_lcm = lcm(denominators)
-#     print('lcm is %i' % clicks_lcm)
-#     numerators = [(x.numerator * clicks_lcm / x.denominator, -1) for x in left_clicks] + \
-#                  [(x.numerator * clicks_lcm / x.denominator, 1) for x in right_clicks]
-#
-#     numerators.sort(key=lambda tup: tup[0])  # sorts in place according to decreasing numerator value
-#
-#     num_array = np.array(numerators)  # col 0 = nums, col 1 = idx
-#     print(num_array)
-#     if num_array.size == 0:
-#         powers = np.array([])
-#     else:
-#         max_power = int(num_array[-1][0])
-#         print(max_power)
-#         powers = np.zeros(max_power + 1)
-#         for i in range(len(num_array)):
-#             powers[int(num_array[i, 0])] = int(num_array[i, 1])
-#     powers = np.flip(powers, 0)
-#     print('powers has length %i' % len(powers))
-#     return powers
 
 
 if __name__ == '__main__':
