@@ -17,6 +17,105 @@ matplotlib.rc('font', **font)
 # from math import gcd
 
 """
+----------------------------CLASS DEFINITIONS
+"""
+
+# class Gammas(list):
+    # def __init__(self, num_trials=1):
+    #     self.num_trials = num_trials
+
+
+class Trial:
+    def __init__(self, stimulus, gamma, init_gammas=None, tolerance=.05):
+        """
+        :param stimulus: 2-tuple of click trains (left, right)
+        :param gamma: true gamma with which decision data should be computed
+        :param init_gammas: initial intervals of admissible gammas (list of dicts)
+        :param tolerance: max distance allowed between two consecutive samples
+        """
+        self.stimulus = stimulus
+        self.true_gamma = gamma
+        self.decision = self.decide(self.stimulus, self.true_gamma)  # -1 for left, 1 for right, 0 for undecided
+        if init_gammas is None:
+            self.admissible_gammas = self.gen_init_gammas()
+        else:
+            self.admissible_gammas = init_gammas
+        self.refined = False  # True if self.refine_admissible_gammas() has been called
+        self.tolerance_gamma = tolerance
+
+    def gen_init_gammas(self, interval=(0, 50)):
+        return [{'interval': interval, 'samples': self.gen_sample_gammas(interval)}]
+
+    def refine_admissible_gammas(self):
+        for interval in self.admissible_gammas:
+            for idx, g in enumerate(interval['samples']):
+                model_decision = self.decide(self.stimulus, g)
+                if (model_dec != self.decision) and not model_decision:
+                    interval['samples'][idx] = np.nan
+        all_gammas = np.concatenate(tuple(x['samples'] for x in self.admissible_gammas), axis=0)
+        self.reconstruct_admissible_gammas(all_gammas)
+        self.refined = True
+
+    def reconstruct_admissible_gammas(self, allg):
+        # extract intervals first
+        interval_list = []
+        lower_bound = None
+        last_up = 0
+
+        # find lower_bound
+        # find upper_bound
+        # add interval to list
+
+        for idx, g in allg:
+            nan = np.isnan(g)
+            if (lower_bound is None) and nan:
+                continue
+            elif lower_bound is None:
+                nlb = g - self.tolerance_gamma
+                if nlb > last_up:
+                    lower_bound = nlb
+                else:
+                    continue
+            elif nan:
+                gm1 = allg[idx - 1]
+                last_up = gm1 + self.tolerance_gamma
+                interval_list += [(lower_bound, last_up)]
+                lower_bound = None
+
+        self.admissible_gammas = [{'interval': x, 'samples': self.gen_sample_gammas(x)} for x in interval_list]
+
+    def gen_sample_gammas(self, interval, max_samples=1000):
+        """
+        samples uniformly in the interval
+        :param interval: tuple with left value smaller than right value
+        :param max_samples: maximum number of samples
+        :return: numpy array of gamma samples + warning message if max_samples is too small for tolerance
+        """
+        samples = np.arange(start=interval[0], stop=interval[1], step=self.tolerance_gamma)
+        if samples.size > max_samples:
+            print('WARNING: one of tolerance or max_samples is too small. Resampling according to max_samples')
+            samples, step = np.linspace(interval[0], interval[1], max_samples, endpoint=False, retstep=True)
+            print('new between-samples step = %f' % step)
+        return samples
+
+    def decide(self, click_trains, discounting_rate, init_cond=0):
+        """
+        computes decision, given input trains
+        :param click_trains: tuple of left and right click streams (numpy arrays)
+        :param discounting_rate: linear discounting term
+        :param init_cond: initial value of accumulation variable
+        :return: -1, 0 or 1 for left, undecided and right
+        """
+        y = init_cond
+        # right train
+        for i in click_trains[1]:
+            y += np.exp(discounting_rate * i)
+        # left train
+        for j in click_trains[0]:
+            y -= np.exp(discounting_rate * j)
+        return np.sign(y)
+
+"""
 ----------------------------GENERAL PURPOSE FUNCTIONS
 """
 
@@ -113,74 +212,68 @@ def gen_stim(ct, rate_l, rate_h, dur):
     return (np.array(left_stream), np.array(right_stream)), state[-1]
 
 
-def decide(click_trains, discounting_rate, init_cond=0):
+def stopping_criterion(width, ninter, stopping_width=0.01):
     """
-    computes decision, given input trains
-    :param click_trains: tuple of left and right click streams (numpy arrays)
-    :param discounting_rate: linear discounting term
-    :param init_cond: initial value of accumulation variable
-    :return: -1, 0 or 1 for left, undecided and right
+    :param width: current precision on inferred gamma
+    :param ninter: number of retained admissible gamma intervals
+    :param stopping_width: desired precision on inferred gamma
+    :return: True or False
     """
-    y = init_cond
-    # right train
-    for i in click_trains[1]:
-        y += np.exp(discounting_rate * i)
-    # left train
-    for j in click_trains[0]:
-        y -= np.exp(discounting_rate * j)
-    return np.sign(y)
+    return (width < stopping_width) and (ninter == 1)
 
 
 if __name__ == '__main__':
     # todo: better deal with sample depletion
     # test code for single trial
-    a_S = [.5, 3, 8]
-    a_gamma = [2.0848, 6.7457, 27.7241]
+    a_S = [.5]  # , 3, 8]
+    a_gamma = [2.0848]  # , 6.7457, 27.7241]
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
+    init_interval = (0, 50)  # initial interval of admissible gammas
+    num_trials = 500
     for jjj in range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in range(len(a_S)):
             S = a_S[kkk]
-            gamma = a_gamma[kkk]
-            num_gammas = 1000
-            gamma_range = np.linspace(0, 50, num_gammas)
-            num_trials = 500
+            true_gamma = a_gamma[kkk]
+            # num_gammas = 1000  # max sample size per admissible interval
             # all_gammas = np.zeros((num_gammas, num_trials))
-            all_gammas = gamma_range.copy()
-            for jj in range(num_trials - 1):
-                all_gammas = np.c_[all_gammas, gamma_range]
-            for trial in range(num_trials):
-                gammas_backup = gamma_range.copy()
-                if np.sum(np.isnan(gamma_range)) == num_gammas - 1:
-                    break
-                stim_train, last_envt_state = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
-                d = decide(stim_train, gamma)
-                # range_gammas = cov_trains2poly(np.array([0.2857142857142857, 0.3333333333]), np.array([99/100])))
-                for ii in range(gamma_range.size):
-                    if not np.isnan(gamma_range[ii]):
-                        model_dec = decide(stim_train, gamma_range[ii])
-                        if model_dec == 0:
-                            print('decision=0 for gamma = ' + str(gamma_range[ii]))
-                            print('%i left clicks and %i right clicks' % (len(stim_train[0]),
-                                                                          len(stim_train[1])))
-                        if model_dec != d:
-                            gamma_range[ii] = np.nan
-                            all_gammas[ii, trial:] = np.nan
-                if all(np.isnan(gamma_range)):  # to cope with sample depletion
-                    gamma_range = gammas_backup.copy()
+            # all_gammas = gamma_range.copy()
+            # for jj in range(num_trials - 1):
+            #     all_gammas = np.c_[all_gammas, gamma_range]
+
+            # loop over trials to construct the trial-dependent list of admissible gammas
+            for lll in range(num_trials):
+
+                gammas_backup = gamma_samples.copy()
+                stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
+
+                # step 1: generate trial and decision
+                trial = Trial(stim_train, true_gamma)
+
+                # step 2: test gamma samples and refine admissible interval
+                trial.refine_admissible_gammas()
+
+                # sample depletion
+                if all(np.isnan(gamma_samples)):
+                    gamma_samples = gammas_backup.copy()
                     break
 
-            print('%i valid values after %i trials' % (gamma_range.size - np.sum(np.isnan(gamma_range)), trial+1))
-            print('true gamma = %f' % gamma)
+                # stopping criteria in addition to reaching num_trials in the upcoming for loop
+                total_width, num_intervals = get_info_intervals(intervals)
+                # exit for loop if stopping criterion met
+                if all(stopping_criterion(total_width, num_intervals)):
+                    break
+            print('%i valid values after %i trials' % (gamma_samples.size - np.sum(np.isnan(gamma_samples)), trial+1))
+            print('true gamma = %f' % true_gamma)
             print('admissible gammas:')
-            for ii in range(gamma_range.size):
-                if not np.isnan(gamma_range[ii]):
-                    print(gamma_range[ii])
+            for ii in range(gamma_samples.size):
+                if not np.isnan(gamma_samples[ii]):
+                    print(gamma_samples[ii])
             idx = 3 * jjj + kkk + 1
             plt.subplot(3, 3, idx)
-            plt.plot(all_gammas[:, :trial].transpose(), 'b-')
+            # plt.plot(all_gammas[:, :trial].transpose(), 'b-')
             plt.ylabel('admissible gamma')
             plt.xlabel('Trial')
             title_string = 'S = %f; h_low = %i' % (S, ll)
