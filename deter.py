@@ -37,7 +37,7 @@ class Trial:
         self.stimulus = stimulus
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
-        self.decision = self.decide(self.stimulus, self.true_gamma)  # -1 for left, 1 for right, 0 for undecided
+        self.decision = self.decide(self.true_gamma)  # -1 for left, 1 for right, 0 for undecided
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas()
         else:
@@ -53,7 +53,7 @@ class Trial:
         copied_gammas = copy.deepcopy(self.admissible_gammas)
         for interval in copied_gammas:
             for idx, gamma in enumerate(interval['samples']):
-                model_decision = self.decide(self.stimulus, gamma)
+                model_decision = self.decide(gamma)
                 if (model_decision != self.decision) and not model_decision:
                     interval['samples'][idx] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
@@ -127,22 +127,22 @@ class Trial:
             print('new between-samples step = %f' % step)
         return samples
 
-    def decide(self, click_trains, discounting_rate, init_cond=0):
+    def decide(self, discounting_rate, init_cond=0):
         """
-        computes decision, given input trains
-        :param click_trains: tuple of left and right click streams (numpy arrays)
+        computes decision, given discounting rate
         :param discounting_rate: linear discounting term
         :param init_cond: initial value of accumulation variable
         :return: -1, 0 or 1 for left, undecided and right
         """
         y = init_cond
         # right train
-        for i in click_trains[1]:
+        for i in self.stimulus[1]:
             y += np.exp(discounting_rate * i)
         # left train
-        for j in click_trains[0]:
+        for j in self.stimulus[0]:
             y -= np.exp(discounting_rate * j)
         return np.sign(y)
+
 
 """
 ----------------------------GENERAL PURPOSE FUNCTIONS
@@ -282,10 +282,14 @@ if __name__ == '__main__':
                     trial = Trial(stim_train, true_gamma)
                 else:
                     trial = Trial(stim_train, true_gamma, init_gammas=global_gammas)
+                print('dealing with trial %i' % lll)
+                print(len(trial.admissible_gammas))
+                print(trial.admissible_gammas[0]['interval'])
 
                 # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
-
+                print('after refinement')
+                print(trial.admissible_gammas[0]['interval'])
                 # update global variables
                 trial_list += [trial]
                 global_gammas = copy.deepcopy(trial.admissible_gammas)
@@ -294,6 +298,9 @@ if __name__ == '__main__':
                 # exit for loop if stopping criterion met
                 if stopping_criterion(trial.total_width, trial.num_intervals):
                     print('stopping criterion met')
+                    print(trial.total_width)
+                    print(trial.num_intervals)
+                    print(trial.admissible_gammas[0]['samples'])
                     break
             # gamma_samples = global_gammas[0]['samples']
             # print('%i valid values after %i trials' % (global_gammas[0]['samples'].size, lll+1))
@@ -305,10 +312,14 @@ if __name__ == '__main__':
 
             # idx = 3 * jjj + kkk + 1
             # plt.subplot(3, 3, idx)
-            # # plt.plot(all_gammas[:, :trial].transpose(), 'b-')
-            # plt.ylabel('admissible gamma')
-            # plt.xlabel('Trial')
-            # title_string = 'S = %f; h_low = %i' % (S, ll)
-            # plt.title(title_string)
+            trial_number = 0
+            for t in trial_list:
+                trial_number += 1
+                for intv in t.admissible_gammas:
+                    plt.plot([trial_number, trial_number], [intv['interval'][0], intv['interval'][1]], 'b-')
+            plt.ylabel('admissible gamma')
+            plt.xlabel('Trial')
+            title_string = 'S = %f; h_low = %i' % (S, ll)
+            plt.title(title_string)
 
-    # plt.show()
+    plt.show()
