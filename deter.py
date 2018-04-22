@@ -50,13 +50,26 @@ class Trial:
         return [{'interval': interval, 'samples': self.gen_sample_gammas(interval)}]
 
     def refine_admissible_gammas(self):
+        # print('entering refine_admissible_gammas()')
         copied_gammas = copy.deepcopy(self.admissible_gammas)
+        # print('first interval of copied admissible gammas')
+        # print(copied_gammas[0]['interval'])
         for interval in copied_gammas:
+            # print(type(interval))
             for idx, gamma in enumerate(interval['samples']):
+                # print(type(gamma))
                 model_decision = self.decide(gamma)
-                if (model_decision != self.decision) and not model_decision:
+                # if idx < 3:
+                    # print('model dec = %i ' % model_decision)
+                    # print('data dec = %i ' % self.decision)
+                    # print(model_decision != self.decision)
+                    # print(model_decision)
+                if (model_decision != self.decision) and model_decision:
                     interval['samples'][idx] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
+        # print(all_gammas[np.isnan(all_gammas)])
+        # print('length all_gammas = %i' % all_gammas.size)
+        # print('nb nan values %i ' % sum(np.isnan(all_gammas)))
         # print(type(all_gammas))
         # print('size all gammas = %i' % all_gammas.size)
         if not all(np.isnan(all_gammas)):
@@ -74,6 +87,7 @@ class Trial:
         return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
 
     def reconstruct_admissible_gammas(self, allg):
+        # print('calling reconstruct_admissible_gammas()')
         # print('entering fcn')
         # print(type(allg))
         # print('first 5 elements of allg are')
@@ -86,6 +100,8 @@ class Trial:
         # find lower_bound
         # find upper_bound
         # add interval to list
+
+        # todo: in the following, why not for loop with enumerate(allg)?
         it = np.nditer(allg, flags=['f_index'])
         while not it.finished:
             idx = it.index
@@ -110,7 +126,8 @@ class Trial:
                 last_up = gm1 + self.tolerance_gamma
                 interval_list += [(lower_bound, last_up)]
                 lower_bound = None
-
+        if not interval_list:  # list is empty
+            interval_list += [(lower_bound, allg[-1])]  # todo: not sure perfect
         self.admissible_gammas = [{'interval': x, 'samples': self.gen_sample_gammas(x)} for x in interval_list]
 
     def gen_sample_gammas(self, interval, max_samples=1000):
@@ -260,7 +277,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    num_trials = 3
+    num_trials = 50
     for jjj in range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in range(len(a_S)):
@@ -282,14 +299,14 @@ if __name__ == '__main__':
                     trial = Trial(stim_train, true_gamma)
                 else:
                     trial = Trial(stim_train, true_gamma, init_gammas=global_gammas)
-                print('dealing with trial %i' % lll)
-                print(len(trial.admissible_gammas))
-                print(trial.admissible_gammas[0]['interval'])
+                # print('dealing with trial %i' % lll)
+                # print(len(trial.admissible_gammas))
+                # print(trial.admissible_gammas[0]['interval'])
 
                 # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
-                print('after refinement')
-                print(trial.admissible_gammas[0]['interval'])
+                # print('after refinement')
+                # print(trial.admissible_gammas[0]['interval'])
                 # update global variables
                 trial_list += [trial]
                 global_gammas = copy.deepcopy(trial.admissible_gammas)
@@ -298,9 +315,9 @@ if __name__ == '__main__':
                 # exit for loop if stopping criterion met
                 if stopping_criterion(trial.total_width, trial.num_intervals):
                     print('stopping criterion met')
-                    print(trial.total_width)
-                    print(trial.num_intervals)
-                    print(trial.admissible_gammas[0]['samples'])
+                    # print(trial.total_width)
+                    # print(trial.num_intervals)
+                    # print(trial.admissible_gammas[0]['samples'])
                     break
             # gamma_samples = global_gammas[0]['samples']
             # print('%i valid values after %i trials' % (global_gammas[0]['samples'].size, lll+1))
