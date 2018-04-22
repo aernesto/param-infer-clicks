@@ -36,13 +36,13 @@ class Trial:
         """
         self.stimulus = stimulus
         self.true_gamma = gamma
+        self.tolerance_gamma = tolerance
         self.decision = self.decide(self.stimulus, self.true_gamma)  # -1 for left, 1 for right, 0 for undecided
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas()
         else:
             self.admissible_gammas = init_gammas
         self.refined = False  # True if self.refine_admissible_gammas() has been called
-        self.tolerance_gamma = tolerance
         self.total_width = self.get_total_width()
         self.num_intervals = len(self.admissible_gammas)
 
@@ -51,14 +51,20 @@ class Trial:
 
     def refine_admissible_gammas(self):
         copied_gammas = copy.deepcopy(self.admissible_gammas)
-        for interval in self.admissible_gammas:
+        for interval in copied_gammas:
             for idx, gamma in enumerate(interval['samples']):
                 model_decision = self.decide(self.stimulus, gamma)
                 if (model_decision != self.decision) and not model_decision:
-                    copied_interval['samples'][idx] = np.nan
-        all_gammas = np.concatenate(tuple(x['samples'] for x in self.admissible_gammas), axis=0)
+                    interval['samples'][idx] = np.nan
+        all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
+        print(type(all_gammas))
+        print('size all gammas = %i' % all_gammas.size)
         if not all(np.isnan(all_gammas)):
             self.reconstruct_admissible_gammas(all_gammas)
+            # if all_gammas.size == 1:
+            #     self.reconstruct_admissible_gammas([all_gammas])
+            # else:
+            #     self.reconstruct_admissible_gammas(all_gammas)
         else:
             print('depletion avoided')
         self.total_width = self.get_total_width()
@@ -68,6 +74,10 @@ class Trial:
         return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
 
     def reconstruct_admissible_gammas(self, allg):
+        print('entering fcn')
+        print(type(allg))
+        print('first 5 elements of allg are')
+        print(allg[:5])
         # extract intervals first
         interval_list = []
         lower_bound = None
@@ -76,9 +86,17 @@ class Trial:
         # find lower_bound
         # find upper_bound
         # add interval to list
-
-        for idx, g in allg:
+        it = np.nditer(allg, flags=['f_index'])
+        while not it.finished:
+            idx = it.index
+            g = it[0]
+            # print(it.index)
+            # print(it[0])
+            print('-----')
+            print('idx %i' % idx)
+            print('gamma %f' % g)
             nan = np.isnan(g)
+            it.iternext()
             if (lower_bound is None) and nan:
                 continue
             elif lower_bound is None:
@@ -256,39 +274,40 @@ if __name__ == '__main__':
 
             # loop over trials to construct the trial-dependent list of admissible gammas
             cross_trials_list = []
+            global_gammas = []
             for lll in range(num_trials):
-
-                gammas_backup = gamma_samples.copy()
                 stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
 
-                # step 1: generate trial and decision
-                trial = Trial(stim_train, true_gamma)
+                # generate trial and decision
+                if lll == 0:
+                    trial = Trial(stim_train, true_gamma)
+                else:
+                    trial = Trial(stim_train, true_gamma, init_gammas=copy.deepcopy(global_gammas[-1]))
 
-                # step 2: test gamma samples and refine admissible interval
+                # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
 
-                # sample depletion
-                if all(np.isnan(gamma_samples)):
-                    gamma_samples = gammas_backup.copy()
-                    break
+                global_gammas += [trial.admissible_gammas]
 
                 # stopping criteria in addition to reaching num_trials in the upcoming for loop
-                total_width, num_intervals = get_info_intervals(intervals)
                 # exit for loop if stopping criterion met
-                if all(stopping_criterion(total_width, num_intervals)):
+                if all(stopping_criterion(trial.total_width, trial.num_intervals)):
+                    print('stopping criterion met')
                     break
-            print('%i valid values after %i trials' % (gamma_samples.size - np.sum(np.isnan(gamma_samples)), trial+1))
-            print('true gamma = %f' % true_gamma)
-            print('admissible gammas:')
-            for ii in range(gamma_samples.size):
-                if not np.isnan(gamma_samples[ii]):
-                    print(gamma_samples[ii])
-            idx = 3 * jjj + kkk + 1
-            plt.subplot(3, 3, idx)
-            # plt.plot(all_gammas[:, :trial].transpose(), 'b-')
-            plt.ylabel('admissible gamma')
-            plt.xlabel('Trial')
-            title_string = 'S = %f; h_low = %i' % (S, ll)
-            plt.title(title_string)
+            # gamma_samples = global_gammas[0]['samples']
+            # print('%i valid values after %i trials' % (global_gammas[0]['samples'].size, lll+1))
+            # print('true gamma = %f' % true_gamma)
+            # print('admissible gammas:')
+            # for ii in range(gamma_samples.size):
+            #     if not np.isnan(gamma_samples[ii]):
+            #         print(gamma_samples[ii])
 
-    plt.show()
+            # idx = 3 * jjj + kkk + 1
+            # plt.subplot(3, 3, idx)
+            # # plt.plot(all_gammas[:, :trial].transpose(), 'b-')
+            # plt.ylabel('admissible gamma')
+            # plt.xlabel('Trial')
+            # title_string = 'S = %f; h_low = %i' % (S, ll)
+            # plt.title(title_string)
+
+    # plt.show()
