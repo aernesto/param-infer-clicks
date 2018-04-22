@@ -57,8 +57,8 @@ class Trial:
                 if (model_decision != self.decision) and not model_decision:
                     interval['samples'][idx] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
-        print(type(all_gammas))
-        print('size all gammas = %i' % all_gammas.size)
+        # print(type(all_gammas))
+        # print('size all gammas = %i' % all_gammas.size)
         if not all(np.isnan(all_gammas)):
             self.reconstruct_admissible_gammas(all_gammas)
             # if all_gammas.size == 1:
@@ -74,10 +74,10 @@ class Trial:
         return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
 
     def reconstruct_admissible_gammas(self, allg):
-        print('entering fcn')
-        print(type(allg))
-        print('first 5 elements of allg are')
-        print(allg[:5])
+        # print('entering fcn')
+        # print(type(allg))
+        # print('first 5 elements of allg are')
+        # print(allg[:5])
         # extract intervals first
         interval_list = []
         lower_bound = None
@@ -92,9 +92,9 @@ class Trial:
             g = it[0]
             # print(it.index)
             # print(it[0])
-            print('-----')
-            print('idx %i' % idx)
-            print('gamma %f' % g)
+            # print('-----')
+            # print('idx %i' % idx)
+            # print('gamma %f' % g)
             nan = np.isnan(g)
             it.iternext()
             if (lower_bound is None) and nan:
@@ -252,7 +252,7 @@ def stopping_criterion(width, ninter, stopping_width=0.01):
 
 
 if __name__ == '__main__':
-    # todo: better deal with sample depletion
+    # todo: measure computation time
     # test code for single trial
     a_S = [.5]  # , 3, 8]
     a_gamma = [2.0848]  # , 6.7457, 27.7241]
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    num_trials = 500
+    num_trials = 3
     for jjj in range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in range(len(a_S)):
@@ -273,8 +273,7 @@ if __name__ == '__main__':
             #     all_gammas = np.c_[all_gammas, gamma_range]
 
             # loop over trials to construct the trial-dependent list of admissible gammas
-            cross_trials_list = []
-            global_gammas = []
+            trial_list = []
             for lll in range(num_trials):
                 stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
 
@@ -282,16 +281,18 @@ if __name__ == '__main__':
                 if lll == 0:
                     trial = Trial(stim_train, true_gamma)
                 else:
-                    trial = Trial(stim_train, true_gamma, init_gammas=copy.deepcopy(global_gammas[-1]))
+                    trial = Trial(stim_train, true_gamma, init_gammas=global_gammas)
 
                 # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
 
-                global_gammas += [trial.admissible_gammas]
+                # update global variables
+                trial_list += [trial]
+                global_gammas = copy.deepcopy(trial.admissible_gammas)
 
                 # stopping criteria in addition to reaching num_trials in the upcoming for loop
                 # exit for loop if stopping criterion met
-                if all(stopping_criterion(trial.total_width, trial.num_intervals)):
+                if stopping_criterion(trial.total_width, trial.num_intervals):
                     print('stopping criterion met')
                     break
             # gamma_samples = global_gammas[0]['samples']
