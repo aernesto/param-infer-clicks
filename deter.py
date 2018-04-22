@@ -8,6 +8,7 @@ The script contains two types of functions.
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import copy
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
         'size': 22}
@@ -42,19 +43,29 @@ class Trial:
             self.admissible_gammas = init_gammas
         self.refined = False  # True if self.refine_admissible_gammas() has been called
         self.tolerance_gamma = tolerance
+        self.total_width = self.get_total_width()
+        self.num_intervals = len(self.admissible_gammas)
 
     def gen_init_gammas(self, interval=(0, 50)):
         return [{'interval': interval, 'samples': self.gen_sample_gammas(interval)}]
 
     def refine_admissible_gammas(self):
+        copied_gammas = copy.deepcopy(self.admissible_gammas)
         for interval in self.admissible_gammas:
-            for idx, g in enumerate(interval['samples']):
-                model_decision = self.decide(self.stimulus, g)
-                if (model_dec != self.decision) and not model_decision:
-                    interval['samples'][idx] = np.nan
+            for idx, gamma in enumerate(interval['samples']):
+                model_decision = self.decide(self.stimulus, gamma)
+                if (model_decision != self.decision) and not model_decision:
+                    copied_interval['samples'][idx] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in self.admissible_gammas), axis=0)
-        self.reconstruct_admissible_gammas(all_gammas)
+        if not all(np.isnan(all_gammas)):
+            self.reconstruct_admissible_gammas(all_gammas)
+        else:
+            print('depletion avoided')
+        self.total_width = self.get_total_width()
         self.refined = True
+
+    def get_total_width(self):
+        return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
 
     def reconstruct_admissible_gammas(self, allg):
         # extract intervals first
@@ -244,6 +255,7 @@ if __name__ == '__main__':
             #     all_gammas = np.c_[all_gammas, gamma_range]
 
             # loop over trials to construct the trial-dependent list of admissible gammas
+            cross_trials_list = []
             for lll in range(num_trials):
 
                 gammas_backup = gamma_samples.copy()
