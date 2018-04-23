@@ -9,9 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import copy
+import time
+import sys
+
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
-        'size': 22}
+        'size': 16}
 
 matplotlib.rc('font', **font)
 # from fractions import Fraction
@@ -21,13 +24,9 @@ matplotlib.rc('font', **font)
 ----------------------------CLASS DEFINITIONS
 """
 
-# class Gammas(list):
-    # def __init__(self, num_trials=1):
-    #     self.num_trials = num_trials
-
 
 class Trial:
-    def __init__(self, stimulus, gamma, init_gammas=None, tolerance=.05):
+    def __init__(self, stimulus, gamma, init_gammas=None, tolerance=.05, verbose=False):
         """
         :param stimulus: 2-tuple of click trains (left, right)
         :param gamma: true gamma with which decision data should be computed
@@ -45,90 +44,103 @@ class Trial:
         self.refined = False  # True if self.refine_admissible_gammas() has been called
         self.total_width = self.get_total_width()
         self.num_intervals = len(self.admissible_gammas)
+        self.verbose = verbose
+        if verbose:
+            self.report('trial instantiated')
+
+    def report(self, string='', list_of_intv=None):
+        if list_of_intv is None:
+            list_of_intv = self.admissible_gammas
+        print(string)
+        print('-------------- report ------------------')
+        print('total width = {}'.format(self.get_total_width()))
+        print('num intervals= {}'.format(len(list_of_intv)))
+        for tn in list_of_intv:
+            print(tn['interval'])
+            print('samples {}'.format(tn['samples'].size))
+            print('first & last samples {0[0]}, {0[1]}'.format((tn['samples'][0], tn['samples'][-1])))
+            print('nan values {}'.format(sum(np.isnan(tn['samples']))))
+        print('----------------------------------------')
 
     def gen_init_gammas(self, interval=(0, 50)):
         return [{'interval': interval, 'samples': self.gen_sample_gammas(interval)}]
 
     def refine_admissible_gammas(self):
-        # print('entering refine_admissible_gammas()')
+        # if self.verbose:
+        #     self.report('entering refine_admissible_gammas()')
         copied_gammas = copy.deepcopy(self.admissible_gammas)
-        # print('first interval of copied admissible gammas')
-        # print(copied_gammas[0]['interval'])
+
         for interval in copied_gammas:
-            # print(type(interval))
-            for idx, gamma in enumerate(interval['samples']):
-                # print(type(gamma))
+            for indx, gamma in enumerate(interval['samples']):
                 model_decision = self.decide(gamma)
-                # if idx < 3:
-                    # print('model dec = %i ' % model_decision)
-                    # print('data dec = %i ' % self.decision)
-                    # print(model_decision != self.decision)
-                    # print(model_decision)
                 if (model_decision != self.decision) and model_decision:
-                    interval['samples'][idx] = np.nan
+                    interval['samples'][indx] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
-        # print(all_gammas[np.isnan(all_gammas)])
-        # print('length all_gammas = %i' % all_gammas.size)
-        # print('nb nan values %i ' % sum(np.isnan(all_gammas)))
-        # print(type(all_gammas))
-        # print('size all gammas = %i' % all_gammas.size)
-        if not all(np.isnan(all_gammas)):
-            self.reconstruct_admissible_gammas(all_gammas)
-            # if all_gammas.size == 1:
-            #     self.reconstruct_admissible_gammas([all_gammas])
-            # else:
-            #     self.reconstruct_admissible_gammas(all_gammas)
-        else:
+        tot_samples = all_gammas.size
+        if self.verbose:
+            self.report('work on copied gammas done', list_of_intv=copied_gammas)
+        num_nan_samples = np.count_nonzero(np.isnan(all_gammas))
+        if 0 < num_nan_samples < tot_samples:
+            self.reconstruct_admissible_gammas(copied_gammas)
+            self.total_width = self.get_total_width()
+        elif num_nan_samples == tot_samples and self.verbose:
             print('depletion avoided')
-        self.total_width = self.get_total_width()
+        elif num_nan_samples == 0 and self.verbose:
+            print('all samples are valid')
         self.refined = True
 
     def get_total_width(self):
         return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
 
-    def reconstruct_admissible_gammas(self, allg):
-        # print('calling reconstruct_admissible_gammas()')
-        # print('entering fcn')
-        # print(type(allg))
-        # print('first 5 elements of allg are')
-        # print(allg[:5])
-        # extract intervals first
+    def reconstruct_admissible_gammas(self, intervals):
         interval_list = []
-        lower_bound = None
-        last_up = 0
+        for intvl in intervals:
+            interval_list += self.reconstruct_interval(intvl)
+        if not interval_list:  # if list is empty
+            print('PROBLEM: INTERVAL RECONSTRUCTED IS EMPTY')
+        self.admissible_gammas = [{'interval': x, 'samples': self.gen_sample_gammas(x)} for x in interval_list]
+        if self.verbose:
+            self.report('reconstruction of gammas over')
 
-        # find lower_bound
-        # find upper_bound
-        # add interval to list
+    def reconstruct_interval(self, interval):
+        """
+        splits an interval into sub-intervals
+        :param interval: dict with: dict['interval'] = (lower_bound, upper_bound) and dict['samples'] = numpy.array
+        :return: list of sub-intervals, possibly empty
+        """
+        interval_list = []
+        last_lower_bound, last_upper_bound = interval['interval']
+        old_samples = interval['samples']
+        lower_bound = None  # new lower bound
+        last_up = 0  # new upper bound
 
-        # todo: in the following, why not for loop with enumerate(allg)?
-        it = np.nditer(allg, flags=['f_index'])
-        while not it.finished:
-            idx = it.index
-            g = it[0]
-            # print(it.index)
-            # print(it[0])
-            # print('-----')
-            # print('idx %i' % idx)
-            # print('gamma %f' % g)
+        for indx, g in enumerate(old_samples):
             nan = np.isnan(g)
-            it.iternext()
             if (lower_bound is None) and nan:
                 continue
             elif lower_bound is None:
                 nlb = g - self.tolerance_gamma
-                if nlb > last_up:
+                if nlb >= last_lower_bound:
                     lower_bound = nlb
                 else:
-                    continue
+                    lower_bound = last_lower_bound
+                # for debug purposes
+                if lower_bound < last_up:
+                    print('WARNING: overlapping consecutive intervals')
             elif nan:
-                gm1 = allg[idx - 1]
+                gm1 = old_samples[max(indx - 1, 0)]
                 last_up = gm1 + self.tolerance_gamma
-                interval_list += [(lower_bound, last_up)]
+                # following if just for debugging
+                if last_up > lower_bound:
+                    interval_list += [(lower_bound, last_up)]
+                else:
+                    print('WARNING: negative length interval!!!')
                 lower_bound = None
-        if not interval_list:  # list is empty
-            interval_list += [(lower_bound, allg[-1])]  # todo: not sure perfect
-        self.admissible_gammas = [{'interval': x, 'samples': self.gen_sample_gammas(x)} for x in interval_list]
+            # list of samples ended without nan values, so inherit upper bound from prev. setting
+            elif g == old_samples[-1]:
+                last_up = last_upper_bound
+                interval_list += [(lower_bound, last_up)]
+        return interval_list
 
     def gen_sample_gammas(self, interval, max_samples=1000):
         """
@@ -137,6 +149,7 @@ class Trial:
         :param max_samples: maximum number of samples
         :return: numpy array of gamma samples + warning message if max_samples is too small for tolerance
         """
+        # step0 = (interval[1] - interval[0]) / max_samples
         samples = np.arange(start=interval[0], stop=interval[1], step=self.tolerance_gamma)
         if samples.size > max_samples:
             print('WARNING: one of tolerance or max_samples is too small. Resampling according to max_samples')
@@ -159,6 +172,33 @@ class Trial:
         for j in self.stimulus[0]:
             y -= np.exp(discounting_rate * j)
         return np.sign(y)
+
+    def stopping_criterion(self, stopping_width):
+        """
+        :param stopping_width: desired precision on inferred gamma. Must be greater than self.tolerance_gamma
+        :return: (decision to stop, explanatory message)
+        """
+        if self.lost_gamma():
+            msg = 'PROBLEM: true gamma has been lost'
+            stop = True
+        elif self.total_width < stopping_width and self.num_intervals == 1:
+            msg = 'stopping criterion has been met'
+            stop = True
+        else:
+            stop = False
+            msg = ''
+
+        return stop, msg
+
+    def lost_gamma(self):
+        """
+        :return: True if true_gamma not in self.admissible_gammas anymore
+        """
+        found = False
+        for intvl in self.admissible_gammas:
+            if intvl['interval'][0] <= self.true_gamma <= intvl['interval'][1]:
+                found = True
+        return not found
 
 
 """
@@ -258,29 +298,19 @@ def gen_stim(ct, rate_l, rate_h, dur):
     return (np.array(left_stream), np.array(right_stream)), state[-1]
 
 
-def stopping_criterion(width, ninter, stopping_width=0.01):
-    """
-    :param width: current precision on inferred gamma
-    :param ninter: number of retained admissible gamma intervals
-    :param stopping_width: desired precision on inferred gamma
-    :return: True or False
-    """
-    return (width < stopping_width) and (ninter == 1)
-
-
 if __name__ == '__main__':
-    # todo: measure computation time
     # test code for single trial
-    a_S = [.5]  # , 3, 8]
-    a_gamma = [2.0848]  # , 6.7457, 27.7241]
+    a_S = [.5]  # 3, 8]
+    a_gamma = [2.0848]  # 6.7457, 27.7241]
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    num_trials = 50
-    for jjj in range(len(a_ll)):
+    num_trials = 30
+    for jjj in [0]:  # range(len(a_ll)):
         ll = a_ll[jjj]
-        for kkk in range(len(a_S)):
+        for kkk in [0]:  # range(len(a_S)):
+            start_time = time.time()
             S = a_S[kkk]
             true_gamma = a_gamma[kkk]
             # num_gammas = 1000  # max sample size per admissible interval
@@ -292,40 +322,32 @@ if __name__ == '__main__':
             # loop over trials to construct the trial-dependent list of admissible gammas
             trial_list = []
             for lll in range(num_trials):
+                print('\n TRIAL {} \n'.format(lll + 1))
                 stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
 
                 # generate trial and decision
                 if lll == 0:
-                    trial = Trial(stim_train, true_gamma)
+                    trial = Trial(stim_train, true_gamma, verbose=True)
                 else:
-                    trial = Trial(stim_train, true_gamma, init_gammas=global_gammas)
-                # print('dealing with trial %i' % lll)
-                # print(len(trial.admissible_gammas))
-                # print(trial.admissible_gammas[0]['interval'])
+                    trial = Trial(stim_train, true_gamma, init_gammas=global_gammas, verbose=True)
 
                 # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
-                # print('after refinement')
-                # print(trial.admissible_gammas[0]['interval'])
+
                 # update global variables
                 trial_list += [trial]
                 global_gammas = copy.deepcopy(trial.admissible_gammas)
 
                 # stopping criteria in addition to reaching num_trials in the upcoming for loop
                 # exit for loop if stopping criterion met
-                if stopping_criterion(trial.total_width, trial.num_intervals):
-                    print('stopping criterion met')
-                    # print(trial.total_width)
-                    # print(trial.num_intervals)
-                    # print(trial.admissible_gammas[0]['samples'])
+                stop_loop, message = trial.stopping_criterion(1.01 * trial.tolerance_gamma)
+                if stop_loop:
+                    print(message)
+                    print("--- %s seconds ---" % (time.time() - start_time))
                     break
-            # gamma_samples = global_gammas[0]['samples']
-            # print('%i valid values after %i trials' % (global_gammas[0]['samples'].size, lll+1))
-            # print('true gamma = %f' % true_gamma)
-            # print('admissible gammas:')
-            # for ii in range(gamma_samples.size):
-            #     if not np.isnan(gamma_samples[ii]):
-            #         print(gamma_samples[ii])
+            if lll == num_trials - 1:
+                print('all trials used for refinement')
+            print("--- %s seconds ---" % (time.time() - start_time))
 
             # idx = 3 * jjj + kkk + 1
             # plt.subplot(3, 3, idx)
@@ -334,9 +356,13 @@ if __name__ == '__main__':
                 trial_number += 1
                 for intv in t.admissible_gammas:
                     plt.plot([trial_number, trial_number], [intv['interval'][0], intv['interval'][1]], 'b-')
+            plt.plot([1, len(trial_list)], [true_gamma, true_gamma], 'r-')
             plt.ylabel('admissible gamma')
             plt.xlabel('Trial')
             title_string = 'S = %f; h_low = %i' % (S, ll)
             plt.title(title_string)
 
-    plt.show()
+    # plt.show()
+    filename = 'report{}'.format(sys.argv[1])
+    plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
+
