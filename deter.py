@@ -26,13 +26,15 @@ matplotlib.rc('font', **font)
 
 
 class Trial:
-    def __init__(self, stimulus, gamma, init_gammas=None, tolerance=.05, verbose=False):
+    def __init__(self, stimulus, gamma, trial_number, init_gammas=None, tolerance=.05, verbose=False):
         """
         :param stimulus: 2-tuple of click trains (left, right)
         :param gamma: true gamma with which decision data should be computed
+        :param trial_number: number within external sequence
         :param init_gammas: initial intervals of admissible gammas (list of dicts)
         :param tolerance: max distance allowed between two consecutive samples
         """
+        self.number = trial_number
         self.stimulus = stimulus
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
@@ -46,7 +48,7 @@ class Trial:
         self.num_intervals = len(self.admissible_gammas)
         self.verbose = verbose
         if verbose:
-            self.report('trial instantiated')
+            self.report('\n TRIAL {} INSTANTIATED \n'.format(self.number))
 
     def report(self, string='', list_of_intv=None):
         if list_of_intv is None:
@@ -142,19 +144,25 @@ class Trial:
                 interval_list += [(lower_bound, last_up)]
         return interval_list
 
-    def gen_sample_gammas(self, interval, max_samples=1000):
+    def gen_sample_gammas(self, interval, max_range=50, max_samples=1000):
         """
         samples uniformly in the interval
         :param interval: tuple with left value smaller than right value
-        :param max_samples: maximum number of samples
+        :param max_range: maximum range in which max_samples should be used
+        :param max_samples: maximum number of samples to use if interval[1]-interval[0]<max_range
         :return: numpy array of gamma samples + warning message if max_samples is too small for tolerance
         """
-        # step0 = (interval[1] - interval[0]) / max_samples
-        samples = np.arange(start=interval[0], stop=interval[1], step=self.tolerance_gamma)
-        if samples.size > max_samples:
-            print('WARNING: one of tolerance or max_samples is too small. Resampling according to max_samples')
+        # todo: return error if interval[1]-interval[0] <= 0
+        curr_range = interval[1] - interval[0]
+        if curr_range <= max_range:
             samples, step = np.linspace(interval[0], interval[1], max_samples, endpoint=False, retstep=True)
-            print('new between-samples step = %f' % step)
+            if step > self.tolerance_gamma and self.verbose:
+                print('WARNING: step = {0} while tolerance = {1}'.format(step, self.tolerance_gamma))
+        else:
+            samples = np.arange(start=interval[0], stop=interval[1], step=self.tolerance_gamma)
+            if self.verbose:
+                fmt_string = 'WARNING TRIAL {}: sample size = {} while max_samples = {}'
+                print(fmt_string.format(self.number, samples.size, max_samples))
         return samples
 
     def decide(self, discounting_rate, init_cond=0):
@@ -313,23 +321,18 @@ if __name__ == '__main__':
             start_time = time.time()
             S = a_S[kkk]
             true_gamma = a_gamma[kkk]
-            # num_gammas = 1000  # max sample size per admissible interval
-            # all_gammas = np.zeros((num_gammas, num_trials))
-            # all_gammas = gamma_range.copy()
-            # for jj in range(num_trials - 1):
-            #     all_gammas = np.c_[all_gammas, gamma_range]
 
             # loop over trials to construct the trial-dependent list of admissible gammas
             trial_list = []
             for lll in range(num_trials):
-                print('\n TRIAL {} \n'.format(lll + 1))
+                trial_nb = lll + 1
                 stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
 
                 # generate trial and decision
                 if lll == 0:
-                    trial = Trial(stim_train, true_gamma, verbose=True)
+                    trial = Trial(stim_train, true_gamma, trial_nb, verbose=True)
                 else:
-                    trial = Trial(stim_train, true_gamma, init_gammas=global_gammas, verbose=True)
+                    trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=True)
 
                 # test gamma samples and refine admissible interval
                 trial.refine_admissible_gammas()
@@ -351,11 +354,11 @@ if __name__ == '__main__':
 
             # idx = 3 * jjj + kkk + 1
             # plt.subplot(3, 3, idx)
-            trial_number = 0
+            trial_num = 0
             for t in trial_list:
-                trial_number += 1
-                for intv in t.admissible_gammas:
-                    plt.plot([trial_number, trial_number], [intv['interval'][0], intv['interval'][1]], 'b-')
+                trial_num += 1
+                for intvl in t.admissible_gammas:
+                    plt.plot([trial_num, trial_num], [intvl['interval'][0], intvl['interval'][1]], 'b-')
             plt.plot([1, len(trial_list)], [true_gamma, true_gamma], 'r-')
             plt.ylabel('admissible gamma')
             plt.xlabel('Trial')
