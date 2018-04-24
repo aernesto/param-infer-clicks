@@ -144,12 +144,13 @@ class Trial:
                 interval_list += [(lower_bound, last_up)]
         return interval_list
 
-    def gen_sample_gammas(self, interval, max_range=50, max_samples=1000):
+    def gen_sample_gammas(self, interval, max_range=50, max_samples=1000, min_distance=0.001):
         """
         samples uniformly in the interval
         :param interval: tuple with left value smaller than right value
         :param max_range: maximum range in which max_samples should be used
         :param max_samples: maximum number of samples to use if interval[1]-interval[0]<max_range
+        :param min_distance: minimum distance between two consecutive samples, to avoid too many samples
         :return: numpy array of gamma samples + warning message if max_samples is too small for tolerance
         """
         # todo: return error if interval[1]-interval[0] <= 0
@@ -158,6 +159,8 @@ class Trial:
             samples, step = np.linspace(interval[0], interval[1], max_samples, endpoint=False, retstep=True)
             if step > self.tolerance_gamma and self.verbose:
                 print('WARNING: step = {0} while tolerance = {1}'.format(step, self.tolerance_gamma))
+            elif step < min_distance:
+                samples = np.arange(start=interval[0], stop=interval[1], step=min_distance)
         else:
             samples = np.arange(start=interval[0], stop=interval[1], step=self.tolerance_gamma)
             if self.verbose:
@@ -306,66 +309,95 @@ def gen_stim(ct, rate_l, rate_h, dur):
     return (np.array(left_stream), np.array(right_stream)), state[-1]
 
 
+"""
+----------------------------FUNCTIONS FOR PARAMETER INFERENCE
+"""
+
+
+def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on_the_fly=True, verbose=False,
+        independent_trials=False):
+    # loop over trials to construct the trial-dependent list of admissible gammas
+    trial_list = []
+    # todo: throw error if num_trials < 1
+    for lll in range(num_trials):
+        trial_nb = lll + 1
+        if stim_on_the_fly:
+            stim_train, _ = gen_stim(gen_cp(interrogation_time, hazard), click_rates[0], click_rates[1],
+                                     interrogation_time)
+
+        # generate trial and decision
+        if lll == 0 or independent_trials:
+            trial = Trial(stim_train, true_gamma, trial_nb, verbose=verbose)
+        else:
+            trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=verbose)
+
+        # test gamma samples and refine admissible interval
+        trial.refine_admissible_gammas()
+
+        # update global variables
+        trial_list += [trial]
+        global_gammas = copy.deepcopy(trial.admissible_gammas)
+
+        # stopping criteria in addition to reaching num_trials in the upcoming for loop
+        # exit for loop if stopping criterion met
+        stop_loop, message = trial.stopping_criterion(1.01 * trial.tolerance_gamma)
+        if stop_loop:
+            print(message)
+            print("--- %s seconds ---" % (time.time() - start_time))
+            break
+    if lll == num_trials - 1:
+        print('all trials used for refinement')
+    return trial_list
+
+
 if __name__ == '__main__':
     # test code for single trial
     a_S = [.5]  # 3, 8]
-    a_gamma = [2.0848]  # 6.7457, 27.7241]
+    a_gamma = [2.0848]  # 6.7457, 27.7241]  # best gamma
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    num_trials = 30
+    number_of_trials = 50
     for jjj in [0]:  # range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in [0]:  # range(len(a_S)):
             start_time = time.time()
+
             S = a_S[kkk]
-            true_gamma = a_gamma[kkk]
-
-            # loop over trials to construct the trial-dependent list of admissible gammas
-            trial_list = []
-            for lll in range(num_trials):
-                trial_nb = lll + 1
-                stim_train, _ = gen_stim(gen_cp(T, h), ll, get_lambda_high(ll, S), T)
-
-                # generate trial and decision
-                if lll == 0:
-                    trial = Trial(stim_train, true_gamma, trial_nb, verbose=True)
-                else:
-                    trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=True)
-
-                # test gamma samples and refine admissible interval
-                trial.refine_admissible_gammas()
-
-                # update global variables
-                trial_list += [trial]
-                global_gammas = copy.deepcopy(trial.admissible_gammas)
-
-                # stopping criteria in addition to reaching num_trials in the upcoming for loop
-                # exit for loop if stopping criterion met
-                stop_loop, message = trial.stopping_criterion(1.01 * trial.tolerance_gamma)
-                if stop_loop:
-                    print(message)
-                    print("--- %s seconds ---" % (time.time() - start_time))
-                    break
-            if lll == num_trials - 1:
-                print('all trials used for refinement')
-            print("--- %s seconds ---" % (time.time() - start_time))
+            true_g = a_gamma[kkk]
+            lh = get_lambda_high(ll, S)
+            num_run = 2000
+            report_nb = [1, 25, 50]
+            widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+            for run_nb in range(num_run):
+                sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False)
+                for tt in sim_trials:
+                    tnb = tt.number - 1
+                    for idxx, nb in enumerate(report_nb):
+                        if tnb == nb:
+                            widths[idxx].append(tt.total_width)
+            print("--- {} seconds ---".format(time.time() - start_time))
+            for idx, ttt in enumerate(widths):
+                plt.subplot(6, 1, idx + 1)
+                plt.hist(ttt)
+                plt.title('trial {}'.format(report_nb[idx]))
 
             # idx = 3 * jjj + kkk + 1
             # plt.subplot(3, 3, idx)
-            trial_num = 0
-            for t in trial_list:
-                trial_num += 1
-                for intvl in t.admissible_gammas:
-                    plt.plot([trial_num, trial_num], [intvl['interval'][0], intvl['interval'][1]], 'b-')
-            plt.plot([1, len(trial_list)], [true_gamma, true_gamma], 'r-')
-            plt.ylabel('admissible gamma')
-            plt.xlabel('Trial')
-            title_string = 'S = %f; h_low = %i' % (S, ll)
-            plt.title(title_string)
+            # trial_num = 0
+            # for t in sim_trials:
+            #     trial_num += 1
+            #     for g_intvl in t.admissible_gammas:
+            #         plt.plot([trial_num, trial_num], [g_intvl['interval'][0], g_intvl['interval'][1]], 'b-')
+            # plt.plot([1, len(sim_trials)], [true_g, true_g], 'r-')
+            # plt.ylabel('admissible gamma')
+            # plt.xlabel('Trial')
+            # title_string = 'S = %f; h_low = %i' % (S, ll)
+            # plt.title(title_string)
 
     # plt.show()
-    filename = 'report{}'.format(sys.argv[1])
-    plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
-
+    plt.savefig('/home/radillo/Pictures/simulations/HISTS.png', bbox_inches='tight')
+    if len(sys.argv) > 1:
+        filename = 'report{}'.format(sys.argv[1])
+        plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
