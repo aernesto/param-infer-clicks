@@ -1,0 +1,26 @@
+TODO: FIND HOW TO AVOID THE FOLLOWING
+
+----------------------------------------
+work on copied gammas done
+-------------- report ------------------
+total width = 2.398038
+num intervals= 1
+(0, 2.3980380000000001)
+samples 1000
+first & last samples 0.0, 2.3956399619999997
+nan values 25
+----------------------------------------
+WARNING: overlapping consecutive intervals
+reconstruction of gammas over
+-------------- report ------------------
+total width = 2.435689012
+num intervals= 2
+(0, 0.050000000000000003)
+samples 50
+first & last samples 0.0, 0.049
+nan values 0
+(0.012348987999999991, 2.3980380000000001)
+samples 1000
+first & last samples 0.012348987999999991, 2.395652310988
+nan values 0
+
