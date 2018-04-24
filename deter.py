@@ -13,11 +13,11 @@ import copy
 import time
 import sys
 
-font = {'family': 'DejaVu Sans',
-        'weight': 'bold',
-        'size': 16}
+# font = {'family': 'DejaVu Sans',
+#         'weight': 'bold',
+#         'size': 16}
 
-matplotlib.rc('font', **font)
+# matplotlib.rc('font', **font)
 # from fractions import Fraction
 # from math import gcd
 
@@ -318,7 +318,7 @@ def gen_stim(ct, rate_l, rate_h, dur):
 
 
 def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on_the_fly=True, verbose=False,
-        independent_trials=False):
+        independent_trials=False, global_gammas=None):
     # loop over trials to construct the trial-dependent list of admissible gammas
     trial_list = []
     # todo: throw error if num_trials < 1
@@ -348,8 +348,6 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on
             print(message)
             print("--- %s seconds ---" % (time.time() - start_time))
             break
-    if lll == num_trials - 1:
-        print('all trials used for refinement')
     return trial_list
 
 
@@ -360,46 +358,35 @@ if __name__ == '__main__':
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
-    init_interval = (0, 50)  # initial interval of admissible gammas
-    number_of_trials = 20
-    for jjj in [0]:  # range(len(a_ll)):
-        ll = a_ll[jjj]
-        for kkk in [0]:  # range(len(a_S)):
-            start_time = time.time()
+    init_interval = (0, 40)  # initial interval of admissible gammas
+    number_of_trials = 150
 
-            S = a_S[kkk]
-            true_g = a_gamma[kkk]
-            lh = get_lambda_high(ll, S)
-            num_run = 200
-            report_nb = [1, 10, 20]
-            widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-            for run_nb in range(num_run):
-                print('\n ///////////////////')
-                print('run {}'.format(run_nb+1))
-                sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=True)
-                for tt in sim_trials:
-                    tnb = tt.number
-                    for idxx, nb in enumerate(report_nb):
-                        if tnb == nb:
-                            widths[idxx].append(tt.total_width)
-            print("--- {} seconds ---".format(time.time() - start_time))
-            for idx, ttt in enumerate(widths):
-                plt.subplot(3, 1, idx + 1)
-                plt.hist(ttt)
-                plt.title('trial {}'.format(report_nb[idx]))
+    ll = a_ll[0]
 
-            # idx = 3 * jjj + kkk + 1
-            # plt.subplot(3, 3, idx)
-            # trial_num = 0
-            # for t in sim_trials:
-            #     trial_num += 1
-            #     for g_intvl in t.admissible_gammas:
-            #         plt.plot([trial_num, trial_num], [g_intvl['interval'][0], g_intvl['interval'][1]], 'b-')
-            # plt.plot([1, len(sim_trials)], [true_g, true_g], 'r-')
-            # plt.ylabel('admissible gamma')
-            # plt.xlabel('Trial')
-            # title_string = 'S = %f; h_low = %i' % (S, ll)
-            # plt.title(title_string)
+    start_time = time.time()
+
+    S = a_S[0]
+    true_g = a_gamma[0]
+    lh = get_lambda_high(ll, S)
+    num_run = 1000
+    report_nb = [1, 50, 100, 150]
+    widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+    for run_nb in range(num_run):
+        print('\n ///////////////////')
+        print('run {}'.format(run_nb + 1))
+        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False)
+        for sim_trial in sim_trials:
+            tnb = sim_trial.number
+            for idxx, nb in enumerate(report_nb):
+                if tnb == nb:
+                    widths[idxx].append(sim_trial.total_width)
+    print("--- {} seconds ---".format(time.time() - start_time))
+    for idx, ttt in enumerate(widths):
+        plt.subplot(4, 1, idx + 1)
+        plt.hist(ttt)
+        plt.title('trial {}'.format(report_nb[idx]))
+        if idx == len(report_nb) - 1:
+            plt.xlabel('total width')
 
     # plt.show()
     plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
