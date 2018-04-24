@@ -371,7 +371,9 @@ if __name__ == '__main__':
             report_nb = [1, 25, 50]
             widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
             for run_nb in range(num_run):
-                sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False)
+                print('\n ///////////////////')
+                print('run {}'.format(run_nb+1))
+                sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=True)
                 for tt in sim_trials:
                     tnb = tt.number - 1
                     for idxx, nb in enumerate(report_nb):
@@ -397,7 +399,7 @@ if __name__ == '__main__':
             # plt.title(title_string)
 
     # plt.show()
-    plt.savefig('/home/radillo/Pictures/simulations/HISTS.png', bbox_inches='tight')
+    plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
     if len(sys.argv) > 1:
         filename = 'report{}'.format(sys.argv[1])
         plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
