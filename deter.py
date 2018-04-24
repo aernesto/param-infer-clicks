@@ -121,12 +121,14 @@ class Trial:
             nan = np.isnan(g)
             if (lower_bound is None) and nan:
                 continue
+            elif g <= last_up:
+                continue
             elif lower_bound is None:
                 nlb = g - self.tolerance_gamma
-                if nlb >= last_lower_bound:
+                if nlb >= max(last_lower_bound, last_up):
                     lower_bound = nlb
                 else:
-                    lower_bound = last_lower_bound
+                    lower_bound = max(last_lower_bound, last_up)
                 # for debug purposes
                 if lower_bound < last_up:
                     print('WARNING: overlapping consecutive intervals')
@@ -359,7 +361,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    number_of_trials = 30
+    number_of_trials = 20
     for jjj in [0]:  # range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in [0]:  # range(len(a_S)):
@@ -368,21 +370,21 @@ if __name__ == '__main__':
             S = a_S[kkk]
             true_g = a_gamma[kkk]
             lh = get_lambda_high(ll, S)
-            num_run = 250
-            report_nb = [1, 25, 50]
+            num_run = 200
+            report_nb = [1, 10, 20]
             widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
             for run_nb in range(num_run):
                 print('\n ///////////////////')
                 print('run {}'.format(run_nb+1))
                 sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=True)
                 for tt in sim_trials:
-                    tnb = tt.number - 1
+                    tnb = tt.number
                     for idxx, nb in enumerate(report_nb):
                         if tnb == nb:
                             widths[idxx].append(tt.total_width)
             print("--- {} seconds ---".format(time.time() - start_time))
             for idx, ttt in enumerate(widths):
-                plt.subplot(6, 1, idx + 1)
+                plt.subplot(3, 1, idx + 1)
                 plt.hist(ttt)
                 plt.title('trial {}'.format(report_nb[idx]))
 
