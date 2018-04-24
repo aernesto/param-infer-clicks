@@ -6,8 +6,9 @@ The script contains two types of functions.
 
 """
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.use('Agg')  # required on server to forbid X-windows usage
+import matplotlib.pyplot as plt
 import copy
 import time
 import sys
@@ -358,7 +359,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 50)  # initial interval of admissible gammas
-    number_of_trials = 50
+    number_of_trials = 30
     for jjj in [0]:  # range(len(a_ll)):
         ll = a_ll[jjj]
         for kkk in [0]:  # range(len(a_S)):
@@ -367,7 +368,7 @@ if __name__ == '__main__':
             S = a_S[kkk]
             true_g = a_gamma[kkk]
             lh = get_lambda_high(ll, S)
-            num_run = 2000
+            num_run = 250
             report_nb = [1, 25, 50]
             widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
             for run_nb in range(num_run):
