@@ -370,7 +370,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 50
+    number_of_trials = 3
 
     ll = a_ll[0]
 
@@ -379,8 +379,8 @@ if __name__ == '__main__':
     S = a_S[0]
     true_g = a_gamma[0]
     lh = get_lambda_high(ll, S)
-    num_run = 100
-    report_nb = [1, 25, 50]
+    num_run = 2
+    report_nb = [1, 2, 3]
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
         print('\n ///////////////////')
@@ -394,13 +394,13 @@ if __name__ == '__main__':
                     widths[idxx].append(sim_trial[0])
     print("--- {} seconds ---".format(time.time() - start_time))
     for idx, ttt in enumerate(widths):
-        plt.subplot(4, 1, idx + 1)
+        plt.subplot(len(report_nb), 1, idx + 1)
         plt.hist(ttt)
         plt.title('trial {}'.format(report_nb[idx]))
         if idx == len(report_nb) - 1:
             plt.xlabel('total width')
 
-    plt.show()
+    # plt.show()
     # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
     if len(sys.argv) > 1:
         filename = 'report{}'.format(sys.argv[1])
