@@ -7,7 +7,7 @@ The script contains two types of functions.
 """
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # required on server to forbid X-windows usage
+# matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import matplotlib.pyplot as plt
 import copy
 import time
@@ -317,10 +317,14 @@ def gen_stim(ct, rate_l, rate_h, dur):
 """
 
 
-def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on_the_fly=True, verbose=False,
-        independent_trials=False, global_gammas=None):
+def run(num_trials, click_rates, true_gamma, interrogation_time, hazard,
+        stim_on_the_fly=True, verbose=False, independent_trials=False, global_gammas=None,
+        report_full_list=False, report_widths=True, report_trials=None):
     # loop over trials to construct the trial-dependent list of admissible gammas
-    trial_list = []
+    if report_full_list:
+        trial_list = []
+    if report_widths:
+        trial_widths = []
     # todo: throw error if num_trials < 1
     for lll in range(num_trials):
         trial_nb = lll + 1
@@ -338,7 +342,11 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on
         trial.refine_admissible_gammas()
 
         # update global variables
-        trial_list += [trial]
+        if report_full_list:
+            trial_list += [trial]
+        if report_widths:
+            if trial_nb in report_trials:
+                trial_widths += [(trial.total_width, trial.number)]
         global_gammas = copy.deepcopy(trial.admissible_gammas)
 
         # stopping criteria in addition to reaching num_trials in the upcoming for loop
@@ -348,7 +356,10 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, stim_on
             print(message)
             print("--- %s seconds ---" % (time.time() - start_time))
             break
-    return trial_list
+    if report_full_list:
+        return trial_list
+    if report_widths:
+        return trial_widths
 
 
 if __name__ == '__main__':
@@ -359,7 +370,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 150
+    number_of_trials = 3
 
     ll = a_ll[0]
 
@@ -368,28 +379,29 @@ if __name__ == '__main__':
     S = a_S[0]
     true_g = a_gamma[0]
     lh = get_lambda_high(ll, S)
-    num_run = 1000
-    report_nb = [1, 50, 100, 150]
+    num_run = 2
+    report_nb = [1, 2, 3]
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
         print('\n ///////////////////')
         print('run {}'.format(run_nb + 1))
-        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False)
+        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False,
+                         report_full_list=False, report_widths=True, report_trials=report_nb)
         for sim_trial in sim_trials:
-            tnb = sim_trial.number
+            tnb = sim_trial[1]
             for idxx, nb in enumerate(report_nb):
                 if tnb == nb:
-                    widths[idxx].append(sim_trial.total_width)
+                    widths[idxx].append(sim_trial[0])
     print("--- {} seconds ---".format(time.time() - start_time))
     for idx, ttt in enumerate(widths):
-        plt.subplot(4, 1, idx + 1)
+        plt.subplot(len(report_nb), 1, idx + 1)
         plt.hist(ttt)
         plt.title('trial {}'.format(report_nb[idx]))
         if idx == len(report_nb) - 1:
             plt.xlabel('total width')
 
     # plt.show()
-    plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
+    # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
     if len(sys.argv) > 1:
         filename = 'report{}'.format(sys.argv[1])
         plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
