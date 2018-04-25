@@ -7,7 +7,7 @@ The script contains two types of functions.
 """
 import numpy as np
 import matplotlib
-# matplotlib.use('Agg')  # required on server to forbid X-windows usage
+matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import matplotlib.pyplot as plt
 import copy
 import time
@@ -181,11 +181,12 @@ class Trial:
         :param init_cond: initial value of accumulation variable
         :return: -1, 0 or 1 for left, undecided and right
         """
+        y = init_cond
         gammas = gammas_array.reshape((-1, 1))
 
         # right train
         right_train = self.stimulus[1].reshape((1, -1))
-        y = np.exp(gammas @ right_train).sum(axis=1)
+        y += np.exp(gammas @ right_train).sum(axis=1)
 
         # left train
         left_train = self.stimulus[0].reshape((1, -1))
@@ -370,13 +371,13 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard,
 
 if __name__ == '__main__':
     # test code for single trial
-    a_S = [.5]  # 3, 8]
-    a_gamma = [2.0848]  # 6.7457, 27.7241]  # best gamma
+    a_S = [3]  # 3, 8]
+    a_gamma = [6.7457]  # 6.7457, 27.7241]  # best gamma
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 3
+    number_of_trials = 200
 
     ll = a_ll[0]
 
@@ -385,11 +386,11 @@ if __name__ == '__main__':
     S = a_S[0]
     true_g = a_gamma[0]
     lh = get_lambda_high(ll, S)
-    num_run = 2
-    report_nb = [1, 2, 3]
+    num_run = 1000
+    report_nb = [1, 50, 100, 150, 200]
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
-        print('\n ///////////////////')
+        # print('\n ///////////////////')
         print('run {}'.format(run_nb + 1))
         sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False,
                          report_full_list=False, report_widths=True, report_trials=report_nb)
@@ -405,8 +406,8 @@ if __name__ == '__main__':
         plt.title('trial {}'.format(report_nb[idx]))
         if idx == len(report_nb) - 1:
             plt.xlabel('total width')
-
-    plt.show()
+    plt.savefig('quick2', bbox_inches='tight')
+    # plt.show()
     # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
     if len(sys.argv) > 1:
         filename = 'report{}'.format(sys.argv[1])
