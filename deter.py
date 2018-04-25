@@ -39,7 +39,7 @@ class Trial:
         self.stimulus = stimulus
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
-        self.decision = self.decide(self.true_gamma)  # -1 for left, 1 for right, 0 for undecided
+        self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas()
         else:
@@ -74,10 +74,13 @@ class Trial:
         copied_gammas = copy.deepcopy(self.admissible_gammas)
 
         for interval in copied_gammas:
-            for indx, gamma in enumerate(interval['samples']):
-                model_decision = self.decide(gamma)
-                if (model_decision != self.decision) and model_decision:
-                    interval['samples'][indx] = np.nan
+            model_decision = self.decide(interval['samples'])
+            # boolean array for nonzero decisions
+            nonzero_decisions = ~np.ma.getmask(np.ma.masked_equal(model_decision, 0))
+            # boolean array for incompatible decisions
+            incompatible_decisions = model_decision != self.decision
+            # set incompatible decisions to NaN
+            interval['samples'][np.logical_and(nonzero_decisions, incompatible_decisions)] = np.nan
         all_gammas = np.concatenate(tuple(x['samples'] for x in copied_gammas), axis=0)
         tot_samples = all_gammas.size
         if self.verbose:
@@ -171,20 +174,23 @@ class Trial:
                 print(fmt_string.format(self.number, samples.size, max_samples))
         return samples
 
-    def decide(self, discounting_rate, init_cond=0):
+    def decide(self, gammas_array, init_cond=0):
         """
         computes decision, given discounting rate
-        :param discounting_rate: linear discounting term
+        :param gammas_array: numpy n-by-1 array of linear discounting terms
         :param init_cond: initial value of accumulation variable
         :return: -1, 0 or 1 for left, undecided and right
         """
-        y = init_cond
+        gammas = gammas_array.reshape((-1, 1))
+
         # right train
-        for i in self.stimulus[1]:
-            y += np.exp(discounting_rate * i)
+        right_train = self.stimulus[1].reshape((1, -1))
+        y = np.exp(gammas @ right_train).sum(axis=1)
+
         # left train
-        for j in self.stimulus[0]:
-            y -= np.exp(discounting_rate * j)
+        left_train = self.stimulus[0].reshape((1, -1))
+        y -= np.exp(gammas @ left_train).sum(axis=1)
+
         return np.sign(y)
 
     def stopping_criterion(self, stopping_width):
@@ -400,7 +406,7 @@ if __name__ == '__main__':
         if idx == len(report_nb) - 1:
             plt.xlabel('total width')
 
-    # plt.show()
+    plt.show()
     # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
     if len(sys.argv) > 1:
         filename = 'report{}'.format(sys.argv[1])
