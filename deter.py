@@ -400,7 +400,7 @@ if __name__ == '__main__':
                     widths[idxx].append(sim_trial[0])
     print("--- {} seconds ---".format(time.time() - start_time))
     for idx, ttt in enumerate(widths):
-        plt.figure()
+        plt.figure(figsize=(4, 2))
         # plt.subplot(len(report_nb), 1, idx + 1)
         plt.hist(ttt, bins='auto', density=True)
         plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
