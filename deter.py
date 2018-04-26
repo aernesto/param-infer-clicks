@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import copy
 import time
 import sys
+import h5py
 
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
@@ -320,6 +321,10 @@ def gen_stim(ct, rate_l, rate_h, dur):
     return (np.array(left_stream), np.array(right_stream)), state[-1]
 
 
+def generate_trial_data():
+    stim_train, _ = gen_stim(gen_cp(interrogation_time, hazard), click_rates[0], click_rates[1], interrogation_time)
+
+
 """
 ----------------------------FUNCTIONS FOR PARAMETER INFERENCE
 """
@@ -370,48 +375,103 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_ra
         return trial_widths
 
 
+def create_hfd5_data_structure(file, groupname):
+    """
+    :param file: h5py.File
+    :param groupname:
+    :return: created group
+    """
+    group = file.create_group(groupname)
+    dt = h5py.special_dtype(vlen=np.dtype('f'))
+    group.create_dataset('trials', (10000, 3), maxshape=(None, 10), dtype=dt)
+    group.create_dataset('trial_info', (10000, 3), maxshape=(None, 10), dtype='i')
+    return group
+
+
 if __name__ == '__main__':
-    # test code for single trial
-    a_S = [0.5, 3, 8]
+    # Set parameters
+    a_S = [0.5, 3, 8]  # S parameter
     a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
-    init_interval = (0, 40)  # initial interval of admissible gammas
+    # init_interval = (0, 40)  # initial interval of admissible gammas
     number_of_trials = 1000
-
     ll = a_ll[1]
     S = a_S[0]
     true_g = a_gamma[0]
     start_time = time.time()
     lh = get_lambda_high(ll, S)
-    num_run = 1000
-    report_nb = np.floor(np.linspace(100, number_of_trials, 10))
-    widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-    for run_nb in range(num_run):
-        # print('\n ///////////////////')
-        # print('run {}'.format(run_nb + 1))
-        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
-                         report_full_list=False, report_widths=True, report_trials=report_nb)
-        for sim_trial in sim_trials:
-            tnb = sim_trial[1]
-            for idxx, nb in enumerate(report_nb):
-                if tnb == nb:
-                    widths[idxx].append(sim_trial[0])
-    print("--- {} seconds ---".format(time.time() - start_time))
-    for idx, ttt in enumerate(widths):
-        plt.figure(figsize=(4, 2))
-        # plt.subplot(len(report_nb), 1, idx + 1)
-        plt.hist(ttt, bins='auto', density=True)
-        plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
-        plt.title('trial {}'.format(int(report_nb[idx])))
-        plt.xlim((0,20))
-        plt.xlabel('total width')
-        plt.ylabel('density')
-        plt.tight_layout()
-        # plt.show()
-        # plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
-        plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
+
+    # # generate stimulus data and store as hdf5 file
+    # open/create file
+    filename = 'test1.h5'
+    try:
+        f = h5py.File(filename, 'r+')
+    except OSError:
+        # create file if file didn't exist
+        f = h5py.File(filename, 'a')
+        print('file created')
+    # get/create group corresponding to parameters
+    group_name = 'lr'+str(ll)+'hr'+str(lh)+'h'+str(h)+'T'+str(T)
+    if group_name in f:
+        grp = f[group_name]
+        trials_data = grp['trials']
+        info_data = grp['trial_info']
+        # todo: get version of
+        data_version = np.max(info_data[:, 2]) + 1
+    else:
+        grp = create_hfd5_data_structure(f, group_name)
+        trials_data = grp['trials']
+        info_data = grp['trial_info']
+        data_version = 1
+
+    # populate database
+    for row in range(number_of_trials):
+        # todo: check dataset is not already full. If full, resize it to add rows
+        # set version number
+        info_data[row, 2] = data_version
+
+        # generate trial
+        run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
+            report_full_list=False, report_widths=True, report_trials=report_nb)
+
+
+
+
+
+
+
+
+
+
+    # num_run = 1000
+    # report_nb = np.floor(np.linspace(100, number_of_trials, 10))
+    # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+    # for run_nb in range(num_run):
+    #     # print('\n ///////////////////')
+    #     # print('run {}'.format(run_nb + 1))
+    #     sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
+    #                      report_full_list=False, report_widths=True, report_trials=report_nb)
+    #     for sim_trial in sim_trials:
+    #         tnb = sim_trial[1]
+    #         for idxx, nb in enumerate(report_nb):
+    #             if tnb == nb:
+    #                 widths[idxx].append(sim_trial[0])
+    # print("--- {} seconds ---".format(time.time() - start_time))
+    # for idx, ttt in  enumerate(widths):
+    #     plt.figure(figsize=(4, 2))
+    #     # plt.subplot(len(report_nb), 1, idx + 1)
+    #     plt.hist(ttt, bins='auto', density=True)
+    #     plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
+    #     plt.title('trial {}'.format(int(report_nb[idx])))
+    #     plt.xlim((0,20))
+    #     plt.xlabel('total width')
+    #     plt.ylabel('density')
+    #     plt.tight_layout()
+    #     # plt.show()
+    #     # plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
+    #     plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
     # if len(sys.argv) > 1:
     #     filename = 'report{}'.format(sys.argv[1])
     #     plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
