@@ -7,7 +7,7 @@ The script contains two types of functions.
 """
 import numpy as np
 import matplotlib
-# matplotlib.use('Agg')  # required on server to forbid X-windows usage
+matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import matplotlib.pyplot as plt
 import copy
 import time
@@ -15,7 +15,7 @@ import sys
 
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
-        'size': 20}
+        'size': 22}
 
 # matplotlib.rc('font', **font)
 # from fractions import Fraction
@@ -372,23 +372,21 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_ra
 
 if __name__ == '__main__':
     # test code for single trial
-    a_S = [3]  # 3, 8]
-    a_gamma = [6.7457]  # 6.7457, 27.7241]  # best gamma
+    a_S = [0.5, 3, 8]
+    a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
     T = 2
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 100
+    number_of_trials = 1000
 
-    ll = a_ll[0]
-
-    start_time = time.time()
-
+    ll = a_ll[1]
     S = a_S[0]
     true_g = a_gamma[0]
+    start_time = time.time()
     lh = get_lambda_high(ll, S)
-    num_run = 100
-    report_nb = np.floor(np.linspace(1, number_of_trials, 5))
+    num_run = 1000
+    report_nb = np.floor(np.linspace(100, number_of_trials, 10))
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
         # print('\n ///////////////////')
@@ -407,13 +405,13 @@ if __name__ == '__main__':
         plt.hist(ttt, bins='auto', density=True)
         plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
         plt.title('trial {}'.format(int(report_nb[idx])))
-        plt.xlim(init_interval)
+        plt.xlim((0,20))
         plt.xlabel('total width')
         plt.ylabel('density')
         plt.tight_layout()
         # plt.show()
-        plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
-    # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
+        # plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
+        plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
     # if len(sys.argv) > 1:
     #     filename = 'report{}'.format(sys.argv[1])
     #     plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
