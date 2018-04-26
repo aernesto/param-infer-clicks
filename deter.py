@@ -7,15 +7,15 @@ The script contains two types of functions.
 """
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # required on server to forbid X-windows usage
+# matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import matplotlib.pyplot as plt
 import copy
 import time
 import sys
 
-# font = {'family': 'DejaVu Sans',
-#         'weight': 'bold',
-#         'size': 16}
+font = {'family': 'DejaVu Sans',
+        'weight': 'bold',
+        'size': 20}
 
 # matplotlib.rc('font', **font)
 # from fractions import Fraction
@@ -27,7 +27,8 @@ import sys
 
 
 class Trial:
-    def __init__(self, stimulus, gamma, trial_number, init_gammas=None, tolerance=.05, verbose=False):
+    def __init__(self, stimulus, gamma, trial_number, init_gammas=None, init_gamma_range=(0, 40),
+                 tolerance=.05, verbose=False):
         """
         :param stimulus: 2-tuple of click trains (left, right)
         :param gamma: true gamma with which decision data should be computed
@@ -41,7 +42,7 @@ class Trial:
         self.tolerance_gamma = tolerance
         self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
         if init_gammas is None:
-            self.admissible_gammas = self.gen_init_gammas()
+            self.admissible_gammas = self.gen_init_gammas(init_gamma_range)
         else:
             self.admissible_gammas = init_gammas
         self.refined = False  # True if self.refine_admissible_gammas() has been called
@@ -65,7 +66,7 @@ class Trial:
             print('nan values {}'.format(sum(np.isnan(tn['samples']))))
         print('----------------------------------------')
 
-    def gen_init_gammas(self, interval=(0, 50)):
+    def gen_init_gammas(self, interval):
         return [{'interval': interval, 'samples': self.gen_sample_gammas(interval)}]
 
     def refine_admissible_gammas(self):
@@ -324,7 +325,7 @@ def gen_stim(ct, rate_l, rate_h, dur):
 """
 
 
-def run(num_trials, click_rates, true_gamma, interrogation_time, hazard,
+def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_range,
         stim_on_the_fly=True, verbose=False, independent_trials=False, global_gammas=None,
         report_full_list=False, report_widths=True, report_trials=None):
     # loop over trials to construct the trial-dependent list of admissible gammas
@@ -341,7 +342,7 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard,
 
         # generate trial and decision
         if lll == 0 or independent_trials:
-            trial = Trial(stim_train, true_gamma, trial_nb, verbose=verbose)
+            trial = Trial(stim_train, true_gamma, trial_nb, verbose=verbose, init_gamma_range=init_range)
         else:
             trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=verbose)
 
@@ -377,7 +378,7 @@ if __name__ == '__main__':
     h = 1
     a_ll = [30, 15, 1]  # low click rate
     init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 200
+    number_of_trials = 100
 
     ll = a_ll[0]
 
@@ -386,13 +387,13 @@ if __name__ == '__main__':
     S = a_S[0]
     true_g = a_gamma[0]
     lh = get_lambda_high(ll, S)
-    num_run = 1000
-    report_nb = [1, 50, 100, 150, 200]
+    num_run = 100
+    report_nb = np.floor(np.linspace(1, number_of_trials, 5))
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
         # print('\n ///////////////////')
-        print('run {}'.format(run_nb + 1))
-        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, verbose=False,
+        # print('run {}'.format(run_nb + 1))
+        sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
                          report_full_list=False, report_widths=True, report_trials=report_nb)
         for sim_trial in sim_trials:
             tnb = sim_trial[1]
@@ -401,14 +402,18 @@ if __name__ == '__main__':
                     widths[idxx].append(sim_trial[0])
     print("--- {} seconds ---".format(time.time() - start_time))
     for idx, ttt in enumerate(widths):
-        plt.subplot(len(report_nb), 1, idx + 1)
-        plt.hist(ttt)
-        plt.title('trial {}'.format(report_nb[idx]))
-        if idx == len(report_nb) - 1:
-            plt.xlabel('total width')
-    plt.savefig('quick2', bbox_inches='tight')
-    # plt.show()
+        plt.figure()
+        # plt.subplot(len(report_nb), 1, idx + 1)
+        plt.hist(ttt, bins='auto', density=True)
+        plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
+        plt.title('trial {}'.format(int(report_nb[idx])))
+        plt.xlim(init_interval)
+        plt.xlabel('total width')
+        plt.ylabel('density')
+        plt.tight_layout()
+        # plt.show()
+        plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
     # plt.savefig('/scratch/adrian/HISTS.png', bbox_inches='tight')
-    if len(sys.argv) > 1:
-        filename = 'report{}'.format(sys.argv[1])
-        plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
+    # if len(sys.argv) > 1:
+    #     filename = 'report{}'.format(sys.argv[1])
+    #     plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
