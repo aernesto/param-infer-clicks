@@ -98,7 +98,7 @@ class Trial:
         self.refined = True
 
     def get_total_width(self):
-        return sum([x['interval'][1]-x['interval'][0] for x in self.admissible_gammas])
+        return sum([x['interval'][1] - x['interval'][0] for x in self.admissible_gammas])
 
     def reconstruct_admissible_gammas(self, intervals):
         interval_list = []
@@ -385,19 +385,21 @@ def create_hfd5_data_structure(file, groupname, num_trials):
     return group
 
 
-def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
+def build_group_name(four_p):
+    """
+    :param four_p: (low click rate, high click rate, hazard rate, interrogation time)
+    :return: string
+    """
+    return 'lr' + str(four_p[0]) + 'hr' + str(four_p[1]) + 'h' + str(four_p[2]) + 'T' + str(four_p[3])
+
+
+def populate_hfd5_db(fname, four_par, num_of_trials):
     """generate stimulus data and store as hdf5 file"""
     # open/create file
-    f = h5py.File(filename, 'a')
-    # try:
-    #     f = h5py.File(filename, 'r+', swmr=True)
-    # except OSError:
-    #     # create file if file didn't exist
-    #     f = h5py.File(filename, 'a', swmr=True)
-    #     print('file created')
-
+    f = h5py.File(fname, 'a')
+    ll, lh, h, t = four_par
     # get/create group corresponding to parameters
-    group_name = 'lr'+str(ll)+'hr'+str(lh)+'h'+str(h)+'T'+str(T)
+    group_name = build_group_name((ll, lh, h, t))
     if group_name in f:  # if dataset already exists, only expand it with new data
         grp = f[group_name]
 
@@ -407,7 +409,7 @@ def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
 
         # resizing operation before inserting new data:
         old_size = trials_data.len()
-        new_size = old_size + number_of_trials
+        new_size = old_size + num_of_trials
         trials_data.resize(new_size, axis=0)
         info_data.resize(new_size, axis=0)
 
@@ -417,30 +419,30 @@ def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
         # version number of new data to insert
         data_version = info_data.attrs['last_version'] + 1
     else:  # if dataset doesn't exist, create it
-        grp = create_hfd5_data_structure(f, group_name, number_of_trials)
+        grp = create_hfd5_data_structure(f, group_name, num_of_trials)
 
         # get trials dataset
         trials_data = grp['trials']
         # get row indices of new data to insert
-        row_indices = np.r_[:number_of_trials]
+        row_indices = np.r_[:num_of_trials]
 
         # create info on data
         info_data = grp['trial_info']  # info dataset
         info_data.attrs['h'] = h
-        info_data.attrs['T'] = T
+        info_data.attrs['T'] = t
         info_data.attrs['low_click_rate'] = ll
         info_data.attrs['high_click_rate'] = lh
-        info_data.attrs['S'] = (lh-ll) / np.sqrt(ll+lh)
+        info_data.attrs['S'] = (lh - ll) / np.sqrt(ll + lh)
         data_version = 1  # version number of new data to insert
 
     # populate database
     for row_idx in row_indices:
         # vector of CP times
-        cptimes = gen_cp(T, h)
+        cptimes = gen_cp(t, h)
         trials_data[row_idx, 2] = cptimes
 
         # stimulus (left clicks, right clicks)
-        (left_clicks, right_clicks), init_state, end_state = gen_stim(cptimes, ll, lh, T)
+        (left_clicks, right_clicks), init_state, end_state = gen_stim(cptimes, ll, lh, t)
         trials_data[row_idx, :2] = left_clicks, right_clicks
 
         # populate info dataset
@@ -451,6 +453,36 @@ def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
     f.close()
 
 
+def get_best_gamma(ratio_rates, h, polyfit=False):
+    if polyfit:
+        snr = ratio_rates / np.sqrt(h)
+        return 1.45333 + 0.670241 * snr + 0.34324 * (snr ** 2) - 0.00275835 * (snr ** 3)
+    else:
+        corr = {'gamma': np.array([2.0848, 2.5828, 3.3143, 4.2789, 5.4162, 6.7457, 8.1371, 9.7199,
+                                   11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
+                                   27.7241, 30.5711, 33.5354, 36.7966, 40.3143]),
+                'S/h': np.arange(0.5, 10.1, 0.5)}
+        idx = np.where(corr['S/h'] == ratio_rates)[0][0]
+        return corr['gamma'][idx]
+
+
+def update_decision_data(file_name, model, group_name):
+    """
+    :param file_name: file name (string)
+    :param model: string, either 'lin' or 'nonlin'
+    :param group_name: group object from h5py module
+    :return:
+    """
+    f = h5py.File(file_name, 'a')
+    group = f[group_name]
+    dec_dataset_name = group_name + '/' + 'decision' + model
+    # check whether decision dataset exists
+    if dec_dataset_name in group:
+        # update
+    else:
+        # create
+
+
 if __name__ == '__main__':
     # parameter vectors
     a_S = [0.5, 3, 8]  # S parameter
@@ -458,17 +490,22 @@ if __name__ == '__main__':
     a_ll = [30, 15, 1]  # low click rate
 
     # scalar parameters
-    T = 2
-    h = 1
+    int_time = 2
+    hazard = 1
     number_of_trials = 2
     S = a_S[0]
-    ll = a_ll[1]  # low click rate
-    lh = get_lambda_high(ll, S)
-    true_g = a_gamma[0]
+    lambda_low = a_ll[1]  # low click rate
+    lambda_high = get_lambda_high(lambda_low, S)
+    four_params = (lambda_low, lambda_high, hazard, int_time)
+    true_g = get_best_gamma(S, hazard)
     start_time = time.time()
 
     filename = 'test2.h5'
-    populate_hfd5_db(filename, ll, lh, h, T, number_of_trials)
+    # populate_hfd5_db(filename, four_params, number_of_trials)
+
+    # create response datasets for best linear and nonlinear models
+    update_decision_data(filename, 'lin', build_group_name(four_params))
+
     print("--- {} seconds ---".format(time.time() - start_time))
     # num_run = 1000
     # report_nb = np.floor(np.linspace(100, number_of_trials, 10))
