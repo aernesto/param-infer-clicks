@@ -385,33 +385,37 @@ def create_hfd5_data_structure(file, groupname, num_trials):
     return group
 
 
-def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials ):
+def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
     """generate stimulus data and store as hdf5 file"""
     # open/create file
-
-    try:
-        f = h5py.File(filename, 'r+', swmr=True)
-    except OSError:
-        # create file if file didn't exist
-        f = h5py.File(filename, 'a', swmr=True)
-        print('file created')
+    f = h5py.File(filename, 'a', swmr=True)
+    # try:
+    #     f = h5py.File(filename, 'r+', swmr=True)
+    # except OSError:
+    #     # create file if file didn't exist
+    #     f = h5py.File(filename, 'a', swmr=True)
+    #     print('file created')
 
     # get/create group corresponding to parameters
     group_name = 'lr'+str(ll)+'hr'+str(lh)+'h'+str(h)+'T'+str(T)
     if group_name in f:  # if dataset already exists, only expand it with new data
         grp = f[group_name]
 
-        # get trials dataset
+        # get datasets
         trials_data = grp['trials']
+        info_data = grp['trial_info']
+
+        # resizing operation before inserting new data:
         old_size = trials_data.len()
         new_size = old_size + number_of_trials
-        # resizing operation before inserting new data:
         trials_data.resize(new_size, axis=0)
+        info_data.resize(new_size, axis=0)
+
         # get row indices of new data to insert
         row_indices = np.r_[old_size:new_size]
 
-        info_data = grp['trial_info']  # info dataset
-        data_version = info_data.attrs['last_version'] + 1  # version number of new data to insert
+        # version number of new data to insert
+        data_version = info_data.attrs['last_version'] + 1
     else:  # if dataset doesn't exist, create it
         grp = create_hfd5_data_structure(f, group_name, number_of_trials)
 
@@ -443,6 +447,8 @@ def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials ):
         info_data[row_idx, :] = init_state, end_state, data_version
 
     info_data.attrs['last_version'] = data_version
+    f.flush()
+    f.close()
 
 
 if __name__ == '__main__':
@@ -461,7 +467,7 @@ if __name__ == '__main__':
     true_g = a_gamma[0]
     start_time = time.time()
 
-    filename = 'test1.h5'
+    filename = 'test2.h5'
     populate_hfd5_db(filename, ll, lh, h, T, number_of_trials)
     print("--- {} seconds ---".format(time.time() - start_time))
     # num_run = 1000
