@@ -318,11 +318,7 @@ def gen_stim(ct, rate_l, rate_h, dur):
             left_stream += left_train_high
             right_stream += right_train_low
 
-    return (np.array(left_stream), np.array(right_stream)), state[-1]
-
-
-def generate_trial_data():
-    stim_train, _ = gen_stim(gen_cp(interrogation_time, hazard), click_rates[0], click_rates[1], interrogation_time)
+    return (np.array(left_stream), np.array(right_stream)), state[0], state[-1]
 
 
 """
@@ -375,76 +371,99 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_ra
         return trial_widths
 
 
-def create_hfd5_data_structure(file, groupname):
+def create_hfd5_data_structure(file, groupname, num_trials):
     """
     :param file: h5py.File
     :param groupname:
+    :param num_trials: nb of trials
     :return: created group
     """
     group = file.create_group(groupname)
     dt = h5py.special_dtype(vlen=np.dtype('f'))
-    group.create_dataset('trials', (10000, 3), maxshape=(None, 10), dtype=dt)
-    group.create_dataset('trial_info', (10000, 3), maxshape=(None, 10), dtype='i')
+    group.create_dataset('trials', (num_trials, 3), maxshape=(100000, 10), dtype=dt)
+    group.create_dataset('trial_info', (num_trials, 3), maxshape=(100000, 10), dtype='i')
     return group
 
 
-if __name__ == '__main__':
-    # Set parameters
-    a_S = [0.5, 3, 8]  # S parameter
-    a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
-    T = 2
-    h = 1
-    a_ll = [30, 15, 1]  # low click rate
-    # init_interval = (0, 40)  # initial interval of admissible gammas
-    number_of_trials = 1000
-    ll = a_ll[1]
-    S = a_S[0]
-    true_g = a_gamma[0]
-    start_time = time.time()
-    lh = get_lambda_high(ll, S)
-
-    # # generate stimulus data and store as hdf5 file
+def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials ):
+    """generate stimulus data and store as hdf5 file"""
     # open/create file
-    filename = 'test1.h5'
+
     try:
-        f = h5py.File(filename, 'r+')
+        f = h5py.File(filename, 'r+', swmr=True)
     except OSError:
         # create file if file didn't exist
-        f = h5py.File(filename, 'a')
+        f = h5py.File(filename, 'a', swmr=True)
         print('file created')
+
     # get/create group corresponding to parameters
     group_name = 'lr'+str(ll)+'hr'+str(lh)+'h'+str(h)+'T'+str(T)
-    if group_name in f:
+    if group_name in f:  # if dataset already exists, only expand it with new data
         grp = f[group_name]
+
+        # get trials dataset
         trials_data = grp['trials']
-        info_data = grp['trial_info']
-        # todo: get version of
-        data_version = np.max(info_data[:, 2]) + 1
-    else:
-        grp = create_hfd5_data_structure(f, group_name)
+        old_size = trials_data.len()
+        new_size = old_size + number_of_trials
+        # resizing operation before inserting new data:
+        trials_data.resize(new_size, axis=0)
+        # get row indices of new data to insert
+        row_indices = np.r_[old_size:new_size]
+
+        info_data = grp['trial_info']  # info dataset
+        data_version = info_data.attrs['last_version'] + 1  # version number of new data to insert
+    else:  # if dataset doesn't exist, create it
+        grp = create_hfd5_data_structure(f, group_name, number_of_trials)
+
+        # get trials dataset
         trials_data = grp['trials']
-        info_data = grp['trial_info']
-        data_version = 1
+        # get row indices of new data to insert
+        row_indices = np.r_[:number_of_trials]
+
+        # create info on data
+        info_data = grp['trial_info']  # info dataset
+        info_data.attrs['h'] = h
+        info_data.attrs['T'] = T
+        info_data.attrs['low_click_rate'] = ll
+        info_data.attrs['high_click_rate'] = lh
+        info_data.attrs['S'] = (lh-ll) / np.sqrt(ll+lh)
+        data_version = 1  # version number of new data to insert
 
     # populate database
-    for row in range(number_of_trials):
-        # todo: check dataset is not already full. If full, resize it to add rows
-        # set version number
-        info_data[row, 2] = data_version
+    for row_idx in row_indices:
+        # vector of CP times
+        cptimes = gen_cp(T, h)
+        trials_data[row_idx, 2] = cptimes
 
-        # generate trial
-        run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
-            report_full_list=False, report_widths=True, report_trials=report_nb)
+        # stimulus (left clicks, right clicks)
+        (left_clicks, right_clicks), init_state, end_state = gen_stim(cptimes, ll, lh, T)
+        trials_data[row_idx, :2] = left_clicks, right_clicks
 
+        # populate info dataset
+        info_data[row_idx, :] = init_state, end_state, data_version
 
-
-
-
-
-
+    info_data.attrs['last_version'] = data_version
 
 
+if __name__ == '__main__':
+    # parameter vectors
+    a_S = [0.5, 3, 8]  # S parameter
+    a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
+    a_ll = [30, 15, 1]  # low click rate
 
+    # scalar parameters
+    T = 2
+    h = 1
+    number_of_trials = 2
+    S = a_S[0]
+    ll = a_ll[1]  # low click rate
+    lh = get_lambda_high(ll, S)
+    true_g = a_gamma[0]
+    start_time = time.time()
+
+    filename = 'test1.h5'
+    populate_hfd5_db(filename, ll, lh, h, T, number_of_trials)
+    print("--- {} seconds ---".format(time.time() - start_time))
     # num_run = 1000
     # report_nb = np.floor(np.linspace(100, number_of_trials, 10))
     # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
@@ -458,7 +477,7 @@ if __name__ == '__main__':
     #         for idxx, nb in enumerate(report_nb):
     #             if tnb == nb:
     #                 widths[idxx].append(sim_trial[0])
-    # print("--- {} seconds ---".format(time.time() - start_time))
+    #
     # for idx, ttt in  enumerate(widths):
     #     plt.figure(figsize=(4, 2))
     #     # plt.subplot(len(report_nb), 1, idx + 1)
