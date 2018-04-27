@@ -388,7 +388,7 @@ def create_hfd5_data_structure(file, groupname, num_trials):
 def populate_hfd5_db(filename, ll, lh, h, T, number_of_trials):
     """generate stimulus data and store as hdf5 file"""
     # open/create file
-    f = h5py.File(filename, 'a', swmr=True)
+    f = h5py.File(filename, 'a')
     # try:
     #     f = h5py.File(filename, 'r+', swmr=True)
     # except OSError:
