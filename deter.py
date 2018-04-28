@@ -517,18 +517,20 @@ if __name__ == '__main__':
     int_time = 2
     hazard = 1
     number_of_trials = 2
-    S = a_S[1]
+    # S = a_S[2]
     lambda_low = a_ll[1]  # low click rate
-    lambda_high = get_lambda_high(lambda_low, S)
-    four_params = (lambda_low, lambda_high, hazard, int_time)
-    true_g = get_best_gamma(S, hazard)
+    # lambda_high = get_lambda_high(lambda_low, S)
+    # four_params = (lambda_low, lambda_high, hazard, int_time)
+    # true_g = get_best_gamma(S, hazard)
     start_time = time.time()
 
-    filename = 'test2.h5'
+    filename = 'data/test.h5'
     # populate_hfd5_db(filename, four_params, number_of_trials)
 
     # create response datasets for best linear and nonlinear models
-    update_decision_data(filename, 'lin', build_group_name(four_params))
+    for S in a_S:
+        four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+        update_decision_data(filename, 'lin', build_group_name(four_params))
 
     print("--- {} seconds ---".format(time.time() - start_time))
     # num_run = 1000
