@@ -29,7 +29,7 @@ font = {'family': 'DejaVu Sans',
 
 class Trial:
     def __init__(self, stimulus, gamma, trial_number, init_gammas=None, init_gamma_range=(0, 40),
-                 tolerance=.05, verbose=False):
+                 tolerance=.05, verbose=False, hazard_rate=1):
         """
         :param stimulus: 2-tuple of click trains (left, right)
         :param gamma: true gamma with which decision data should be computed
@@ -42,6 +42,7 @@ class Trial:
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
         self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
+        self.nonlin_dec = None  # todo: improve this
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas(init_gamma_range)
         else:
@@ -178,7 +179,7 @@ class Trial:
 
     def decide(self, gammas_array, init_cond=0):
         """
-        computes decision, given discounting rate
+        computes decision using the linear model
         :param gammas_array: numpy n-by-1 array of linear discounting terms
         :param init_cond: initial value of accumulation variable
         :return: -1, 0 or 1 for left, undecided and right
@@ -326,7 +327,7 @@ def gen_stim(ct, rate_l, rate_h, dur):
 """
 
 
-def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_range,
+def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, init_range,
         stim_on_the_fly=True, verbose=False, independent_trials=False, global_gammas=None,
         report_full_list=False, report_widths=True, report_trials=None):
     # loop over trials to construct the trial-dependent list of admissible gammas
@@ -338,7 +339,7 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard, init_ra
     for lll in range(num_trials):
         trial_nb = lll + 1
         if stim_on_the_fly:
-            stim_train, _ = gen_stim(gen_cp(interrogation_time, hazard), click_rates[0], click_rates[1],
+            stim_train, _, _ = gen_stim(gen_cp(interrogation_time, hazard_rate), click_rates[0], click_rates[1],
                                      interrogation_time)
 
         # generate trial and decision
@@ -475,12 +476,35 @@ def update_decision_data(file_name, model, group_name):
     """
     f = h5py.File(file_name, 'a')
     group = f[group_name]
-    dec_dataset_name = group_name + '/' + 'decision' + model
+    info_dset = group['trial_info']
+    trials_dset = group['trials']
+    num_trials = trials_dset.shape[0]
+    dset_name = 'decision_' + model
     # check whether decision dataset exists
-    if dec_dataset_name in group:
-        # update
+    if dset_name in group:
+        dset = group[dset_name]
+        dset_length = dset.shape[0]
+        # resize for new data
+        if dset_length < num_trials:
+            dset.resize(num_trials, axis=0)
+            row_indices = np.arange(dset_length, num_trials)
+        else:
+            return
     else:
         # create
+        dset = group.create_dataset(dset_name, (num_trials, ), dtype='i', maxshape=(100000, ))
+        row_indices = np.arange(num_trials)
+    # store best gamma as attribute for future reference
+    best_gamma = get_best_gamma(round(info_dset.attrs['S'], 4), 1)
+    dset.attrs['best_gamma'] = best_gamma
+    # populate dataset
+    for row_idx in row_indices:
+        # get trial object
+        stim = tuple(trials_dset[row_idx, :2])
+        trial = Trial(stim, best_gamma, row_idx + 1)
+        dset[row_idx] = trial.decision
+    f.flush()
+    f.close()
 
 
 if __name__ == '__main__':
@@ -493,7 +517,7 @@ if __name__ == '__main__':
     int_time = 2
     hazard = 1
     number_of_trials = 2
-    S = a_S[0]
+    S = a_S[1]
     lambda_low = a_ll[1]  # low click rate
     lambda_high = get_lambda_high(lambda_low, S)
     four_params = (lambda_low, lambda_high, hazard, int_time)
