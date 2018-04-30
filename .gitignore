@@ -102,3 +102,4 @@ ENV/
 .idea/*
 *.h5
 data/*
+logs/*
