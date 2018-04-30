@@ -580,9 +580,9 @@ if __name__ == '__main__':
     populate_hfd5_db(filename, four_params, 90000)
 
     # create response datasets for best linear and nonlinear models
-    # for S in a_S:
-    #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
-    update_decision_data(filename, 'lin', build_group_name(four_params))
+    for S in a_S:
+        four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+        update_decision_data(filename, 'lin', build_group_name(four_params))
 
   #  num_run = 500
    # number_of_trials = 40
