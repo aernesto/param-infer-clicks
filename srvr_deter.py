@@ -569,19 +569,22 @@ if __name__ == '__main__':
     int_time = 2
     hazard = 1
 
-    S = a_S[2]
+    S = a_S[1]
     lambda_low = a_ll[1]  # low click rate
     lambda_high = get_lambda_high(lambda_low, S)
     four_params = (lambda_low, lambda_high, hazard, int_time)
     true_g = get_best_gamma(S, hazard)
     start_time = time.time()
 
-    filename = '/scratch/adrian/srvr_data_2.h5'
-    populate_hfd5_db(filename, four_params, 90000)
+    filename = '/scratch/adrian/srvr_data_3.h5'
+    populate_hfd5_db(filename, four_params, 50000)
+    update_decision_data(filename, 'lin', four_params)
 
     # create response datasets for best linear and nonlinear models
+    lambda_low = a_ll[2]
     for S in a_S:
         four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+        populate_hfd5_db(filename, four_params, 100000)
         update_decision_data(filename, 'lin', build_group_name(four_params))
 
   #  num_run = 500
