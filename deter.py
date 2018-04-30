@@ -29,7 +29,7 @@ font = {'family': 'DejaVu Sans',
 
 class Trial:
     def __init__(self, stimulus, gamma, trial_number, init_gammas=None, init_gamma_range=(0, 40),
-                 tolerance=.05, verbose=False, hazard_rate=1):
+                 tolerance=.05, verbose=False, hazard_rate=1, decision_datum=None):
         """
         :param stimulus: 2-tuple of click trains (left, right)
         :param gamma: true gamma with which decision data should be computed
@@ -41,7 +41,10 @@ class Trial:
         self.stimulus = stimulus
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
-        self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
+        if decision_datum is None:
+            self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
+        else:
+            self.decision = decision_datum
         self.nonlin_dec = None  # todo: improve this
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas(init_gamma_range)
@@ -329,24 +332,44 @@ def gen_stim(ct, rate_l, rate_h, dur):
 
 def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, init_range,
         stim_on_the_fly=True, verbose=False, independent_trials=False, global_gammas=None,
-        report_full_list=False, report_widths=True, report_trials=None):
+        report_full_list=False, report_widths=True, report_trials=None, file_name=None):
     # loop over trials to construct the trial-dependent list of admissible gammas
     if report_full_list:
         trial_list = []
     if report_widths:
         trial_widths = []
     # todo: throw error if num_trials < 1
+    if num_trials < 1:
+        print('num_trials should be >= 1')
+        return
+    if not stim_on_the_fly:
+        # prepare DB
+        f = h5py.File(file_name, 'r')
+        group_name = build_group_name((click_rates[0], click_rates[1], hazard_rate, interrogation_time))
+        data_trials = f[group_name + '/trials']
+        data_info = f[group_name + '/trial_info']
+        data_dec = f[group_name + '/decision_lin']
     for lll in range(num_trials):
         trial_nb = lll + 1
         if stim_on_the_fly:
             stim_train, _, _ = gen_stim(gen_cp(interrogation_time, hazard_rate), click_rates[0], click_rates[1],
                                      interrogation_time)
-
-        # generate trial and decision
-        if lll == 0 or independent_trials:
-            trial = Trial(stim_train, true_gamma, trial_nb, verbose=verbose, init_gamma_range=init_range)
+            # generate trial and decision
+            if lll == 0 or independent_trials:
+                trial = Trial(stim_train, true_gamma, trial_nb, verbose=verbose, init_gamma_range=init_range)
+            else:
+                trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=verbose)
         else:
-            trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=verbose)
+            # read trial from db
+            stim_train = tuple(data_trials[lll, :2])
+            decision_value = data_dec[lll]
+            # generate trial and decision
+            if lll == 0 or independent_trials:
+                trial = Trial(stim_train, true_gamma, trial_nb, decision_datum=decision_value,
+                              verbose=verbose, init_gamma_range=init_range)
+            else:
+                trial = Trial(stim_train, true_gamma, trial_nb, decision_datum=decision_value,
+                              init_gammas=global_gammas, verbose=verbose)
 
         # test gamma samples and refine admissible interval
         trial.refine_admissible_gammas()
@@ -364,7 +387,6 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
         stop_loop, message = trial.stopping_criterion(1.01 * trial.tolerance_gamma)
         if stop_loop:
             print(message)
-            print("--- %s seconds ---" % (time.time() - start_time))
             break
     if report_full_list:
         return trial_list
@@ -516,36 +538,40 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-    number_of_trials = 2
-    # S = a_S[2]
+
+    S = a_S[2]
     lambda_low = a_ll[1]  # low click rate
-    # lambda_high = get_lambda_high(lambda_low, S)
-    # four_params = (lambda_low, lambda_high, hazard, int_time)
-    # true_g = get_best_gamma(S, hazard)
+    lambda_high = get_lambda_high(lambda_low, S)
+    four_params = (lambda_low, lambda_high, hazard, int_time)
+    true_g = get_best_gamma(S, hazard)
     start_time = time.time()
 
     filename = 'data/test.h5'
     # populate_hfd5_db(filename, four_params, number_of_trials)
 
     # create response datasets for best linear and nonlinear models
-    for S in a_S:
-        four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
-        update_decision_data(filename, 'lin', build_group_name(four_params))
+    # for S in a_S:
+    #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+    #     update_decision_data(filename, 'lin', build_group_name(four_params))
 
+    num_run = 20
+    number_of_trials = 20
+    report_nb = np.floor(np.linspace(1, number_of_trials, 5))
+    init_interval = (0, 40)
+    widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+    for run_nb in range(num_run):
+        # print('\n ///////////////////')
+        # print('run {}'.format(run_nb + 1))
+        sim_trials = run(number_of_trials, (lambda_low, lambda_high),
+                         true_g, int_time, hazard, init_interval,
+                         verbose=False, stim_on_the_fly=False, file_name=filename,
+                         report_full_list=False, report_widths=True, report_trials=report_nb)
+        for sim_trial in sim_trials:
+            tnb = sim_trial[1]
+            for idxx, nb in enumerate(report_nb):
+                if tnb == nb:
+                    widths[idxx].append(sim_trial[0])
     print("--- {} seconds ---".format(time.time() - start_time))
-    # num_run = 1000
-    # report_nb = np.floor(np.linspace(100, number_of_trials, 10))
-    # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-    # for run_nb in range(num_run):
-    #     # print('\n ///////////////////')
-    #     # print('run {}'.format(run_nb + 1))
-    #     sim_trials = run(number_of_trials, (ll, lh), true_g, T, h, init_interval, verbose=False,
-    #                      report_full_list=False, report_widths=True, report_trials=report_nb)
-    #     for sim_trial in sim_trials:
-    #         tnb = sim_trial[1]
-    #         for idxx, nb in enumerate(report_nb):
-    #             if tnb == nb:
-    #                 widths[idxx].append(sim_trial[0])
     #
     # for idx, ttt in  enumerate(widths):
     #     plt.figure(figsize=(4, 2))
