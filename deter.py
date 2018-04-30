@@ -7,7 +7,7 @@ The script contains two types of functions.
 """
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # required on server to forbid X-windows usage
+# matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import matplotlib.pyplot as plt
 import copy
 import time
@@ -381,8 +381,8 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
         else:
             # read trial from db
             row_nb = lll + num_trials * run_number
-            stim_train = tuple(data_trials[lll, :2])
-            decision_value = data_dec[lll]
+            stim_train = tuple(data_trials[row_nb, :2])
+            decision_value = data_dec[row_nb]
             # generate trial and decision
             if lll == 0 or independent_trials:
                 trial = Trial(stim_train, true_gamma, trial_nb, decision_datum=decision_value,
@@ -570,7 +570,7 @@ if __name__ == '__main__':
     hazard = 1
 
     S = a_S[0]
-    lambda_low = a_ll[1]  # low click rate
+    lambda_low = a_ll[2]  # low click rate
     lambda_high = get_lambda_high(lambda_low, S)
     four_params = (lambda_low, lambda_high, hazard, int_time)
     true_g = get_best_gamma(S, hazard)
@@ -615,7 +615,7 @@ if __name__ == '__main__':
         plt.ylabel('density')
         plt.tight_layout()
     # plt.show()
-        plt.savefig('/home/radillo/Pictures/simulations/THREE_from_db{}.svg'.format(idx), bbox_inches='tight')
+        plt.savefig('/home/radillo/Pictures/simulations/PPPP_02{}.svg'.format(idx), bbox_inches='tight')
         # plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
     # if len(sys.argv) > 1:
     #     filename = 'report{}'.format(sys.argv[1])
