@@ -332,7 +332,26 @@ def gen_stim(ct, rate_l, rate_h, dur):
 
 def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, init_range,
         stim_on_the_fly=True, verbose=False, independent_trials=False, global_gammas=None,
-        report_full_list=False, report_widths=True, report_trials=None, file_name=None):
+        report_full_list=False, report_widths=True, report_trials=None, file_name=None,
+        run_number=None, swmr=False):
+    """
+    :param num_trials: number of trials in the run
+    :param click_rates:
+    :param true_gamma:
+    :param interrogation_time:
+    :param hazard_rate:
+    :param init_range: init interval of admissible gammas
+    :param stim_on_the_fly: reads from db if false
+    :param verbose:
+    :param independent_trials: if false, passes the admissible gammas recursively
+    :param global_gammas:
+    :param report_full_list:
+    :param report_widths: for hists
+    :param report_trials:
+    :param file_name: file name for hfd5 db
+    :param run_number: starts at 0
+    :return:
+    """
     # loop over trials to construct the trial-dependent list of admissible gammas
     if report_full_list:
         trial_list = []
@@ -344,7 +363,7 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
         return
     if not stim_on_the_fly:
         # prepare DB
-        f = h5py.File(file_name, 'r')
+        f = h5py.File(file_name, 'r', swmr=swmr)
         group_name = build_group_name((click_rates[0], click_rates[1], hazard_rate, interrogation_time))
         data_trials = f[group_name + '/trials']
         data_info = f[group_name + '/trial_info']
@@ -361,6 +380,7 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
                 trial = Trial(stim_train, true_gamma, trial_nb, init_gammas=global_gammas, verbose=verbose)
         else:
             # read trial from db
+            row_nb = lll + num_trials * run_number
             stim_train = tuple(data_trials[lll, :2])
             decision_value = data_dec[lll]
             # generate trial and decision
@@ -388,6 +408,8 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
         if stop_loop:
             print(message)
             break
+    if not stim_on_the_fly:
+        f.close()
     if report_full_list:
         return trial_list
     if report_widths:
@@ -529,17 +551,25 @@ def update_decision_data(file_name, model, group_name):
     f.close()
 
 
+def dump_info(four_parameters, s):
+    print('S value: {}'.format(s))
+    print('low click rate: {}'.format(four_parameters[0]))
+    print('high click rate: {}'.format(four_parameters[1]))
+    print('hazard rate: {}'.format(four_parameters[2]))
+    print('interr. time: {}'.format(four_parameters[3]))
+
+
 if __name__ == '__main__':
     # parameter vectors
     a_S = [0.5, 3, 8]  # S parameter
-    a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
+    # a_gamma = [2.0848, 6.7457, 27.7241]  # best gamma
     a_ll = [30, 15, 1]  # low click rate
 
     # scalar parameters
     int_time = 2
     hazard = 1
 
-    S = a_S[2]
+    S = a_S[0]
     lambda_low = a_ll[1]  # low click rate
     lambda_high = get_lambda_high(lambda_low, S)
     four_params = (lambda_low, lambda_high, hazard, int_time)
@@ -554,16 +584,16 @@ if __name__ == '__main__':
     #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
     #     update_decision_data(filename, 'lin', build_group_name(four_params))
 
-    num_run = 20
-    number_of_trials = 20
-    report_nb = np.floor(np.linspace(1, number_of_trials, 5))
+    num_run = 500
+    number_of_trials = 40
+    report_nb = np.floor(np.linspace(1, number_of_trials, 4))
     init_interval = (0, 40)
     widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
     for run_nb in range(num_run):
         # print('\n ///////////////////')
         # print('run {}'.format(run_nb + 1))
         sim_trials = run(number_of_trials, (lambda_low, lambda_high),
-                         true_g, int_time, hazard, init_interval,
+                         true_g, int_time, hazard, init_interval, run_number=run_nb,
                          verbose=False, stim_on_the_fly=False, file_name=filename,
                          report_full_list=False, report_widths=True, report_trials=report_nb)
         for sim_trial in sim_trials:
@@ -571,21 +601,22 @@ if __name__ == '__main__':
             for idxx, nb in enumerate(report_nb):
                 if tnb == nb:
                     widths[idxx].append(sim_trial[0])
+    dump_info(four_params, S)
     print("--- {} seconds ---".format(time.time() - start_time))
     #
-    # for idx, ttt in  enumerate(widths):
-    #     plt.figure(figsize=(4, 2))
-    #     # plt.subplot(len(report_nb), 1, idx + 1)
-    #     plt.hist(ttt, bins='auto', density=True)
-    #     plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
-    #     plt.title('trial {}'.format(int(report_nb[idx])))
-    #     plt.xlim((0,20))
-    #     plt.xlabel('total width')
-    #     plt.ylabel('density')
-    #     plt.tight_layout()
-    #     # plt.show()
-    #     # plt.savefig('/home/radillo/Pictures/simulations/tmp{}.svg'.format(idx), bbox_inches='tight')
-    #     plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
+    for idx, ttt in enumerate(widths):
+        plt.figure(figsize=(6, 2.8))
+        # plt.subplot(len(report_nb), 1, idx + 1)
+        plt.hist(ttt, bins='auto', density=True)
+        plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
+        plt.title('trial {}'.format(int(report_nb[idx])))
+        plt.xlim(init_interval)
+        plt.xlabel('total width')
+        plt.ylabel('density')
+        plt.tight_layout()
+    # plt.show()
+        plt.savefig('/home/radillo/Pictures/simulations/THREE_from_db{}.svg'.format(idx), bbox_inches='tight')
+        # plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
     # if len(sys.argv) > 1:
     #     filename = 'report{}'.format(sys.argv[1])
     #     plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
