@@ -8,6 +8,7 @@ The script contains two types of functions.
 import numpy as np
 import matplotlib
 # matplotlib.use('Agg')  # required on server to forbid X-windows usage
+import pickle
 import matplotlib.pyplot as plt
 import copy
 import time
@@ -501,14 +502,15 @@ def populate_hfd5_db(fname, four_par, num_of_trials):
 def get_best_gamma(ratio_rates, h, polyfit=False):
     if polyfit:
         snr = ratio_rates / np.sqrt(h)
+        # todo: correct the flawed polynomial below
         return 1.45333 + 0.670241 * snr + 0.34324 * (snr ** 2) - 0.00275835 * (snr ** 3)
     else:
         corr = {'gamma': np.array([2.0848, 2.5828, 3.3143, 4.2789, 5.4162, 6.7457, 8.1371, 9.7199,
                                    11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
                                    27.7241, 30.5711, 33.5354, 36.7966, 40.3143]),
                 'S/h': np.arange(0.5, 10.1, 0.5)}
-        idx = np.where(corr['S/h'] == ratio_rates)[0][0]
-        return corr['gamma'][idx]
+        iddx = np.where(corr['S/h'] == ratio_rates)[0][0]
+        return corr['gamma'][iddx]
 
 
 def update_decision_data(file_name, model, group_name):
@@ -551,12 +553,14 @@ def update_decision_data(file_name, model, group_name):
     f.close()
 
 
-def dump_info(four_parameters, s):
+def dump_info(four_parameters, s, nt, nruns):
     print('S value: {}'.format(s))
     print('low click rate: {}'.format(four_parameters[0]))
     print('high click rate: {}'.format(four_parameters[1]))
     print('hazard rate: {}'.format(four_parameters[2]))
     print('interr. time: {}'.format(four_parameters[3]))
+    print('nb of trials / hist: {}'.format(nruns))
+    print('nb of trials in sequence: {}'.format(nt))
 
 
 if __name__ == '__main__':
@@ -568,15 +572,18 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-
-    S = a_S[0]
-    lambda_low = a_ll[2]  # low click rate
-    lambda_high = get_lambda_high(lambda_low, S)
-    four_params = (lambda_low, lambda_high, hazard, int_time)
-    true_g = get_best_gamma(S, hazard)
+    filename = 'data/srvr_data_3.h5'
     start_time = time.time()
+    num_run = 700
+    number_of_trials = 140
+    report_nb = np.floor(np.linspace(1, number_of_trials, 10))
+    init_interval = (0, 40)
+    for S in a_S:
+        for lambda_low in a_ll[-2:]:  # low click rate
+            lambda_high = get_lambda_high(lambda_low, S)
+            four_params = (lambda_low, lambda_high, hazard, int_time)
+            true_g = get_best_gamma(S, hazard)
 
-    filename = 'data/test.h5'
     # populate_hfd5_db(filename, four_params, number_of_trials)
 
     # create response datasets for best linear and nonlinear models
@@ -584,38 +591,45 @@ if __name__ == '__main__':
     #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
     #     update_decision_data(filename, 'lin', build_group_name(four_params))
 
-    num_run = 500
-    number_of_trials = 40
-    report_nb = np.floor(np.linspace(1, number_of_trials, 4))
-    init_interval = (0, 40)
-    widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-    for run_nb in range(num_run):
-        # print('\n ///////////////////')
-        # print('run {}'.format(run_nb + 1))
-        sim_trials = run(number_of_trials, (lambda_low, lambda_high),
-                         true_g, int_time, hazard, init_interval, run_number=run_nb,
-                         verbose=False, stim_on_the_fly=False, file_name=filename,
-                         report_full_list=False, report_widths=True, report_trials=report_nb)
-        for sim_trial in sim_trials:
-            tnb = sim_trial[1]
-            for idxx, nb in enumerate(report_nb):
-                if tnb == nb:
-                    widths[idxx].append(sim_trial[0])
-    dump_info(four_params, S)
-    print("--- {} seconds ---".format(time.time() - start_time))
-    #
-    for idx, ttt in enumerate(widths):
-        plt.figure(figsize=(6, 2.8))
-        # plt.subplot(len(report_nb), 1, idx + 1)
-        plt.hist(ttt, bins='auto', density=True)
-        plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
-        plt.title('trial {}'.format(int(report_nb[idx])))
-        plt.xlim(init_interval)
-        plt.xlabel('total width')
-        plt.ylabel('density')
-        plt.tight_layout()
-    # plt.show()
-        plt.savefig('/home/radillo/Pictures/simulations/PPPP_02{}.svg'.format(idx), bbox_inches='tight')
+            widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+            for run_nb in range(num_run):
+                # print('\n ///////////////////')
+                # print('run {}'.format(run_nb + 1))
+                sim_trials = run(number_of_trials, (lambda_low, lambda_high),
+                                 true_g, int_time, hazard, init_interval, run_number=run_nb,
+                                 verbose=False, stim_on_the_fly=False, file_name=filename,
+                                 report_full_list=False, report_widths=True, report_trials=report_nb)
+                for sim_trial in sim_trials:
+                    tnb = sim_trial[1]
+                    for idxx, nb in enumerate(report_nb):
+                        if tnb == nb:
+                            widths[idxx].append(sim_trial[0])
+
+            # save widths to file
+            data_string = build_group_name(four_params)
+            with open('data/' + data_string + '.pkl', 'wb') as f_hist_data:
+                pickle.dump(widths, f_hist_data)
+            print('-------------' + data_string + '----------------')
+            dump_info(four_params, S, number_of_trials, num_run)
+
+            for idx, ttt in enumerate(widths):
+                plt.figure(figsize=(6, 2.8))
+                # plt.subplot(len(report_nb), 1, idx + 1)
+                plt.hist(ttt, bins='auto', density=True)
+                plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
+                plt.title('trial {}'.format(int(report_nb[idx])))
+                if idx < 3:
+                    plt.xlim(init_interval)
+                else:
+                    plt.xlim(init_interval[0], init_interval[1]/2)
+                plt.xlabel('total width')
+                plt.ylabel('density')
+                plt.tight_layout()
+            # plt.show()
+                plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_{}.svg'.format(data_string, idx),
+                            bbox_inches='tight')
+        # dump_info(four_params, S, number_of_trials, num_run)
+        print("--- {} seconds ---".format(time.time() - start_time))
         # plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
     # if len(sys.argv) > 1:
     #     filename = 'report{}'.format(sys.argv[1])
