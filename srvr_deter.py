@@ -577,8 +577,8 @@ if __name__ == '__main__':
     start_time = time.time()
 
     filename = '/scratch/adrian/srvr_data_3.h5'
-    populate_hfd5_db(filename, four_params, 50000)
-    update_decision_data(filename, 'lin', four_params)
+    # populate_hfd5_db(filename, four_params, 50000)
+    update_decision_data(filename, 'lin', build_group_name(four_params))
 
     # create response datasets for best linear and nonlinear models
     lambda_low = a_ll[2]
