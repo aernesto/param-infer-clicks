@@ -234,14 +234,14 @@ class Trial:
 """
 
 
-def get_lambda_high(lambda_low, s):
+def get_lambda_high(lamb_low, s):
     """
     returns the high click rate, given the low click rate and S as input.
-    :param lambda_low: low click rate
+    :param lamb_low: low click rate
     :param s: S=(lambda_high-lambda_low)/sqrt(lambda_low+lambda_high)
     :return: value of lambda_high that fits with S and lambda_low
     """
-    return (2 * lambda_low + s ** 2 + s * np.sqrt(s ** 2 + 8 * lambda_low)) / 2
+    return (2 * lamb_low + s ** 2 + s * np.sqrt(s ** 2 + 8 * lamb_low)) / 2
 
 
 """
@@ -417,6 +417,50 @@ def run(num_trials, click_rates, true_gamma, interrogation_time, hazard_rate, in
         return trial_widths
 
 
+def newrun(file_name, fourparameters, num_trials, init_range, bin_right_edges, swmr=False):
+    """
+    :param file_name:
+    :param fourparameters:
+    :param num_trials:
+    :param init_range:
+    :param bin_right_edges: numpy array of right edges of bins. Intervals are right-closed left-open
+    :param swmr:
+    :return:
+    """
+    # prepare DB
+    f = h5py.File(file_name, 'r', swmr=swmr)
+    group_name = build_group_name(fourparameters)
+    data_trials = f[group_name + '/trials']
+    data_info = f[group_name + '/trial_info']
+    data_dec = f[group_name + '/decision_lin']
+    T = fourparameters[3]
+    list_widths_bin = []
+    for lll in range(num_trials):
+        trial_nb = lll + 1
+        # read trial from db
+        row_nb = lll
+        stim_train = tuple(data_trials[row_nb, :2])
+        cptimes = data_trials[row_nb, 2]
+        if cptimes.size == 0:
+            last_duration = T
+        else:
+            last_duration = cptimes[-1]
+        bool_indices = (last_duration <= bin_right_edges).nonzero()
+        bin_nb = bool_indices[0][0]
+
+        decision_value = data_dec[row_nb]
+        true_gamma = data_dec.attrs['best_gamma']
+        # generate trial and decision
+        trial = Trial(stim_train, true_gamma, trial_nb, decision_datum=decision_value, verbose=False,
+                      init_gamma_range=init_range)
+        # test gamma samples and refine admissible interval
+        trial.refine_admissible_gammas()
+
+        list_widths_bin.append((trial.total_width, bin_nb))
+    f.close()
+    return list_widths_bin
+
+
 def create_hfd5_data_structure(file, groupname, num_trials):
     """
     :param file: h5py.File
@@ -575,11 +619,14 @@ if __name__ == '__main__':
     filename = 'data/srvr_data_3.h5'
     start_time = time.time()
     num_run = 700
-    number_of_trials = 140
-    report_nb = np.floor(np.linspace(1, number_of_trials, 10))
+    number_of_trials = 100000  #100000
+    # report_nb = np.floor(np.linspace(1, number_of_trials, 10))
     init_interval = (0, 40)
+    num_bins = 4  #200
+    bin_edges = np.linspace(0, int_time, num_bins+1)  # includes 0
+    bin_redges = bin_edges[1:]  # only the right edges of each bin
     for S in a_S:
-        for lambda_low in a_ll[-2:]:  # low click rate
+        for lambda_low in [a_ll[1]]:  # low click rate
             lambda_high = get_lambda_high(lambda_low, S)
             four_params = (lambda_low, lambda_high, hazard, int_time)
             true_g = get_best_gamma(S, hazard)
@@ -591,46 +638,52 @@ if __name__ == '__main__':
     #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
     #     update_decision_data(filename, 'lin', build_group_name(four_params))
 
-            widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-            for run_nb in range(num_run):
-                # print('\n ///////////////////')
-                # print('run {}'.format(run_nb + 1))
-                sim_trials = run(number_of_trials, (lambda_low, lambda_high),
-                                 true_g, int_time, hazard, init_interval, run_number=run_nb,
-                                 verbose=False, stim_on_the_fly=False, file_name=filename,
-                                 report_full_list=False, report_widths=True, report_trials=report_nb)
-                for sim_trial in sim_trials:
-                    tnb = sim_trial[1]
-                    for idxx, nb in enumerate(report_nb):
-                        if tnb == nb:
-                            widths[idxx].append(sim_trial[0])
+            # compute whisker plot of total admissible widths as function of time since last CP
+            total_widths_data = [[] for _ in range(num_bins)]  # each list corresponds to data for a bin
 
-            # save widths to file
-            data_string = build_group_name(four_params)
-            with open('data/' + data_string + '.pkl', 'wb') as f_hist_data:
-                pickle.dump(widths, f_hist_data)
-            print('-------------' + data_string + '----------------')
-            dump_info(four_params, S, number_of_trials, num_run)
+            # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+            # for run_nb in range(num_run):
+            #     # print('\n ///////////////////')
+            #     # print('run {}'.format(run_nb + 1))
+            sim_trials = newrun(filename, four_params, number_of_trials,
+                                init_interval, bin_redges)
+            for sim_trial in sim_trials:
+                ww, bnb = sim_trial
+                total_widths_data[bnb].append(ww)
+            #
+            # # save widths to file
+            data_string = 'fourBins_100000_' + build_group_name(four_params)
+            with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
+                pickle.dump(total_widths_data, f_ww_data)
 
-            for idx, ttt in enumerate(widths):
-                plt.figure(figsize=(6, 2.8))
-                # plt.subplot(len(report_nb), 1, idx + 1)
-                plt.hist(ttt, bins='auto', density=True)
-                plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
-                plt.title('trial {}'.format(int(report_nb[idx])))
-                if idx < 3:
-                    plt.xlim(init_interval)
-                else:
-                    plt.xlim(init_interval[0], init_interval[1]/2)
-                plt.xlabel('total width')
-                plt.ylabel('density')
-                plt.tight_layout()
-            # plt.show()
-                plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_{}.svg'.format(data_string, idx),
-                            bbox_inches='tight')
+            plt.figure()
+            plt.boxplot(total_widths_data)
+            plt.xlabel('last epoch duration')
+            plt.ylabel('total admissible width')
+            plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_whisker.svg'.format(data_string),
+                        bbox_inches='tight')
+            plt.close()
+
+            # print('-------------' + data_string + '----------------')
+            # dump_info(four_params, S, number_of_trials, num_run)
+            #
+            # for idx, ttt in enumerate(widths):
+            #     plt.figure(figsize=(6, 2.8))
+            #     # plt.subplot(len(report_nb), 1, idx + 1)
+            #     plt.hist(ttt, bins='auto', density=True)
+            #     plt.axvline(np.mean(ttt), color='r', linestyle='-', linewidth=2)
+            #     plt.title('trial {}'.format(int(report_nb[idx])))
+            #     if idx < 3:
+            #         plt.xlim(init_interval)
+            #     else:
+            #         plt.xlim(init_interval[0], init_interval[1]/2)
+            #     plt.xlabel('total width')
+            #     plt.ylabel('density')
+            #     plt.tight_layout()
+            # # plt.show()
+            #     plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_{}.svg'.format(data_string, idx),
+            #                 bbox_inches='tight')
+            #     plt.close()  # crucial if many figs are open during script execution
         # dump_info(four_params, S, number_of_trials, num_run)
-        print("--- {} seconds ---".format(time.time() - start_time))
-        # plt.savefig('/home/adrian/tosubmit_home/ba92d3a_{}.svg'.format(idx), bbox_inches='tight')
-    # if len(sys.argv) > 1:
-    #     filename = 'report{}'.format(sys.argv[1])
-    #     plt.savefig('/home/radillo/Pictures/simulations/{}.png'.format(filename), bbox_inches='tight')
+    # plt.show()
+    print("--- {} seconds ---".format(time.time() - start_time))
