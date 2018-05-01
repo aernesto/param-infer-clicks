@@ -14,6 +14,7 @@ import copy
 import time
 import sys
 import h5py
+from sympy import *
 
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
@@ -28,8 +29,9 @@ font = {'family': 'DejaVu Sans',
 """
 
 
-class Trial:
-    def __init__(self, stimulus, gamma, trial_number, init_gammas=None, init_gamma_range=(0, 40),
+class Trial:  # todo: make sure trial_duration is passed correctly in rest of script
+    def __init__(self, stimulus, trial_number, gamma=None, kappa=None, trial_duration=2,
+                 init_gammas=None, init_gamma_range=(0, 40), nonlinear=False, linear=True,
                  tolerance=.05, verbose=False, hazard_rate=1, decision_datum=None):
         """
         :param stimulus: 2-tuple of click trains (left, right)
@@ -38,15 +40,20 @@ class Trial:
         :param init_gammas: initial intervals of admissible gammas (list of dicts)
         :param tolerance: max distance allowed between two consecutive samples
         """
+        self.kappa = kappa
+        self.trial_duration = trial_duration
         self.number = trial_number
         self.stimulus = stimulus
         self.true_gamma = gamma
         self.tolerance_gamma = tolerance
-        if decision_datum is None:
+        if (decision_datum is None) and linear:
             self.decision = self.decide(np.array([self.true_gamma]))  # -1 for left, 1 for right, 0 for undecided
         else:
             self.decision = decision_datum
-        self.nonlin_dec = None  # todo: improve this
+        if nonlinear:
+            self.nonlin_dec = self.nonlin_decide(hazard_rate)
+        else:
+            self.nonlin_dec = None
         if init_gammas is None:
             self.admissible_gammas = self.gen_init_gammas(init_gamma_range)
         else:
@@ -201,6 +208,64 @@ class Trial:
 
         return np.sign(y)
 
+    def nonlin_decide(self, hh, init_cond=0):
+        """
+        :param hh: hazard rate to use for the decision
+        :param init_cond: initial condition for ODE
+        :return:
+        """
+        y = init_cond
+        t = 0
+        right_clicks_left = self.stimulus[1].size
+        left_clicks_left = self.stimulus[0].size
+        clicks_left = left_clicks_left + right_clicks_left
+
+        right_clicks = list(self.stimulus[1])
+        left_clicks = list(self.stimulus[0])
+        while clicks_left > 0:
+            if right_clicks_left and left_clicks_left:
+                if right_clicks[0] < left_clicks[0]:
+                    nxt_click = right_clicks[0]
+                    right_clicks = right_clicks[1:]
+                    right_clicks_left -= 1
+                    dwell = nxt_click - t
+                    y = end_point_nonlin(y, dwell, hh)
+                    y += self.kappa
+                    t = nxt_click
+                elif right_clicks[0] > left_clicks[0]:
+                    nxt_click = left_clicks[0]
+                    left_clicks = left_clicks[1:]
+                    left_clicks_left -= 1
+                    dwell = nxt_click - t
+                    y = end_point_nonlin(y, dwell, hh)
+                    y -= self.kappa
+                    t = nxt_click
+                else:
+                    right_clicks_left -= 1
+                    left_clicks_left -= 1
+                    right_clicks = right_clicks[1:]
+                    left_clicks = left_clicks[1:]
+            elif right_clicks_left:
+                nxt_click = right_clicks[0]
+                right_clicks = right_clicks[1:]
+                right_clicks_left -= 1
+                dwell = nxt_click - t
+                y = end_point_nonlin(y, dwell, hh)
+                y += self.kappa
+                t = nxt_click
+            elif left_clicks_left:
+                nxt_click = left_clicks[0]
+                left_clicks = left_clicks[1:]
+                left_clicks_left -= 1
+                dwell = nxt_click - t
+                y = end_point_nonlin(y, dwell, hh)
+                y -= self.kappa
+                t = nxt_click
+            clicks_left = left_clicks_left + right_clicks_left
+        dwell = self.trial_duration - t
+        y = end_point_nonlin(y, dwell, hh)
+        return np.sign(y)
+
     def stopping_criterion(self, stopping_width):
         """
         :param stopping_width: desired precision on inferred gamma. Must be greater than self.tolerance_gamma
@@ -232,6 +297,13 @@ class Trial:
 """
 ----------------------------GENERAL PURPOSE FUNCTIONS
 """
+
+
+def end_point_nonlin(init_cond, end_time, hr):
+    if init_cond == 0:
+        return 0
+    else:
+        return float(2*mpmath.acoth(np.exp(2*hr*end_time)*mpmath.coth(init_cond/2)))
 
 
 def get_lambda_high(lamb_low, s):
@@ -581,18 +653,32 @@ def update_decision_data(file_name, model, group_name):
         else:
             return
     else:
-        # create
-        dset = group.create_dataset(dset_name, (num_trials, ), dtype='i', maxshape=(100000, ))
+        if model == 'lin':
+            # create
+            dset = group.create_dataset(dset_name, (num_trials, ), dtype='i', maxshape=(100000, ))
+        elif model == 'nonlin':
+            dset = group.create_dataset(dset_name, (num_trials, 1), dtype='i', maxshape=(100000, None))
         row_indices = np.arange(num_trials)
-    # store best gamma as attribute for future reference
-    best_gamma = get_best_gamma(round(info_dset.attrs['S'], 4), 1)
-    dset.attrs['best_gamma'] = best_gamma
+    if model == 'lin':
+        # store best gamma as attribute for future reference
+        best_gamma = get_best_gamma(round(info_dset.attrs['S'], 4), 1)
+        dset.attrs['best_gamma'] = best_gamma
+
     # populate dataset
-    for row_idx in row_indices:
-        # get trial object
-        stim = tuple(trials_dset[row_idx, :2])
-        trial = Trial(stim, best_gamma, row_idx + 1)
-        dset[row_idx] = trial.decision
+    if model == 'lin':
+        for row_idx in row_indices:
+            # get trial object
+            stim = tuple(trials_dset[row_idx, :2])
+            trial = Trial(stim, best_gamma, row_idx + 1)
+            dset[row_idx] = trial.decision
+    elif model == 'nonlin':
+        kappa = np.log(info_dset.attrs['high_click_rate'] / info_dset.attrs['low_click_rate'])
+        hhh = info_dset.attrs['h']
+        for row_idx in row_indices:
+            # get trial object
+            stim = tuple(trials_dset[row_idx, :2])
+            trial = Trial(stim, row_idx + 1, kappa=kappa, hazard_rate=hhh, linear=False, nonlinear=True)
+            dset[row_idx] = trial.nonlin_dec
     f.flush()
     f.close()
 
@@ -616,7 +702,7 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-    filename = 'data/srvr_data_3.h5'
+    filename = 'data/test.h5'
     start_time = time.time()
     num_run = 700
     number_of_trials = 100000  #100000
@@ -625,44 +711,45 @@ if __name__ == '__main__':
     num_bins = 4  #200
     bin_edges = np.linspace(0, int_time, num_bins+1)  # includes 0
     bin_redges = bin_edges[1:]  # only the right edges of each bin
-    for S in a_S:
-        for lambda_low in [a_ll[1]]:  # low click rate
-            lambda_high = get_lambda_high(lambda_low, S)
-            four_params = (lambda_low, lambda_high, hazard, int_time)
-            true_g = get_best_gamma(S, hazard)
+    # for S in a_S:
+    #     for lambda_low in [a_ll[1]]:  # low click rate
+    #         lambda_high = get_lambda_high(lambda_low, S)
+    #         four_params = (lambda_low, lambda_high, hazard, int_time)
+    #         true_g = get_best_gamma(S, hazard)
 
     # populate_hfd5_db(filename, four_params, number_of_trials)
 
     # create response datasets for best linear and nonlinear models
-    # for S in a_S:
-    #     four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
-    #     update_decision_data(filename, 'lin', build_group_name(four_params))
+    for S in a_S[1:]:
+        lambda_low = a_ll[2]
+        four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+        update_decision_data(filename, 'nonlin', build_group_name(four_params))
 
             # compute whisker plot of total admissible widths as function of time since last CP
-            total_widths_data = [[] for _ in range(num_bins)]  # each list corresponds to data for a bin
-
-            # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-            # for run_nb in range(num_run):
-            #     # print('\n ///////////////////')
-            #     # print('run {}'.format(run_nb + 1))
-            sim_trials = newrun(filename, four_params, number_of_trials,
-                                init_interval, bin_redges)
-            for sim_trial in sim_trials:
-                ww, bnb = sim_trial
-                total_widths_data[bnb].append(ww)
+            # total_widths_data = [[] for _ in range(num_bins)]  # each list corresponds to data for a bin
             #
-            # # save widths to file
-            data_string = 'fourBins_100000_' + build_group_name(four_params)
-            with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
-                pickle.dump(total_widths_data, f_ww_data)
-
-            plt.figure()
-            plt.boxplot(total_widths_data)
-            plt.xlabel('last epoch duration')
-            plt.ylabel('total admissible width')
-            plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_whisker.svg'.format(data_string),
-                        bbox_inches='tight')
-            plt.close()
+            # # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+            # # for run_nb in range(num_run):
+            # #     # print('\n ///////////////////')
+            # #     # print('run {}'.format(run_nb + 1))
+            # sim_trials = newrun(filename, four_params, number_of_trials,
+            #                     init_interval, bin_redges)
+            # for sim_trial in sim_trials:
+            #     ww, bnb = sim_trial
+            #     total_widths_data[bnb].append(ww)
+            # #
+            # # # save widths to file
+            # data_string = 'fourBins_100000_' + build_group_name(four_params)
+            # with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
+            #     pickle.dump(total_widths_data, f_ww_data)
+            #
+            # plt.figure()
+            # plt.boxplot(total_widths_data)
+            # plt.xlabel('last epoch duration')
+            # plt.ylabel('total admissible width')
+            # plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_whisker.svg'.format(data_string),
+            #             bbox_inches='tight')
+            # plt.close()
 
             # print('-------------' + data_string + '----------------')
             # dump_info(four_params, S, number_of_trials, num_run)
