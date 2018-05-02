@@ -18,9 +18,9 @@ from sympy import *
 
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
-        'size': 22}
+        'size': 15}
 
-# matplotlib.rc('font', **font)
+matplotlib.rc('font', **font)
 # from fractions import Fraction
 # from math import gcd
 
@@ -516,13 +516,13 @@ def newrun(file_name, fourparameters, num_trials, init_range, bin_right_edges, s
         if cptimes.size == 0:
             last_duration = T
         else:
-            last_duration = cptimes[-1]
+            last_duration = T-cptimes[-1]
         bool_indices = (last_duration <= bin_right_edges).nonzero()
         bin_nb = bool_indices[0][0]
 
         decision_value = data_dec[row_nb]
         true_gamma = data_dec.attrs['best_gamma']
-        # generate trial and decision
+        # instantiate Trial
         trial = Trial(stim_train, true_gamma, trial_nb, decision_datum=decision_value, verbose=False,
                       init_gamma_range=init_range)
         # test gamma samples and refine admissible interval
@@ -702,13 +702,13 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-    filename = 'data/test.h5'
+    filename = 'data/srvr_data_3.h5'
     start_time = time.time()
     num_run = 700
-    number_of_trials = 100000  #100000
+    number_of_trials = 100000
     # report_nb = np.floor(np.linspace(1, number_of_trials, 10))
     init_interval = (0, 40)
-    num_bins = 4  #200
+    num_bins = 5  #200
     bin_edges = np.linspace(0, int_time, num_bins+1)  # includes 0
     bin_redges = bin_edges[1:]  # only the right edges of each bin
     # for S in a_S:
@@ -720,38 +720,55 @@ if __name__ == '__main__':
     # populate_hfd5_db(filename, four_params, number_of_trials)
 
     # create response datasets for best linear and nonlinear models
-    for S in a_S[1:]:
-        lambda_low = a_ll[2]
-        four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
-        update_decision_data(filename, 'nonlin', build_group_name(four_params))
+    for S in a_S:
+        for lambda_low in a_ll[-2:]:
+            four_params = (lambda_low, get_lambda_high(lambda_low, S), hazard, int_time)
+        # update_decision_data(filename, 'nonlin', build_group_name(four_params))
 
             # compute whisker plot of total admissible widths as function of time since last CP
-            # total_widths_data = [[] for _ in range(num_bins)]  # each list corresponds to data for a bin
-            #
-            # # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
-            # # for run_nb in range(num_run):
-            # #     # print('\n ///////////////////')
-            # #     # print('run {}'.format(run_nb + 1))
-            # sim_trials = newrun(filename, four_params, number_of_trials,
-            #                     init_interval, bin_redges)
-            # for sim_trial in sim_trials:
-            #     ww, bnb = sim_trial
-            #     total_widths_data[bnb].append(ww)
-            # #
-            # # # save widths to file
-            # data_string = 'fourBins_100000_' + build_group_name(four_params)
-            # with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
-            #     pickle.dump(total_widths_data, f_ww_data)
-            #
-            # plt.figure()
-            # plt.boxplot(total_widths_data)
-            # plt.xlabel('last epoch duration')
-            # plt.ylabel('total admissible width')
-            # plt.savefig('/home/radillo/Pictures/simulations/histograms/{}_whisker.svg'.format(data_string),
-            #             bbox_inches='tight')
-            # plt.close()
+            total_widths_data = [[] for _ in range(num_bins)]  # each list corresponds to data for a bin
 
-            # print('-------------' + data_string + '----------------')
+            # widths = [[] for _ in range(len(report_nb))]  # empty list of lists of total widths. One list per trial nb
+            # for run_nb in range(num_run):
+            #     # print('\n ///////////////////')
+            #     # print('run {}'.format(run_nb + 1))
+            sim_trials = newrun(filename, four_params, number_of_trials, init_interval, bin_redges)
+            for sim_trial in sim_trials:
+                ww, bnb = sim_trial
+                total_widths_data[bnb].append(ww)
+
+            # save widths to file
+            data_string = 'fiveBins_100000_' + build_group_name(four_params)
+            with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
+                pickle.dump(total_widths_data, f_ww_data)
+            f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, sharex=True)
+            # plt.figure()
+            # plt.subplot(2, 1, 1)
+            # plt.boxplot(total_widths_data, positions=bin_redges)
+            ax1.boxplot(total_widths_data, positions=bin_redges)
+            print('-------------' + data_string + '----------------')
+            print([len(x) for x in total_widths_data])
+            ax1.set_title('S={}, low_rate={}'.format(S, lambda_low))
+            # plt.xlabel('bin nb (width= .20 sec)')
+            ax1.set_ylabel('total width')
+            ax1.set_ylim(init_interval)
+
+            means = np.array([np.mean(z) for z in total_widths_data])
+            stdevs = np.array([np.std(z) for z in total_widths_data])
+            # plt.subplot(2, 1, 2, sharex='all', sharey='all')
+            ax2.plot(bin_redges, means, 'b')
+            ax2.plot(bin_redges, means - stdevs, 'r')
+            ax2.plot(bin_redges, np.minimum(means + stdevs, init_interval[1]), 'r')
+            # plt.xticks(bin_redges)
+            ax2.set_xlabel('duration last epoch')
+            ax2.set_ylabel('total width')
+            # plt.ylim(init_interval)
+            plt.tight_layout()
+            plt.savefig('/home/radillo/Pictures/simulations/whiskers/{}_NEW_whisker.svg'.format(data_string),
+                        bbox_inches='tight')
+            plt.close()
+
+
             # dump_info(four_params, S, number_of_trials, num_run)
             #
             # for idx, ttt in enumerate(widths):
