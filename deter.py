@@ -711,8 +711,8 @@ if __name__ == '__main__':
     number_of_trials = 100000
     # report_nb = np.floor(np.linspace(1, number_of_trials, 10))
     init_interval = (0, 40)
-    num_bins = 30
-    bin_edges = np.linspace(0, .8, num_bins+1)  # includes 0
+    num_bins = 20
+    bin_edges = np.linspace(0, .3, num_bins+1)  # includes 0
     bin_redges = bin_edges[1:]  # only the right edges of each bin
     # for S in a_S:
     #     for lambda_low in [a_ll[1]]:  # low click rate
@@ -741,7 +741,7 @@ if __name__ == '__main__':
                 total_widths_data[bnb].append(ww)
 
             # save widths to file
-            data_string = 'short_time_bins_' + build_group_name(four_params)
+            data_string = 'Very_short_time_bins_' + build_group_name(four_params)
             with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
                 pickle.dump(total_widths_data, f_ww_data)
             # f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, sharex=True)
@@ -763,7 +763,7 @@ if __name__ == '__main__':
             plt.plot(bin_redges, means - stdevs, 'r')
             plt.plot(bin_redges, np.minimum(means + stdevs, init_interval[1]), 'r')
             plt.title('S={}, low_rate={}'.format(S, lambda_low))
-            plt.xticks(bin_redges)
+            # plt.xticks(bin_redges)
             plt.xlabel('duration last epoch')
             plt.ylabel('total width')
             plt.ylim(init_interval)
