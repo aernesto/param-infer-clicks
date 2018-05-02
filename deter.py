@@ -708,7 +708,7 @@ if __name__ == '__main__':
     number_of_trials = 100000
     # report_nb = np.floor(np.linspace(1, number_of_trials, 10))
     init_interval = (0, 40)
-    num_bins = 5  #200
+    num_bins = 10  #200
     bin_edges = np.linspace(0, int_time, num_bins+1)  # includes 0
     bin_redges = bin_edges[1:]  # only the right edges of each bin
     # for S in a_S:
@@ -738,7 +738,7 @@ if __name__ == '__main__':
                 total_widths_data[bnb].append(ww)
 
             # save widths to file
-            data_string = 'fiveBins_100000_' + build_group_name(four_params)
+            data_string = 'tenBinWhiskers_100000_' + build_group_name(four_params)
             with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
                 pickle.dump(total_widths_data, f_ww_data)
             f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, sharex=True)
@@ -764,7 +764,7 @@ if __name__ == '__main__':
             ax2.set_ylabel('total width')
             # plt.ylim(init_interval)
             plt.tight_layout()
-            plt.savefig('/home/radillo/Pictures/simulations/whiskers/{}_NEW_whisker.svg'.format(data_string),
+            plt.savefig('/home/radillo/Pictures/simulations/whiskers/{}_NEW_whisker.png'.format(data_string),
                         bbox_inches='tight')
             plt.close()
 
