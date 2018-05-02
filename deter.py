@@ -518,7 +518,10 @@ def newrun(file_name, fourparameters, num_trials, init_range, bin_right_edges, s
         else:
             last_duration = T-cptimes[-1]
         bool_indices = (last_duration <= bin_right_edges).nonzero()
-        bin_nb = bool_indices[0][0]
+        if bool_indices[0].size > 0:
+            bin_nb = bool_indices[0][0]
+        else:
+            continue
 
         decision_value = data_dec[row_nb]
         true_gamma = data_dec.attrs['best_gamma']
@@ -704,12 +707,12 @@ if __name__ == '__main__':
     hazard = 1
     filename = 'data/srvr_data_3.h5'
     start_time = time.time()
-    num_run = 700
+    # num_run = 700
     number_of_trials = 100000
     # report_nb = np.floor(np.linspace(1, number_of_trials, 10))
     init_interval = (0, 40)
-    num_bins = 10  #200
-    bin_edges = np.linspace(0, int_time, num_bins+1)  # includes 0
+    num_bins = 30
+    bin_edges = np.linspace(0, .8, num_bins+1)  # includes 0
     bin_redges = bin_edges[1:]  # only the right edges of each bin
     # for S in a_S:
     #     for lambda_low in [a_ll[1]]:  # low click rate
@@ -738,32 +741,33 @@ if __name__ == '__main__':
                 total_widths_data[bnb].append(ww)
 
             # save widths to file
-            data_string = 'tenBinWhiskers_100000_' + build_group_name(four_params)
+            data_string = 'short_time_bins_' + build_group_name(four_params)
             with open('data/' + data_string + '.pkl', 'wb') as f_ww_data:
                 pickle.dump(total_widths_data, f_ww_data)
-            f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, sharex=True)
+            # f, (ax1, ax2) = plt.subplots(2, 1, sharey=True, sharex=True)
             # plt.figure()
             # plt.subplot(2, 1, 1)
             # plt.boxplot(total_widths_data, positions=bin_redges)
-            ax1.boxplot(total_widths_data, positions=bin_redges)
+            # ax1.boxplot(total_widths_data, positions=bin_redges)
             print('-------------' + data_string + '----------------')
             print([len(x) for x in total_widths_data])
-            ax1.set_title('S={}, low_rate={}'.format(S, lambda_low))
-            # plt.xlabel('bin nb (width= .20 sec)')
-            ax1.set_ylabel('total width')
-            ax1.set_ylim(init_interval)
+            # ax1.set_title('S={}, low_rate={}'.format(S, lambda_low))
+            # # plt.xlabel('bin nb (width= .20 sec)')
+            # ax1.set_ylabel('total width')
+            # ax1.set_ylim(init_interval)
 
             means = np.array([np.mean(z) for z in total_widths_data])
             stdevs = np.array([np.std(z) for z in total_widths_data])
             # plt.subplot(2, 1, 2, sharex='all', sharey='all')
-            ax2.plot(bin_redges, means, 'b')
-            ax2.plot(bin_redges, means - stdevs, 'r')
-            ax2.plot(bin_redges, np.minimum(means + stdevs, init_interval[1]), 'r')
-            # plt.xticks(bin_redges)
-            ax2.set_xlabel('duration last epoch')
-            ax2.set_ylabel('total width')
-            # plt.ylim(init_interval)
-            plt.tight_layout()
+            plt.plot(bin_redges, means, 'b')
+            plt.plot(bin_redges, means - stdevs, 'r')
+            plt.plot(bin_redges, np.minimum(means + stdevs, init_interval[1]), 'r')
+            plt.title('S={}, low_rate={}'.format(S, lambda_low))
+            plt.xticks(bin_redges)
+            plt.xlabel('duration last epoch')
+            plt.ylabel('total width')
+            plt.ylim(init_interval)
+            # plt.tight_layout()
             plt.savefig('/home/radillo/Pictures/simulations/whiskers/{}_NEW_whisker.png'.format(data_string),
                         bbox_inches='tight')
             plt.close()
