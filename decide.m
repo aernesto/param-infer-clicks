@@ -20,14 +20,14 @@ hh = 1;
 % toc
 
 % hdf5 DB
-dbname = 'data/test_light.h5';
-dsetname = '/lr15hr57.6h1T2/trials';
-dsetname_decision = '/lr15hr57.6h1T2/decision_nonlin';
+dbname = '/scratch/adrian/sandbox_data.h5';
+dsetname = '/lr15hr101.26h1T2/trials';
+dsetname_decision = '/lr15hr101.26h1T2/decision_nonlin';
 %h5disp(dbname, dsetname)
 
-ntrials=100;
+ntrials=90;
 ncols=2;
-ncols_write=10001;
+ncols_write=101;
 trial_data = h5read(dbname,dsetname,[1 1],[ncols ntrials]);
 display('100 trials')
 
