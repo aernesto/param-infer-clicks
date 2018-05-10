@@ -312,16 +312,16 @@ def dump_info(four_parameters, s, nt, nruns):
 
 if __name__ == '__main__':
     # parameter vectors
-    a_S = np.arange(0.5, 6.1, 0.5)
+    a_S = np.array([2,5])  # np.arange(0.5, 6.1, 0.5)
 
     a_ll = (1, 15, 30)
 
     # scalar parameters
     int_time = 2
     hazard = 1
-    filename = 'data/test_light.h5'
+    filename = '/scratch/adrian/data_S_2_5.h5'
     start_time = time.time()
-    number_of_trials = 100
+    number_of_trials = 100000
 
     start_time = time.time()
     for S in a_S:
@@ -332,6 +332,6 @@ if __name__ == '__main__':
             true_g = get_best_gamma(S, hazard)
 
             populate_hfd5_db(filename, four_params, number_of_trials)
-            update_linear_decision_data(filename, grp_name, verbose=True)
+            update_linear_decision_data(filename, grp_name)
 
     print("--- {} seconds ---".format(time.time() - start_time))
