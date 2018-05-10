@@ -1,7 +1,7 @@
 1.
-generate a DB of 10,000 independent trials per condition.
+generate a DB of 100,000 independent trials per condition.
 h=1; T=2;
-SNR=(0.5:0.5:10)';
+SNR=(0.5:0.5:6)';
 BEST_GAMMA=[
    2.0848
    2.5828
@@ -14,34 +14,24 @@ BEST_GAMMA=[
   11.3937
   13.2381
   15.1327
-  17.2771
-  19.5909
-  22.0435
-  24.6947
-  27.7241
-  30.5711
-  33.5354
-  36.7966
-  40.3143];
+  17.2771];
 
-(recall BEST_GAMMA=1.45333 + 0.670241*SNR + 0.34324*SNR^2- 0.00275835*SNR^3)
+(recall BEST_GAMMA may be fitted as a polynomial fcn of SNR)
 
-where SNR here is our S variable.
+SNR above is our S variable.
 
 fix lambda_low to 30 and find lambda_high that corresponds.
 then again for lambda_low = 15 and lambda_low = 1.
 
-1bis. to start with, produce trials on the fly and discard them...
-
 2. 
-produce a parallel database of model responses, with the linear deterministic
-model (if evidence =0 at end of trial, signal it and exclude trial from
-experiment).
+produce a parallel database of model responses, with both the linear and the
+nonlinear deterministic models. Sample 10,000 values of the discounting
+parameter in each case, uniformly in the interval [0,50] (if evidence =0 at end
+of trial, don't include it in refinement procedure).
 
 3. 
-for each trial, indicate and store the cutoff value of gamma
-plot their distribution for each condition.
-divide analysis between left rays and right rays.
+Produce the plots described here:
+https://paper.dropbox.com/doc/Meeting-notes-II-7CSeUnW0KqSx8niWxh79A#:uid=223929714500335226206206&h2=April-26%2C-2018
 
 4. 
 try to find what features render a trial very vs little informative.
