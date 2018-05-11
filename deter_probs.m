@@ -1,29 +1,29 @@
 % computes empirical probabilities of each sample being the correct one
 clear
 % explore data
-dbname = 'data/small_data_1.h5';
+dbname = '/storage/adrian/srvr_data_1.h5';
 %dsetname = '/lr15hr57.6h1T2/trials';
-dsetname_decision_nonlin = '/lr1hr6.46h1T2/decision_nonlin';
-dsetname_decision_lin = '/lr1hr6.46h1T2/decision_lin';
+dsetname_decision_nonlin = '/lr15hr101.258639865h1T2/decision_nonlin';
+dsetname_decision_lin = '/lr15hr101.258639865h1T2/decision_lin';
 %h5disp(dbname)
-numtrials=10000;
-numsamples = 1000;
-linear_decisions = h5read(dbname, dsetname_decision_lin, [2,10001], [numsamples, numtrials]);
+numtrials=100000;
+numsamples = 10000;
+linear_decisions = h5read(dbname, dsetname_decision_lin, [2,1], [numsamples, numtrials]);
 nonlinear_decisions = h5read(dbname, dsetname_decision_nonlin, [2,1], [numsamples, numtrials]);
 
 %size(linear_decisions)
 %size(nonlinear_decisions)
-reference_decision_linear = h5read(dbname, dsetname_decision_lin, [1,10001], [1, numtrials]);
+reference_decision_linear = h5read(dbname, dsetname_decision_lin, [1,1], [1, numtrials]);
 reference_decision_nonlinear = h5read(dbname, dsetname_decision_nonlin, [1,1], [1, numtrials]);
 
 true_param_lin = h5readatt(dbname,dsetname_decision_lin,'best_gamma');
 true_param_nonlin = 1;
 param_values = linspace(0,40,numsamples);
-
+savelocation = 'home/adrian/tosubmit_home/';%'/home/radillo/Pictures/clickTask/inferDiscRate/';%'/home/adrian/tosubmit_home/'
 % linlin
 bool_lin_lin = (linear_decisions == reference_decision_linear);
 proba_linear = mean(bool_lin_lin, 2);
-figure(1)
+figure('Number', 1, 'Visible', 'off')
 plot(param_values,proba_linear, 'LineWidth', 3)
 hold on
 plot([true_param_lin true_param_lin],[0 1],'red','LineWidth', 2)
@@ -34,11 +34,12 @@ ylabel('% compatible')
 legend('proportion trials','true gamma (best)')
 ax=gca;
 ax.FontSize=20;
+saveas(gcf,[savelocation,'fig1.png'])
 
 % nonlinnonlin
 bool_nonlin_nonlin = (nonlinear_decisions == reference_decision_nonlinear);
 proba_nonlinear = mean(bool_nonlin_nonlin, 2);
-figure(2)
+figure('Number', 2, 'Visible', 'off')
 plot(param_values,proba_nonlinear, 'LineWidth', 3)
 hold on
 plot([true_param_nonlin true_param_nonlin],[0 1],'red','LineWidth', 2)
@@ -49,12 +50,12 @@ ylabel('% compatible')
 legend('proportion trials','true hazard rate')
 ax=gca;
 ax.FontSize=20;
-
+saveas(gcf, [savelocation, 'fig2.png'])
 % linnonlin - fit linear model to nonlinear data
 bool_lin_nonlin = (linear_decisions == reference_decision_nonlinear);
 proba_linnonlinear = mean(bool_lin_nonlin, 2);
 
-figure(3)
+figure('Number', 3, 'Visible', 'off')
 plot(param_values,proba_linnonlinear, 'LineWidth', 3)
 hold on
 plot([true_param_lin true_param_lin],[0 1],'red','LineWidth', 2)
@@ -65,11 +66,11 @@ ylabel('% compatible')
 legend('proportion trials','best gamma')
 ax=gca;
 ax.FontSize=20;
-
+saveas(gcf,[savelocation,'fig3.png'])
 % nonlinlin - fit nonlinear model to linear data
 bool_nonlin_lin = (nonlinear_decisions == reference_decision_linear);
 proba_nonlinlinear = mean(bool_nonlin_lin, 2);
-figure(4)
+figure('Number', 4, 'Visible', 'off')
 plot(param_values,proba_nonlinlinear,'LineWidth', 3)
 hold on
 plot([true_param_nonlin true_param_nonlin],[0 1],'red','LineWidth', 2)
@@ -80,4 +81,4 @@ ylabel('% compatible')
 legend('proportion trials','true h')
 ax=gca;
 ax.FontSize=20;
-
+saveas(gcf,[savelocation, 'fig4.png'])
