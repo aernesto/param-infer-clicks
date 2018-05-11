@@ -19,11 +19,11 @@ reference_decision_nonlinear = h5read(dbname, dsetname_decision_nonlin, [1,1], [
 true_param_lin = h5readatt(dbname,dsetname_decision_lin,'best_gamma');
 true_param_nonlin = 1;
 param_values = linspace(0,40,numsamples);
-savelocation = 'home/adrian/tosubmit_home/';%'/home/radillo/Pictures/clickTask/inferDiscRate/';%'/home/adrian/tosubmit_home/'
+savelocation = '/home/adrian/tosubmit_home/';%'/home/radillo/Pictures/clickTask/inferDiscRate/';%'/home/adrian/tosubmit_home/'
 % linlin
 bool_lin_lin = (linear_decisions == reference_decision_linear);
 proba_linear = mean(bool_lin_lin, 2);
-figure('Number', 1, 'Visible', 'off')
+figure('Visible', 'off')
 plot(param_values,proba_linear, 'LineWidth', 3)
 hold on
 plot([true_param_lin true_param_lin],[0 1],'red','LineWidth', 2)
@@ -39,7 +39,7 @@ saveas(gcf,[savelocation,'fig1.png'])
 % nonlinnonlin
 bool_nonlin_nonlin = (nonlinear_decisions == reference_decision_nonlinear);
 proba_nonlinear = mean(bool_nonlin_nonlin, 2);
-figure('Number', 2, 'Visible', 'off')
+figure('Visible', 'off')
 plot(param_values,proba_nonlinear, 'LineWidth', 3)
 hold on
 plot([true_param_nonlin true_param_nonlin],[0 1],'red','LineWidth', 2)
@@ -55,7 +55,7 @@ saveas(gcf, [savelocation, 'fig2.png'])
 bool_lin_nonlin = (linear_decisions == reference_decision_nonlinear);
 proba_linnonlinear = mean(bool_lin_nonlin, 2);
 
-figure('Number', 3, 'Visible', 'off')
+figure('Visible', 'off')
 plot(param_values,proba_linnonlinear, 'LineWidth', 3)
 hold on
 plot([true_param_lin true_param_lin],[0 1],'red','LineWidth', 2)
@@ -70,7 +70,7 @@ saveas(gcf,[savelocation,'fig3.png'])
 % nonlinlin - fit nonlinear model to linear data
 bool_nonlin_lin = (nonlinear_decisions == reference_decision_linear);
 proba_nonlinlinear = mean(bool_nonlin_lin, 2);
-figure('Number', 4, 'Visible', 'off')
+figure('Visible', 'off')
 plot(param_values,proba_nonlinlinear,'LineWidth', 3)
 hold on
 plot([true_param_nonlin true_param_nonlin],[0 1],'red','LineWidth', 2)
