@@ -139,7 +139,7 @@ def decide_linear(gammas_array, stimulus, init_cond=0):
     return np.sign(y)
 
 
-def create_hfd5_data_structure(file, groupname, num_trials):
+def create_hfd5_data_structure(hdf5file, groupname, num_trials, max_trials=100000, num_samples=10000):
     """
     As of now, decision datasets contain 10001 columns because first col contains
     decision for true parameter and the remaining 10,000 correspond to decision data
@@ -150,9 +150,9 @@ def create_hfd5_data_structure(file, groupname, num_trials):
     :param num_trials: nb of trials
     :return: created group
     """
-    max_trials = 100000
-    num_samples = 10000
-    group = file.create_group(groupname)
+#    max_trials = 100000
+#    num_samples = 10000
+    group = hdf5file.create_group(groupname)
     dt = h5py.special_dtype(vlen=np.dtype('f'))
     group.create_dataset('trials', (num_trials, 3), maxshape=(max_trials, 10), dtype=dt)
     group.create_dataset('trial_info', (num_trials, 3), maxshape=(max_trials, 10), dtype='f')
@@ -173,7 +173,7 @@ def build_group_name(four_p):
     return 'lr{}hr{}h{}T{}'.format(lowrate, highrate, hazard_rate, interr_time)
 
 
-def populate_hfd5_db(fname, four_par, num_of_trials, group_name=None, create_nonlin_db=False):
+def populate_hfd5_db(fname, four_par, num_of_trials, group_name=None, create_nonlin_db=False, number_of_samples=10000):
     """generate stimulus data and store as hdf5 file"""
     # open/create file
     f = h5py.File(fname, 'a')
@@ -204,7 +204,7 @@ def populate_hfd5_db(fname, four_par, num_of_trials, group_name=None, create_non
         # version number of new data to insert
         data_version = info_data.attrs['last_version'] + 1
     else:  # if dataset doesn't exist, create it
-        grp = create_hfd5_data_structure(f, group_name, num_of_trials)
+        grp = create_hfd5_data_structure(f, group_name, num_of_trials, num_samples=number_of_samples)
 
         # get trials dataset
         trials_data = grp['trials']
@@ -265,7 +265,7 @@ def update_linear_decision_data(file_name, group_name, create_nonlin_db=False, v
     num_trials = trials_dset.shape[0]
     row_indices = range(num_trials)
     dset_name = 'decision_lin'
-    num_samples = 10000
+    num_samples = 100
     if create_nonlin_db:
         # create dataset for nonlinear decisions
         group.create_dataset('decision_nonlin', (100000, 10001), dtype='i', maxshape=(100000, 10001))
@@ -293,7 +293,7 @@ def update_linear_decision_data(file_name, group_name, create_nonlin_db=False, v
     # store best gamma as attribute for future reference
     best_gamma = get_best_gamma(round(info_dset.attrs['S'], 4), 1)
     dset.attrs['best_gamma'] = best_gamma
-    gamma_samples, gamma_step = np.linspace(0, 40, 10000, retstep=True)
+    gamma_samples, gamma_step = np.linspace(0, 40, num_samples, retstep=True)
     dset.attrs['init_sample'] = gamma_samples[0]
     dset.attrs['end_sample'] = gamma_samples[-1]
     dset.attrs['sample_step'] = gamma_step
@@ -346,24 +346,19 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-    filename = '/home/adrian/servers/storage/srvr_data_1.h5'
+    filename = '/scratch/adrian/sandbox_data.h5'
 
     start_time = time.time()
     for sstring, S in smap.items():
         ddict = db_content[sstring]
         lr = ddict['lr']
         hr = get_lambda_high(lr, S)
-        grp_name = ddict['group_name']
+        fp = (lr, hr, hazard, int_time)
+        grp_name = build_group_name(fp)
         true_g = get_best_gamma(S, hazard)
-        if S == 0.5:
-            update_linear_decision_data(filename, grp_name, create_nonlin_db=True) 
-        elif S == 3:
-            number_of_trials = 50000
-            populate_hfd5_db(filename, (lr, hr, hazard, int_time), number_of_trials, group_name=grp_name)
-            update_linear_decision_data(filename, grp_name, create_nonlin_db=True)
-        elif S == 8:
-            number_of_trials = 90000
-            populate_hfd5_db(filename, (lr, hr, hazard, int_time), number_of_trials, group_name=grp_name)
-            update_linear_decision_data(filename, grp_name, create_nonlin_db=True)
+        number_of_trials = 90
+        nsamples=100
+        populate_hfd5_db(filename, fp, number_of_trials, number_of_samples=nsamples)
+        update_linear_decision_data(filename, grp_name)
 
     print("--- {} seconds ---".format(time.time() - start_time))
