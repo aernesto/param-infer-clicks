@@ -1,3 +1,4 @@
-db_file_name	Location	Size	S		lambda_low	number_of_trials
-srvr_data_1.h5	/storage/adrian	12 GB	0.5; 3; 8	15		100,000
-data_S_2_5.h5	/storage/adrian	23 GB	2; 5		1; 15; 30	100,000
+db_file_name	Location    Size    S           lambda_low      num_trials  d
+srvr_data_1.h5	/storage    16 GB   0.5; 3; 8   15		100,000     8
+data_S_2_5.h5	/storage    23 GB   2; 5	1; 15; 30	100,000
+small_data_1.h5 laptop      84 MB   2           1   (discard first 10K) 10K 2
