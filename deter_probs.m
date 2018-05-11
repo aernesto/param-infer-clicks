@@ -1,23 +1,24 @@
 % computes empirical probabilities of each sample being the correct one
 clear
 % explore data
-dbname = 'data/test_light.h5';
+dbname = 'data/small_data_1.h5';
 %dsetname = '/lr15hr57.6h1T2/trials';
-dsetname_decision_nonlin = '/lr15hr57.6h1T2/decision_nonlin';
-dsetname_decision_lin = '/lr15hr57.6h1T2/decision_lin';
+dsetname_decision_nonlin = '/lr1hr6.46h1T2/decision_nonlin';
+dsetname_decision_lin = '/lr1hr6.46h1T2/decision_lin';
 %h5disp(dbname)
-
-linear_decisions = h5read(dbname, dsetname_decision_lin, [2,1], [10000, 100]);
-nonlinear_decisions = h5read(dbname, dsetname_decision_nonlin, [2,1], [10000, 100]);
+numtrials=10000;
+numsamples = 1000;
+linear_decisions = h5read(dbname, dsetname_decision_lin, [2,10001], [numsamples, numtrials]);
+nonlinear_decisions = h5read(dbname, dsetname_decision_nonlin, [2,1], [numsamples, numtrials]);
 
 %size(linear_decisions)
 %size(nonlinear_decisions)
-reference_decision_linear = h5read(dbname, dsetname_decision_lin, [1,1], [1, 100]);
-reference_decision_nonlinear = h5read(dbname, dsetname_decision_nonlin, [1,1], [1, 100]);
+reference_decision_linear = h5read(dbname, dsetname_decision_lin, [1,10001], [1, numtrials]);
+reference_decision_nonlinear = h5read(dbname, dsetname_decision_nonlin, [1,1], [1, numtrials]);
 
 true_param_lin = h5readatt(dbname,dsetname_decision_lin,'best_gamma');
 true_param_nonlin = 1;
-param_values = linspace(0,40,10000);
+param_values = linspace(0,40,numsamples);
 
 % linlin
 bool_lin_lin = (linear_decisions == reference_decision_linear);
