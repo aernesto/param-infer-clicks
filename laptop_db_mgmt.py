@@ -1,28 +1,15 @@
 """
-The aim of this script is to manage the databases in hdf5 format
+The aim of this script is to manage the databases in hdf5 format on my laptop
 """
 import numpy as np
 # import copy
 import time
-import sys
 import h5py
-
-# from sympy import *
-
-# from fractions import Fraction
-# from math import gcd
 
 
 """
 ----------------------------GENERAL PURPOSE FUNCTIONS
 """
-
-
-# def end_point_nonlin(init_cond, end_time, hr):
-#     if init_cond == 0:
-#         return 0
-#     else:
-#         return float(2*mpmath.acoth(np.exp(2*hr*end_time)*mpmath.coth(init_cond/2)))
 
 
 def get_lambda_high(lamb_low, s):
@@ -173,14 +160,15 @@ def build_group_name(four_p):
     return 'lr{}hr{}h{}T{}'.format(lowrate, highrate, hazard_rate, interr_time)
 
 
-def populate_hfd5_db(fname, four_par, num_of_trials, group_name=None, create_nonlin_db=False, number_of_samples=10000):
+def populate_hfd5_db(fname, four_par, num_of_trials,
+                     group_name=None, create_nonlin_db=False, number_of_samples=10000):
     """generate stimulus data and store as hdf5 file"""
     # open/create file
     f = h5py.File(fname, 'a')
     ll, lh, h, t = four_par
     # get/create group corresponding to parameters
     if group_name is None:
-        group_name = build_group_name((ll, lh, h, t))
+        group_name = build_group_name(four_par)
     if group_name in f:  # if dataset already exists, only expand it with new data
         grp = f[group_name]
         
@@ -204,6 +192,7 @@ def populate_hfd5_db(fname, four_par, num_of_trials, group_name=None, create_non
         # version number of new data to insert
         data_version = info_data.attrs['last_version'] + 1
     else:  # if dataset doesn't exist, create it
+        print('creating dataset with group name {}'.format(group_name))
         grp = create_hfd5_data_structure(f, group_name, num_of_trials, num_samples=number_of_samples)
 
         # get trials dataset
@@ -325,7 +314,7 @@ if __name__ == '__main__':
     int_time = 2
     hazard = 1
     S = 2
-    filename = 'data/small_data_1.h5'
+    filename = 'data/small_data_TEST.h5'
 
     start_time = time.time()
     lr = 1
@@ -334,7 +323,7 @@ if __name__ == '__main__':
     grp_name = build_group_name(fp)
     true_g = get_best_gamma(S, hazard)
     number_of_trials = 10000
-    nsamples=1000
+    nsamples = 1000
     populate_hfd5_db(filename, fp, number_of_trials, number_of_samples=nsamples)
     update_linear_decision_data(filename, grp_name, nsamples)
 
