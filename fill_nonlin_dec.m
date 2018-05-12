@@ -1,4 +1,4 @@
-function fill_nonlin_dec(lr, hr, kappa, h, td, filename, ntrials, nsamples)
+function fill_nonlin_dec(lr, hr, kappa, h, td, dbname, ntrials, nsamples)
 % arguments passed to the script should be in the following order:
 %    1. low rate
 %    2. high rate
@@ -9,12 +9,15 @@ function fill_nonlin_dec(lr, hr, kappa, h, td, filename, ntrials, nsamples)
 %    7. num_trials
 %    8. num_samples
 %dbname = char(filename);
-dbname = filename;
+%dbname = filename;
+%display(dbname)
 ncols=2;
 ncols_write=nsamples+1;
 all_h = [1, linspace(0,40,ncols_write-1)];
-grp_name = ['/lr',num2str(lr),'hr',num2str(hr,'%.2f'),'h',...
+ss=strip(strip(num2str(hr,'%.2f'),'0'),'.');
+grp_name = ['/lr',num2str(lr),'hr',ss,'h',...
     num2str(h,'%.0f'), 'T',num2str(td, '%.0f')];
+%display(grp_name)
 dsetname = [grp_name,'/trials'];
 dsetname_decision = [grp_name,'/decision_nonlin'];
 trial_data = h5read(dbname,dsetname,[1 1],[ncols ntrials]);
