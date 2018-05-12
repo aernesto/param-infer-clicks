@@ -23,7 +23,8 @@ function produce_figs(dbname, dsetname, numtrials, numsamples,init_sample, last_
     legend('proportion trials','true gamma (best)','Location','southeast')
     ax=gca;
     ax.FontSize=20;
-    saveas(gcf,[savelocation,'fig_',dsetname(2:end),'lin2lin.png'])
+    saveas(gcf,[savelocation,'fig_',dsetname(2:end),'_tr',...
+                num2str(numtrials),'sp',num2str(numsamples),'_lin2lin.png'])
 
     % nonlinnonlin
     bool_nonlin_nonlin = (nonlinear_decisions == reference_decision_nonlinear);
@@ -39,7 +40,8 @@ function produce_figs(dbname, dsetname, numtrials, numsamples,init_sample, last_
     legend('proportion trials','true hazard rate','Location','southeast')
     ax=gca;
     ax.FontSize=20;
-    saveas(gcf, [savelocation, 'fig_',dsetname(2:end),'nonlin2nonlin.png'])
+    saveas(gcf, [savelocation, 'fig_',dsetname(2:end),'_tr',...
+                num2str(numtrials),'sp',num2str(numsamples), '_nonlin2nonlin.png'])
     % linnonlin - fit linear model to nonlinear data
     bool_lin_nonlin = (linear_decisions == reference_decision_nonlinear);
     proba_linnonlinear = mean(bool_lin_nonlin, 2);
@@ -55,7 +57,8 @@ function produce_figs(dbname, dsetname, numtrials, numsamples,init_sample, last_
     legend('proportion trials','best gamma','Location','southeast')
     ax=gca;
     ax.FontSize=20;
-    saveas(gcf,[savelocation,'fig_',dsetname(2:end),'lin2nonlin.png'])
+    saveas(gcf,[savelocation,'fig_',dsetname(2:end),'_tr',...
+                num2str(numtrials),'sp',num2str(numsamples),'_lin2nonlin.png'])
     % nonlinlin - fit nonlinear model to linear data
     bool_nonlin_lin = (nonlinear_decisions == reference_decision_linear);
     proba_nonlinlinear = mean(bool_nonlin_lin, 2);
@@ -70,5 +73,6 @@ function produce_figs(dbname, dsetname, numtrials, numsamples,init_sample, last_
     legend('proportion trials','true h','Location','southeast')
     ax=gca;
     ax.FontSize=20;
-    saveas(gcf,[savelocation, 'fig_',dsetname(2:end),'nonlin2lin.png'])
+    saveas(gcf,[savelocation, 'fig_',dsetname(2:end),'_tr',...
+                num2str(numtrials),'sp',num2str(numsamples),'_nonlin2lin.png'])
 end

@@ -7,19 +7,19 @@ set -e
 # 4/ produces figures of proportion of compatible trials with MATLAB
 
 # SET PARAMETERS
-S=3;
-lowrate=1;
-highrate="`python3 get_lambda_high.py $lowrate $S`";
-kappa="`python3 get_kappa.py $lowrate $highrate`";
-file_substr="ttt";
-filename="data/$file_substr.h5";
+S=3
+lowrate=2
+h=1
+T=2
+ntrials=500
+nsamples=5000
+highrate="`python3 get_lambda_high.py $lowrate $S`"
+kappa="`python3 get_kappa.py $lowrate $highrate`"
+file_substr="S$S""lr$lowrate""h$h""T$T""tr$ntrials""sp$nsamples"
+filename="data/$file_substr.h5"
 logfile="logs/create_$file_substr""_log.txt"
-h=1;
-T=2;
-groupname="/lr$lowrate""hr$highrate""h$h""T$T/";
-ntrials=100;
-nsamples=50;
-
+groupname="`python3 build_group_name.py $lowrate $highrate $h $T`"
+saveimfolder="figs/progressionS$S""lr$lowrate""h$h""T$T"
 # Uncomment following block for stdout checks
 : <<'END'
 echo
@@ -36,7 +36,10 @@ END
 
 echo "STEP 1-2" > $logfile
 python3 create_db.py "$lowrate" "$S" "$h" "$T" "$filename" "$ntrials" "$nsamples" &>> $logfile
-echo "STEP 3" >> $logfile
-matlab -nodesktop -nodisplay -r "fill_nonlin_dec($lowrate,$highrate,$kappa,$h,$T,'$filename',$ntrials,$nsamples)" &>> $logfile &
+echo "STEP 3 -- AGAIN" >> $logfile
+matlab -nodisplay -r "fill_nonlin_dec($lowrate,$highrate,$kappa,$h,$T,'$filename',$ntrials,$nsamples)" &>> $logfile &
+echo -n "`date`," >> status_db.txt
+echo -n "$filename," >> status_db.txt
+echo -n "hr$highrate" >> status_db.txt
 echo "STEP 4" >> $logfile
-#matlab -nodesktop -nodisplay < produce_figs.m &>> $logfile
+matlab -nodisplay -r "produce_figs('$filename', '$groupname', $ntrials,$nsamples,0, 40, '$saveimfolder')" &>> $logfile &
