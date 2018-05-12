@@ -5,11 +5,11 @@ all_h = [1, linspace(0,40,ncols_write-1)];
 td = 2;
 
 % S2 data
-dbname = '/storage/adrian/data_S_2_5.h5';
-dsetname = '/lr1hr6.46h1T2/trials';
-dsetname_decision = '/lr1hr6.46h1T2/decision_nonlin';
+dbname = '/storage/adrian/srvr_data_1.h5';
+dsetname='/lr15hr36.5367250374h1T2/trials';
+dsetname_decision='/lr15hr36.5367250374h1T2/decision_nonlin';
 trial_data = h5read(dbname,dsetname,[1 1],[ncols ntrials]);
-kappa = log(6.4641016151377544);
+kappa = log(36.5367250374/15);
 for i = 1:ntrials
     ls = trial_data{1,i};
     rs = trial_data{2,i};
