@@ -241,10 +241,13 @@ def get_best_gamma(ratio_rates, h, polyfit=False):
         return corr['gamma'][iddx]
 
 
-def update_linear_decision_data(file_name, group_name, num_samples, create_nonlin_db=False, verbose=False):
+def update_linear_decision_data(file_name, group_name, num_samples, create_nonlin_db=False):
     """
     :param file_name: file name (string)
     :param group_name: group object from h5py module
+    :param num_samples:
+    :param create_nonlin_db:
+    :param verbose:
     :return:
     """
     f = h5py.File(file_name, 'r+')
@@ -256,27 +259,9 @@ def update_linear_decision_data(file_name, group_name, num_samples, create_nonli
     dset_name = 'decision_lin'
     if create_nonlin_db:
         # create dataset for nonlinear decisions
-        group.create_dataset('decision_nonlin', (100000, 10001), dtype='i', maxshape=(100000, 10001))
-    # check whether decision dataset exists
-    if dset_name in group:
-        dset = group[dset_name]
-        dset_length, dset_width = dset.shape
-        # resize for new data
-        if dset_length < num_trials:
-            dset.resize(num_trials, axis=0)
-            row_indices = np.arange(dset_length, num_trials)
-        else:
-            if verbose:
-                print('possibly overwriting data')
-
-        if dset_width < num_samples + 1:
-            dset.resize(num_samples+1, axis=1)
-        else:
-            if verbose:
-                print('possibly overwriting data')
-    else:
-        dset = group.create_dataset(dset_name, (num_trials, num_samples+1), dtype='i', maxshape=(100000, num_samples+1))
-        row_indices = np.arange(num_trials)
+        group.create_dataset('decision_nonlin', (num_trials, num_samples),
+                             dtype='i', maxshape=(100000, 10001))
+    dset = group[dset_name]
 
     # store best gamma as attribute for future reference
     best_gamma = get_best_gamma(round(info_dset.attrs['S'], 4), 1)
@@ -290,7 +275,7 @@ def update_linear_decision_data(file_name, group_name, num_samples, create_nonli
     for row_idx in row_indices:
         # get trial object
         stim = tuple(trials_dset[row_idx, :2])
-        gamma_array = np.reshape(np.r_[best_gamma,gamma_samples], (-1,1))
+        gamma_array = np.reshape(np.r_[best_gamma, gamma_samples], (-1, 1))
         dset[row_idx, :] = decide_linear(gamma_array, stim)
     f.flush()
     f.close()
@@ -313,7 +298,7 @@ if __name__ == '__main__':
     # scalar parameters
     int_time = 2
     hazard = 1
-    S = 2
+    S = 3
     filename = 'data/small_data_TEST.h5'
 
     start_time = time.time()
@@ -322,8 +307,8 @@ if __name__ == '__main__':
     fp = (lr, hr, hazard, int_time)
     grp_name = build_group_name(fp)
     true_g = get_best_gamma(S, hazard)
-    number_of_trials = 10000
-    nsamples = 1000
+    number_of_trials = 1000
+    nsamples = 100
     populate_hfd5_db(filename, fp, number_of_trials, number_of_samples=nsamples)
     update_linear_decision_data(filename, grp_name, nsamples)
 
