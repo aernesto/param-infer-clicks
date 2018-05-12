@@ -1,5 +1,4 @@
 db_file_name	Location    	Size    S	LowRate	Samples Trials  Dec_S_lr
 ------------	--------	----	-	-------	-------	------	--------
 srvr_data_1.h5	/storage/adrian 16 GB   0.5;3;8	15	10,000	100,000	8; 15
-data_S_2_5.h5	/storage/adrian 25 GB   2; 5	1;15;30	10,000	100,000	2; 1
-small_data_1.h5 data/      	84 MB   2       1   	CORRUPTED
+data_S_2_5.h5	/storage/adrian 27 GB   2; 5	1;15;30	10,000	100,000	2; 1 

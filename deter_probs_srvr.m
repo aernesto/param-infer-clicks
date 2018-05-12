@@ -1,10 +1,10 @@
 % computes empirical probabilities of each sample being the correct one
 clear
 % explore data
-dbname = '/storage/adrian/srvr_data_1.h5';
+dbname = '/storage/adrian/data_S_2_5.h5';
 %dsetname = '/lr15hr57.6h1T2/trials';
-dsetname_decision_nonlin = '/lr15hr101.258639865h1T2/decision_nonlin';
-dsetname_decision_lin = '/lr15hr101.258639865h1T2/decision_lin';
+dsetname_decision_nonlin = '/lr1hr6.46h1T2/decision_nonlin';
+dsetname_decision_lin = '/lr1hr6.46h1T2/decision_lin';
 %h5disp(dbname)
 numtrials=100000;
 numsamples = 10000;
