@@ -7,11 +7,11 @@ set -e
 # 4/ produces figures of proportion of compatible trials with MATLAB
 
 # SET PARAMETERS
-S=3
-lowrate=2
+S=4
+lowrate=5
 h=1
 T=2
-ntrials=500
+ntrials=1000
 nsamples=5000
 highrate="`python3 get_lambda_high.py $lowrate $S`"
 kappa="`python3 get_kappa.py $lowrate $highrate`"
@@ -42,4 +42,5 @@ echo -n "`date`," >> status_db.txt
 echo -n "$filename," >> status_db.txt
 echo -n "hr$highrate" >> status_db.txt
 echo "STEP 4" >> $logfile
-matlab -nodisplay -r "produce_figs('$filename', '$groupname', $ntrials,$nsamples,0, 40, '$saveimfolder')" &>> $logfile &
+# following line doesn't work as such
+#matlab -nodisplay -r "produce_figs('$filename', '$groupname', $ntrials,$nsamples,0, 40, '$saveimfolder')" &>> $logfile &
