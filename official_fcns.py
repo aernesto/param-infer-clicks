@@ -86,7 +86,7 @@ def get_best_gamma(s, h, polyfit=True):
                  0.781956794258376,
                  1.545682894736835]
         polyfcn = np.poly1d(coefs)
-        return h*polyfcn(s)
+        return h*polyfcn(s/np.sqrt(h))
     else:
         corr = {'gamma': np.array([2.0848, 2.5828, 3.3143, 4.2789, 5.4162, 6.7457, 8.1371, 9.7199,
                                    11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
