@@ -81,19 +81,18 @@ def gen_stim(ct, rate_l, rate_h, dur):
 
 def get_best_gamma(s, h, polyfit=True):
     if polyfit:
-        s_root_h = s / np.sqrt(h)
         # coefficients of polynomial in decreasing power order (coefs[0]*x**n+...)
         coefs = [0.308812235133288,
                  0.781956794258376,
                  1.545682894736835]
         polyfcn = np.poly1d(coefs)
-        return polyfcn(s_root_h)
+        return h*polyfcn(s)
     else:
         corr = {'gamma': np.array([2.0848, 2.5828, 3.3143, 4.2789, 5.4162, 6.7457, 8.1371, 9.7199,
                                    11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
                                    27.7241, 30.5711, 33.5354, 36.7966, 40.3143]),
-                'S/h': np.arange(0.5, 10.1, 0.5)}
-        iddx = np.where(corr['S/h'] == s)[0][0]
+                'S': np.arange(0.5, 10.1, 0.5)}
+        iddx = np.where(corr['S'] == s)[0][0]
         return corr['gamma'][iddx]
 
 
@@ -142,11 +141,12 @@ def decide_linear(gammas_array, stimulus, init_cond=0):
     return np.sign(y)
 
 
-def update_linear_decision_data(file_name, group_name, num_samples, create_nonlin_db=False):
+def update_linear_decision_data(file_name, group_name, num_samples, sample_range, create_nonlin_db=False):
     """
     :param file_name: file name (string)
     :param group_name: group object from h5py module
     :param num_samples:
+    :param sample_range: (starting value, ending value)
     :param create_nonlin_db:
     :return:
     """
@@ -174,10 +174,10 @@ def update_linear_decision_data(file_name, group_name, num_samples, create_nonli
         else:
             best_gamma = get_best_gamma(skellam, h)
         dset.attrs['best_gamma'] = best_gamma
-    gamma_samples, gamma_step = np.linspace(0, 40, num_samples, retstep=True)
-    attrslist = ['init_sample','end_sample','sample_step']
-    values_dict = {'init_sample': gamma_samples[0],
-                   'end_sample': gamma_samples[-1],
+    gamma_samples, gamma_step = np.linspace(sample_range[0], sample_range[1], num_samples, retstep=True)
+    attrslist = ['init_sample', 'end_sample', 'sample_step']
+    values_dict = {'init_sample': sample_range[0],
+                   'end_sample': sample_range[1],
                    'sample_step': gamma_step}
     for attrname in attrslist:
         if attrname not in dset.attrs.keys():

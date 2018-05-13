@@ -121,7 +121,7 @@ if __name__ == '__main__':
     6. num_trials
     7. num_samples
     """
-    if len(sys.argv) == 8:
+    if len(sys.argv) == 10:
         # low click rate
         try:
             lr = float(sys.argv[1])
@@ -170,6 +170,13 @@ if __name__ == '__main__':
             print('\nError msg: seventh command line arg corresponding to number of samples should be an integer\n')
             exit(1)
 
+        # Gamma sample range
+        try:
+            gamma_range = (float(sys.argv[8]), float(sys.argv[9]))
+        except ValueError:
+            print('\nError msg: pb with eigth or ninth command line arg corresponding to gamma sample range\n')
+            exit(1)
+
         start_time = time.time()
 
         hr = get_lambda_high(lr, S)
@@ -178,7 +185,7 @@ if __name__ == '__main__':
         true_g = get_best_gamma(S, hazard)
 
         populate_hfd5_db(filename, fp, number_of_trials, number_of_samples=nsamples)
-        update_linear_decision_data(filename, grp_name, nsamples)
+        update_linear_decision_data(filename, grp_name, nsamples, gamma_range)
 
         print("--- {} seconds ---".format(time.time() - start_time))
     else:

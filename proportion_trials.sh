@@ -11,8 +11,12 @@ S=6
 lowrate=30
 h=20
 T=2
-ntrials=500
-nsamples=1000
+ntrials=1000
+nsamples=5000
+gamma_init=320
+gamma_end=360
+h_init=0
+h_end=40
 highrate="`python3 get_lambda_high.py $lowrate $S`"
 kappa="`python3 get_kappa.py $lowrate $highrate`"
 file_substr="S$S""lr$lowrate""h$h""T$T""tr$ntrials""sp$nsamples"
@@ -35,12 +39,13 @@ echo
 END
 
 echo "STEP 1-2" > $logfile
-python3 create_db.py "$lowrate" "$S" "$h" "$T" "$filename" "$ntrials" "$nsamples" &>> $logfile
+python3 create_db.py "$lowrate" "$S" "$h" "$T" "$filename" "$ntrials" "$nsamples" "$gamma_init" "$gamma_end" &>> $logfile
 echo "STEP 3 -- AGAIN" >> $logfile
-matlab -nodisplay -r "fill_nonlin_dec($lowrate,$highrate,$kappa,$h,$T,'$filename',$ntrials,$nsamples)" &>> $logfile &
+matlab -nodisplay -r "fill_nonlin_dec($lowrate,$highrate,$kappa,$h,$T,'$filename',$ntrials,$nsamples,[$h_init,$h_end])" &>> $logfile &
 echo -n "`date`," >> status_db.txt
 echo -n "$filename," >> status_db.txt
-echo -n "hr$highrate" >> status_db.txt
-echo "STEP 4" >> $logfile
+echo -n "$groupname," >> status_db.txt
+echo "hr$highrate" >> status_db.txt
+#echo "STEP 4" >> $logfile
 # following line doesn't work as such
 #matlab -nodisplay -r "produce_figs('$filename', '$groupname', $ntrials,$nsamples,0, 40, '$saveimfolder')" &>> $logfile &
