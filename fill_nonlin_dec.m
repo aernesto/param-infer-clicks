@@ -13,7 +13,7 @@ function fill_nonlin_dec(lr, hr, kappa, h, td, dbname, ntrials, nsamples)
 %display(dbname)
 ncols=2;
 ncols_write=nsamples+1;
-all_h = [1, linspace(0,40,ncols_write-1)];
+all_h = [h, linspace(0,40,ncols_write-1)];
 ss=strip(strip(num2str(hr,'%.2f'),'0'),'.');
 grp_name = ['/lr',num2str(lr),'hr',ss,'h',...
     num2str(h,'%.0f'), 'T',num2str(td, '%.0f')];

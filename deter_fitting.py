@@ -11,6 +11,7 @@ import time
 import sys
 import h5py
 from sympy import *
+from official_fcns import *
 
 font = {'family': 'DejaVu Sans',
         'weight': 'bold',
@@ -282,23 +283,6 @@ class Trial:  # todo: make sure trial_duration is passed correctly in rest of sc
         return not found
 
 
-def end_point_nonlin(init_cond, end_time, hr):
-    if init_cond == 0:
-        return 0
-    else:
-        return float(2*mpmath.acoth(np.exp(2*hr*end_time)*mpmath.coth(init_cond/2)))
-
-
-def get_lambda_high(lamb_low, s):
-    """
-    returns the high click rate, given the low click rate and S as input.
-    :param lamb_low: low click rate
-    :param s: S=(lambda_high-lambda_low)/sqrt(lambda_low+lambda_high)
-    :return: value of lambda_high that fits with S and lambda_low
-    """
-    return (2 * lamb_low + s ** 2 + s * np.sqrt(s ** 2 + 8 * lamb_low)) / 2
-
-
 def deter_fit(p):
     """
     :param p: a dict of parameters with the following keys:
@@ -336,21 +320,11 @@ def get_intervals(ref_dec, synthetic_dec, init_sample_values):
     """
 
 
-
-
-
 def build_sample_vec(samples_params_dict):
     start = samples_params_dict['start']
     end = samples_params_dict['end']
     nb = samples_params_dict['number']
     return np.linspace(start, end, nb)
-
-def build_group_name(four_p):
-    """
-    :param four_p: (low click rate, high click rate, hazard rate, interrogation time)
-    :return: string
-    """
-    return 'lr' + str(four_p[0]) + 'hr' + str(four_p[1]) + 'h' + str(four_p[2]) + 'T' + str(four_p[3])
 
 
 def get_best_gamma(skellam, h, polyfit=False):

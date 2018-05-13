@@ -2,12 +2,13 @@ function produce_figs(dbname, dsetname, numtrials, numsamples,init_sample, last_
     % computes empirical probabilities of each sample being the correct one
     dsetname_decision_nonlin = [dsetname,'/decision_nonlin'];
     dsetname_decision_lin = [dsetname,'/decision_lin'];
+    dsetname_info = [dsetname,'/trial_info'];
     linear_decisions = h5read(dbname, dsetname_decision_lin, [2,1], [numsamples, numtrials]);
     nonlinear_decisions = h5read(dbname, dsetname_decision_nonlin, [2,1], [numsamples, numtrials]);
     reference_decision_linear = h5read(dbname, dsetname_decision_lin, [1,1], [1, numtrials]);
     reference_decision_nonlinear = h5read(dbname, dsetname_decision_nonlin, [1,1], [1, numtrials]);
     true_param_lin = h5readatt(dbname,dsetname_decision_lin,'best_gamma');
-    true_param_nonlin = 1;
+    true_param_nonlin = h5readatt(dbname, dsetname_info, 'h');
     param_values = linspace(init_sample,last_sample,numsamples);
     % linlin
     bool_lin_lin = (linear_decisions == reference_decision_linear);
