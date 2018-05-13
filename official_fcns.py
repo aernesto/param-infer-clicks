@@ -190,3 +190,25 @@ def update_linear_decision_data(file_name, group_name, num_samples, create_nonli
         dset[row_idx, :] = decide_linear(gamma_array, stim)
     f.flush()
     f.close()
+
+
+def get_accuracy(filename, groupname, model, sample_col=0):
+    """
+    computes the accuracy of the given model in the given database, using the given sample value
+    :param filename:
+    :param groupname:
+    :param model: either 'lin' or 'nonlin'
+    :param sample_col:
+    :return: accuracy between 0 and 1
+    """
+    if model not in ['lin', 'nonlin']:
+        raise ValueError("model param should be either 'lin' or 'nonlin'")
+        exit(1)
+    with h5py.File(filename, 'r') as f:
+        grp = f[groupname]
+        decision_dset = grp['decision_{}'.format(model)]
+        info_dset = grp['trial_info']
+        decisions = decision_dset[:, sample_col]
+        correct_choice = info_dset[:, 1]  # end state of environment stored in 2nd column
+        correct_decision = decisions == correct_choice
+        return np.mean(correct_decision)
