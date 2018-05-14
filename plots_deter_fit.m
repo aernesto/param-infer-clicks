@@ -1,16 +1,18 @@
 clear
-fname='data/S3lr2h1T2tr500sp5K.h5';
+fname='data/S3lr2h1T2tr5Ksp10K.h5';
 gname='/lr2hr14h1T2';
-ntrials=500;
-nsamp=5000;
+ntrials=5000;
+nsamp=10000;
 range_g=[0,40];
 range_h=[0,40];
 [l2l,l2n,n2l,n2n]=count_perfect_samples(fname,gname,ntrials,nsamp,...
     range_g(1),range_g(2),range_h(1), range_h(2));
 
 ms=10;lw=1.5;fs=18;
-xlim_lin=[min(min(l2l.values),min(l2n.values)),max(max(l2l.values),max(l2n.values))];
-xlim_nonlin=[min(min(n2l.values),min(n2n.values)),max(max(n2l.values),max(n2n.values))];
+xlim_lin=[min([min(l2l.values),min(l2n.values),l2l.true_param_fit]),...
+    max([max(l2l.values),max(l2n.values),l2l.true_param_fit])];
+xlim_nonlin=[min([min(n2l.values),min(n2n.values),n2l.true_param_fit]),...
+    max([max(n2l.values),max(n2n.values),n2l.true_param_fit])];
 
 subplot(2,2,1)
 yval=l2l.maxprob*100;
