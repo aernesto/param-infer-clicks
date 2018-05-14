@@ -7,9 +7,9 @@ set -e
 # 4/ produces figures of proportion of compatible trials with MATLAB
 
 # SET PARAMETERS
-S=5
-lowrate=0.1
-h=1
+S=6
+lowrate=30
+h=20
 T=2
 ntrials=100000
 nsamples=3
