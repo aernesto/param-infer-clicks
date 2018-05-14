@@ -7,14 +7,14 @@ set -e
 # 4/ produces figures of proportion of compatible trials with MATLAB
 
 # SET PARAMETERS
-S=6
-lowrate=30
-h=20
+S=5
+lowrate=0.1
+h=1
 T=2
-ntrials=1000
-nsamples=5000
-gamma_init=320
-gamma_end=360
+ntrials=100000
+nsamples=3
+gamma_init=0
+gamma_end=40
 h_init=0
 h_end=40
 highrate="`python3 get_lambda_high.py $lowrate $S`"
