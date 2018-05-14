@@ -10,7 +10,7 @@ function produce_figs(dbname, dsetname, numtrials, init_g, last_g, numsamples, i
     true_param_lin = h5readatt(dbname,dsetname_decision_lin,'best_gamma');
     true_param_nonlin = h5readatt(dbname, dsetname_info, 'h');
     lin_param_values = linspace(init_g,last_g,numsamples);
-    nonlin_param_values = linspace(init_h, last_h, numsamples)
+    nonlin_param_values = linspace(init_h, last_h, numsamples);
     % linlin
     bool_lin_lin = (linear_decisions == reference_decision_linear);
     proba_linear = mean(bool_lin_lin, 2);
