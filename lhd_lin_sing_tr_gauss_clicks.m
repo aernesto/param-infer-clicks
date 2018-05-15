@@ -5,9 +5,9 @@ function lklh = lhd_lin_sing_tr_gauss_clicks(dec, noise_stdev, kappa, T, left_cl
 % gammas must be a col vector or scalar
 % RETURNS:
 % returns NaN if both click trains are empty, otherwise, returns column
-% vector with probabilities, one entry per gamma value.
+% vector with log probabilities, one entry per gamma value.
 % DESCR:
-% computes the likelihood of choosing dec (+1 or -1), given the click trains,
+% computes the log-likelihood of choosing dec (+1 or -1), given the click trains,
 % the discounting rate gamma, and the stdev of the Gaussian noise applied
 % to each click
 if size(gammas,2) > 1
@@ -30,7 +30,7 @@ else
     neg1 = sum(exp(gammas*left_clicks),2);
     neg2 = sum(exp(2*gammas*left_clicks),2);
 end
-meanTerm = double(dec) * kappa * exp(-gammas*T) .* (pos1 - neg1);
+meanTerm = single(dec) * kappa * exp(-gammas*T) .* (pos1 - neg1);
 varTerm = noise_stdev^2 * exp(-2*gammas*T) .* (pos2 + neg2);
-lklh = normcdf(meanTerm ./ sqrt(varTerm));
+lklh = log(normcdf(meanTerm ./ sqrt(varTerm)));
 end

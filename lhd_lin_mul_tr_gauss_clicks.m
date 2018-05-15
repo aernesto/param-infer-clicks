@@ -1,4 +1,4 @@
-function posterior = lhd_lin_mul_tr_gauss_clicks(dbname, grp_name, ntrials, noise_stdev, gammas)
+function log_posterior = lhd_lin_mul_tr_gauss_clicks(dbname, grp_name, ntrials, noise_stdev, gammas)
 ncols=2;
 dsetname = [grp_name,'/trials'];
 info_dset = [grp_name,'/trial_info'];
@@ -14,7 +14,7 @@ init_cond=0;
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
 %dec_data = h5read(dbname, dec_dset, [1 1], [1 ntrials]);
 %dec_data(1)
-posterior = ones(size(gammas))/(gammas(end)-gammas(1));
+log_posterior = ones(size(gammas))/(gammas(end)-gammas(1));
 tic
 for i = 1:ntrials
     lst = trial_data{1,i}; % col vector
@@ -22,7 +22,7 @@ for i = 1:ntrials
     seed = i;
     dec_data = gauss_noise_lin_decide(lst, rst, true_gamma, kappa, noise_stdev, seed, init_cond);
     try
-        posterior = posterior .* lhd_lin_sing_tr_gauss_clicks(dec_data, noise_stdev,...
+        log_posterior = log_posterior + lhd_lin_sing_tr_gauss_clicks(dec_data, noise_stdev,...
             kappa, T, lst', rst', gammas);
     catch ME
         rethrow(ME)
@@ -30,4 +30,7 @@ for i = 1:ntrials
     end
 end
 toc
+% Normalize?
+%C = -log(sum(exp(log_posterior)));
+%log_posterior = log_posterior+C;
 end
