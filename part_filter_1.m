@@ -16,9 +16,9 @@ true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 hs=linspace(0,5,50)'; % values of h to try
-ntrials=50;
-npart=400;
-nsd=2;
+ntrials=200;
+npart=500;
+nsd=.1;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
 log_posterior=zeros(1,length(hs));
@@ -33,8 +33,14 @@ for num_trial = 1:ntrials
     end
 end
 toc
-plot(hs, log_posterior, 'LineWidth', lw)
-%ylim([0,max(log_posterior)])
-ylabel('unnormalized log-posterior')
-xlabel('h fit')
-saveas(gcf,'/home/adrian/tosubmit_home/pf.png')
+filename=['/home/adrian/tosubmit_home/logpost_',...
+		'tr',...
+		num2str(ntrials),...
+		'sd',...
+		num2str(nsd),...
+		'part',...
+		num2str(npart),...
+		'sp',...
+		num2str(length(hs)),...
+		'.mat'];
+save(filename,'log_posterior','-v7.3')
