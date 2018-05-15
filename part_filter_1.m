@@ -3,21 +3,21 @@ clear
 lw=3; % line width for plots
 
 % db 
-dbname='data/S3lr2h1T2tr5Ksp10K.h5'; % hdf5 filename
-grp_name='/lr2hr14h1T2';
+dbname='/scratch/adrian/sandbox_data.h5'; % hdf5 filename
+grp_name='/lr15hr36.54h1T2';
 dsetname = [grp_name,'/trials'];
 info_dset = [grp_name,'/trial_info'];
 dec_dset = [grp_name,'/decision_nonlin']; % decision dataset
 
-hr = h5readatt(dbname, info_dset, 'high_click_rate');
-lr = h5readatt(dbname, info_dset, 'low_click_rate');
-T = h5readatt(dbname, info_dset, 'T'); % trial duration
-true_h = h5readatt(dbname, info_dset, 'h'); % true hazard rate
+hr = double(h5readatt(dbname, info_dset, 'high_click_rate'));
+lr = double(h5readatt(dbname, info_dset, 'low_click_rate'));
+T = double(h5readatt(dbname, info_dset, 'T')); % trial duration
+true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 hs=linspace(0,10,10)'; % values of h to try
 ntrials=2;
-npart=100;
+npart=200;
 nsd=1;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
@@ -37,3 +37,4 @@ plot(hs, log_posterior, 'LineWidth', lw)
 %ylim([0,max(log_posterior)])
 ylabel('unnormalized log-posterior')
 xlabel('h fit')
+saveas(gcf,'/home/adrian/tosubmit_home/pf.png')
