@@ -14,7 +14,7 @@ init_cond=0;
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
 %dec_data = h5read(dbname, dec_dset, [1 1], [1 ntrials]);
 %dec_data(1)
-log_posterior = ones(size(gammas))/(gammas(end)-gammas(1));
+log_posterior = log(ones(size(gammas))/(gammas(end)-gammas(1)));
 tic
 for i = 1:ntrials
     lst = trial_data{1,i}; % col vector
