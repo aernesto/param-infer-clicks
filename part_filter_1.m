@@ -3,8 +3,8 @@ clear
 lw=3; % line width for plots
 
 % db 
-dbname='/scratch/adrian/sandbox_data.h5'; % hdf5 filename
-grp_name='/lr15hr36.54h1T2';
+dbname='/storage/adrian/data_S_2_5.h5'; % hdf5 filename
+grp_name='/lr1hr6.46h1T2';
 dsetname = [grp_name,'/trials'];
 info_dset = [grp_name,'/trial_info'];
 dec_dset = [grp_name,'/decision_nonlin']; % decision dataset
@@ -15,10 +15,10 @@ T = double(h5readatt(dbname, info_dset, 'T')); % trial duration
 true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
-hs=linspace(0,10,10)'; % values of h to try
-ntrials=2;
-npart=200;
-nsd=1;
+hs=linspace(0,5,50)'; % values of h to try
+ntrials=50;
+npart=400;
+nsd=2;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
 log_posterior=zeros(1,length(hs));
