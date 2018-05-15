@@ -39,3 +39,4 @@ h5writeatt(dbname,dsetname_decision,'init_sample',sample_range(1))
 h5writeatt(dbname,dsetname_decision,'end_sample',sample_range(2))
 h5writeatt(dbname,dsetname_decision,'sample_step',diff(sample_range)/(ncols_write-2))
 toc
+end
