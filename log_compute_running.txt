@@ -1,3 +1,3 @@
-04
-08
-10
+04	sd1	400tr	500parts
+08	sd1	200tr	1000parts
+10	sd0.5	150tr	500parts

@@ -17,7 +17,7 @@ k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 hs=linspace(0,5,50)'; % values of h to try
 ntrials=200;
-npart=500;
+npart=1000;
 nsd=1;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);

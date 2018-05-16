@@ -4,6 +4,7 @@ lw=3; % line width for plots
 
 % db 
 dbname='/storage/adrian/data_S_2_5.h5'; % hdf5 filename
+trials_in_db = 100000;
 grp_name='/lr1hr6.46h1T2';
 dsetname = [grp_name,'/trials'];
 info_dset = [grp_name,'/trial_info'];
@@ -16,11 +17,13 @@ true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 hs=linspace(0,5,50)'; % values of h to try
-ntrials=100;
+ntrials=150;
 npart=500;
-nsd=1;
+nsd=.5;
+rng('shuffle')
+start_trial = randsample(trials_in_db-ntrials,1);
 ncols=2; %nb of columns in db
-trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
+trial_data = h5read(dbname, dsetname, [1 start_trial], [ncols ntrials]);
 log_posterior=zeros(1,length(hs));
 tic
 for num_trial = 1:ntrials

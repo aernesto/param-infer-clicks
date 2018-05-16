@@ -16,9 +16,9 @@ true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 hs=linspace(0,5,50)'; % values of h to try
-ntrials=200;
+ntrials=400;
 npart=500;
-nsd=.1;
+nsd=1;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
 log_posterior=zeros(1,length(hs));
