@@ -18,6 +18,8 @@ font = {'family': 'DejaVu Sans',
         'size': 15}
 
 matplotlib.rc('font', **font)
+
+
 # from fractions import Fraction
 # from math import gcd
 
@@ -110,48 +112,6 @@ class Trial:  # todo: make sure trial_duration is passed correctly in rest of sc
         self.admissible_gammas = [{'interval': x, 'samples': self.gen_sample_gammas(x)} for x in interval_list]
         if self.verbose:
             self.report('reconstruction of gammas over')
-
-    def reconstruct_interval(self, interval):
-        """
-        splits an interval into sub-intervals
-        :param interval: dict with: dict['interval'] = (lower_bound, upper_bound) and dict['samples'] = numpy.array
-        :return: list of sub-intervals, possibly empty
-        """
-        interval_list = []
-        last_lower_bound, last_upper_bound = interval['interval']
-        old_samples = interval['samples']
-        lower_bound = None  # new lower bound
-        last_up = 0  # new upper bound
-
-        for indx, g in enumerate(old_samples):
-            nan = np.isnan(g)
-            if (lower_bound is None) and nan:
-                continue
-            elif g <= last_up:
-                continue
-            elif lower_bound is None:
-                nlb = g - self.tolerance_gamma
-                if nlb >= max(last_lower_bound, last_up):
-                    lower_bound = nlb
-                else:
-                    lower_bound = max(last_lower_bound, last_up)
-                # for debug purposes
-                if lower_bound < last_up:
-                    print('WARNING: overlapping consecutive intervals')
-            elif nan:
-                gm1 = old_samples[max(indx - 1, 0)]
-                last_up = gm1 + self.tolerance_gamma
-                # following if just for debugging
-                if last_up > lower_bound:
-                    interval_list += [(lower_bound, last_up)]
-                else:
-                    print('WARNING: negative length interval!!!')
-                lower_bound = None
-            # list of samples ended without nan values, so inherit upper bound from prev. setting
-            elif g == old_samples[-1]:
-                last_up = last_upper_bound
-                interval_list += [(lower_bound, last_up)]
-        return interval_list
 
     def gen_sample_gammas(self, interval, max_range=50, max_samples=1000, min_distance=0.001):
         """
@@ -285,46 +245,129 @@ class Trial:  # todo: make sure trial_duration is passed correctly in rest of sc
 
 def deter_fit(p):
     """
+
     :param p: a dict of parameters with the following keys:
         ['S','low_rate','high_rate','hazard_rate','T','best_gamma',
-        'filename','samples_params','ntrials','group_name']
-    :return: dict containing four lists of admissible intervals
+        'filename','samples_params','tot_trials_db','block_number',
+        'trial_number','model_to_fit','reference_model','group_name']
+    :return: 2-tuple containing the average MSE across blocks and average total admissible width across blocks
     """
-    # prepare DB
-    db_file = h5py.File(p['filename'], 'r')
-    group_name = p['group_name']
-    dset_trials = db_file[group_name + '/trials']
-    dset_info = db_file[group_name + '/trial_info']
-    dset_lin_dec = db_file[group_name + '/decision_lin']
-    dset_nonlin_dec = db_file[group_name + '/decision_nonlin']
-    T = p['T']
-    fit_results_dict = {'lin2lin': [],
-                        'lin2nonlin': [],
-                        'nonlin2lin': [],
-                        'nonlin2nonlin': []}
-    all_sample_values = build_sample_vec(p['samples_params'])
-    for model_condition in fit_results_dict.keys():
+    with h5py.File(p['filename'], 'r') as db_file:
+        group_name = p['group_name']
+        # dset_trials = db_file[group_name + '/trials']
+        # dset_info = db_file[group_name + '/trial_info']
+        dset_dec_to_fit = db_file[group_name + '/decision_' + p['model_to_fit']]
+        dset_dec_ref = db_file[group_name + '/decision_' + p['reference_model']]
+        T = p['T']
+        all_sample_values, sp_tol = build_sample_vec(p['samples_params'])
+        if p['model_to_fit'] == 'lin':
+            true_param = p['best_gamma']
+        elif p['model_to_fit'] == 'nonlin':
+            true_param = p['hazard_rate']
+        else:
+            raise ValueError("'model_to_fit' key in p argument has wrong value")
 
-        fit_results_dict[model_condition] = get_intervals(model_condition)
+        running_mse = 0
+        running_avg_width = 0
+        N = p['block_number']
+        ntrials = p['trial_number']
 
-    db_file.close()
-    return fit_results_dict
+        # inline function definition
+        def get_block(block_idx):
+            return slice(block_idx * ntrials, (block_idx + 1) * ntrials)
+
+        for i in range(N):
+            block_slice = get_block(i)
+            reference_dec = dset_dec_ref[block_slice, 0]
+            decision_data = dset_dec_to_fit[block_slice, 1:]
+            curr_sq_err, curr_width = get_block_width(reference_dec, decision_data, all_sample_values, sp_tol, true_param)
+            running_mse += curr_sq_err / N
+            running_avg_width += curr_width / N
+
+    return running_mse, running_avg_width
 
 
-def get_intervals(ref_dec, synthetic_dec, init_sample_values):
+def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, sample_edges, true_parameter):
     """
-    :param ref_dec: value of reference decision
-    :param synthetic_dec: vector of decision per sample value
-    :param init_sample_values: initial numpy array of admissible samples
-    :return: list of admissible intervals
+    :param ref_dec: value of reference decision for each trial
+    :param synthetic_dec: matrix of decision per sample value
+    :param sample_tolerance: width to add around valid samples
+    :param sample_edges: tuple with lowest and highest sample values
+    :param true_parameter: true parameter to recover
+    :return: 2-tuple with squared error and total admissible width
     """
+    # construct boolean matrix of compatible decisions
+    col_vec_ref_dec = np.reshape(ref_dec, (-1, 1))
+    bool_vec = col_vec_ref_dec == synthetic_dec
+
+    # set places where synthetic decision was 0 to 1 in boolean matrix
+    bool_vec[synthetic_dec == 0] = True
+
+    # perform 'and' operation column-wise to get end-block valid samples
+    valid_samples = np.prod(bool_vec, axis=0)
+
+    # add tolerances around edges
+    sample_array[np.logical_not(valid_samples)] = np.nan
+    interval_dict = {'interval': sample_edges, 'samples': sample_array}
+    interval_list = reconstruct_interval(interval_dict, sample_tolerance)
+
+    # compute squared error
+    squared_error
+
+    # compute total width
+
+    return squared_error, total_width
+
+
+def reconstruct_interval(interval, tolerance):
+    """
+    splits an interval into sub-intervals
+    :param interval: dict with: dict['interval'] = (lower_bound, upper_bound) and dict['samples'] = numpy.array
+    :param tolerance: space between consecutive samples
+    :return: list of sub-intervals, possibly empty
+    """
+    interval_list = []
+    last_lower_bound, last_upper_bound = interval['interval']
+    old_samples = interval['samples']
+    lower_bound = None  # new lower bound
+    last_up = 0  # new upper bound
+
+    for indx, g in enumerate(old_samples):
+        nan = np.isnan(g)
+        if (lower_bound is None) and nan:
+            continue
+        elif g <= last_up:
+            continue
+        elif lower_bound is None:
+            nlb = g - tolerance
+            if nlb >= max(last_lower_bound, last_up):
+                lower_bound = nlb
+            else:
+                lower_bound = max(last_lower_bound, last_up)
+            # for debug purposes
+            if lower_bound < last_up:
+                print('WARNING: overlapping consecutive intervals')
+        elif nan:
+            gm1 = old_samples[max(indx - 1, 0)]
+            last_up = gm1 + tolerance
+            # following if just for debugging
+            if last_up > lower_bound:
+                interval_list += [(lower_bound, last_up)]
+            else:
+                print('WARNING: negative length interval!!!')
+            lower_bound = None
+        # list of samples ended without nan values, so inherit upper bound from prev. setting
+        elif g == old_samples[-1]:
+            last_up = last_upper_bound
+            interval_list += [(lower_bound, last_up)]
+    return interval_list
 
 
 def build_sample_vec(samples_params_dict):
     start = samples_params_dict['start']
     end = samples_params_dict['end']
     nb = samples_params_dict['number']
-    return np.linspace(start, end, nb)
+    return np.linspace(start, end, nb, retstep=True)
 
 
 def get_best_gamma(skellam, h, polyfit=False):
@@ -337,7 +380,7 @@ def get_best_gamma(skellam, h, polyfit=False):
                                    11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
                                    27.7241, 30.5711, 33.5354, 36.7966, 40.3143]),
                 'S/sqrt(h)': np.arange(0.5, 10.1, 0.5)}
-        iddx = np.where(corr['S/sqrt(h)'] == skellam/np.sqrt(h))[0][0]
+        iddx = np.where(corr['S/sqrt(h)'] == skellam / np.sqrt(h))[0][0]
         return corr['gamma'][iddx]
 
 
@@ -360,16 +403,24 @@ if __name__ == '__main__':
 
     # 1/ Define parameters for synthetic data to read
     params = {'S': 3,
-              'low_rate': 1,
+              'low_rate': 2,
               'hazard_rate': 1,
               'T': 2,
-              'filename': 'data/',
+              'filename': 'data/S3lr2h1T2tr5Ksp10K.h5',
               'samples_params': {'start': 0, 'end': 40, 'number': 10000},
-              'ntrials': 100000}
+              'tot_trials_db': 5000,
+              'block_number': 100,
+              'trial_number': 50,
+              'model_to_fit': 'lin',
+              'reference_model': 'lin'}
     params['high_rate'] = get_lambda_high(params['low_rate'], S)
-    params['best_gamma'] = get_best_gamma(params['S'], params['hazard_rate'])
+    if params['S'] in np.arange(0.5, 10.1, 0.5) and params['hazard_rate'] == 1:
+        pol = False
+    else:
+        pol = True
+    params['best_gamma'] = get_best_gamma(params['S'], params['hazard_rate'], polyfit=pol)
     params['group_name'] = build_group_name((params['low_rate'],
                                              params['high_rate'],
                                              params['hazard_rate'],
                                              params['T']))
-    admissible_intervals = deter_fit(params)
+    MSE, AvgWidth = deter_fit(params)
