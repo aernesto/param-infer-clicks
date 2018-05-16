@@ -102,7 +102,11 @@ def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, samp
             curr_intgl = (ivl[1]**2-ivl[0]**2) / 2
             tot_intgl += curr_intgl
             tot_width += curr_width
-        estimate = tot_intgl / tot_width
+        try:
+            estimate = tot_intgl / tot_width
+        except ZeroDivisionError:
+            print('Warning: samples depleted')
+            estimate = 0
         sqerr = (estimate - true_parameter)**2
         return sqerr, tot_width
 
@@ -159,8 +163,8 @@ if __name__ == '__main__':
               'tot_trials_db': 5000,
               'block_number': 25,
               'trial_number': 200,
-              'model_to_fit': 'lin',
-              'reference_model': 'lin'}
+              'model_to_fit': 'nonlin',
+              'reference_model': 'nonlin'}
     params['high_rate'] = get_lambda_high(params['low_rate'], params['S'])
     if params['S'] in np.arange(0.5, 10.1, 0.5) and params['hazard_rate'] == 1:
         pol = False
