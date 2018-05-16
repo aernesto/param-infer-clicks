@@ -3,7 +3,7 @@ The aim of this script is to infer the discounting & hazard rate used to produce
 """
 
 import matplotlib
-# matplotlib.use('Agg')  # required on server to forbid X-windows usage
+matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import pickle
 import matplotlib.pyplot as plt
 import copy
@@ -150,19 +150,22 @@ if __name__ == '__main__':
     """
     1/ Define parameters for synthetic data to read
     2/ Compute four sequences of admissible intervals for each trial (1 per model condition)
-    3/ 
+    3/
+
+    
+    lr15hr36.5367250374h1T2
     """
 
     # 1/ Define parameters for synthetic data to read
     params = {'S': 3,
-              'low_rate': 2,
+              'low_rate': 15,
               'hazard_rate': 1,
               'T': 2,
-              'filename': 'data/S3lr2h1T2tr5Ksp10K.h5',
+              'filename': '/storage/adrian/srvr_data_1.h5',
               'samples_params': {'start': 0, 'end': 40, 'number': 10000},
-              'tot_trials_db': 5000,
-              'block_number': 25,
-              'trial_number': 200,
+              'tot_trials_db': 100000,
+              'block_number': 200,
+              'trial_number': 500,
               'model_to_fit': 'nonlin',
               'reference_model': 'nonlin'}
     params['high_rate'] = get_lambda_high(params['low_rate'], params['S'])
@@ -175,6 +178,10 @@ if __name__ == '__main__':
                                              params['high_rate'],
                                              params['hazard_rate'],
                                              params['T']))
+    if params['filename'] == '/storage/adrian/srvr_data_1.h5':
+        params['group_name'] = 'lr15hr36.5367250374h1T2'
+    print(params['filename'])
+    print(params['group_name'])
     start_time = time.time()
     MSE, AvgWidth = deter_fit(params)
     print('--{} seconds'.format(time.time() - start_time))
