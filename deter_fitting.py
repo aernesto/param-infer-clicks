@@ -319,50 +319,6 @@ def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, samp
     return squared_error, total_width
 
 
-def reconstruct_interval(interval, tolerance):
-    """
-    splits an interval into sub-intervals
-    :param interval: dict with: dict['interval'] = (lower_bound, upper_bound) and dict['samples'] = numpy.array
-    :param tolerance: space between consecutive samples
-    :return: list of sub-intervals, possibly empty
-    """
-    interval_list = []
-    last_lower_bound, last_upper_bound = interval['interval']
-    old_samples = interval['samples']
-    lower_bound = None  # new lower bound
-    last_up = 0  # new upper bound
-
-    for indx, g in enumerate(old_samples):
-        nan = np.isnan(g)
-        if (lower_bound is None) and nan:
-            continue
-        elif g <= last_up:
-            continue
-        elif lower_bound is None:
-            nlb = g - tolerance
-            if nlb >= max(last_lower_bound, last_up):
-                lower_bound = nlb
-            else:
-                lower_bound = max(last_lower_bound, last_up)
-            # for debug purposes
-            if lower_bound < last_up:
-                print('WARNING: overlapping consecutive intervals')
-        elif nan:
-            gm1 = old_samples[max(indx - 1, 0)]
-            last_up = gm1 + tolerance
-            # following if just for debugging
-            if last_up > lower_bound:
-                interval_list += [(lower_bound, last_up)]
-            else:
-                print('WARNING: negative length interval!!!')
-            lower_bound = None
-        # list of samples ended without nan values, so inherit upper bound from prev. setting
-        elif g == old_samples[-1]:
-            last_up = last_upper_bound
-            interval_list += [(lower_bound, last_up)]
-    return interval_list
-
-
 def build_sample_vec(samples_params_dict):
     start = samples_params_dict['start']
     end = samples_params_dict['end']

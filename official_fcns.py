@@ -203,7 +203,6 @@ def get_accuracy(filename, groupname, model, sample_col=0):
     """
     if model not in ['lin', 'nonlin']:
         raise ValueError("model param should be either 'lin' or 'nonlin'")
-        exit(1)
     with h5py.File(filename, 'r') as f:
         grp = f[groupname]
         decision_dset = grp['decision_{}'.format(model)]
@@ -212,3 +211,90 @@ def get_accuracy(filename, groupname, model, sample_col=0):
         correct_choice = info_dset[:, 1]  # end state of environment stored in 2nd column
         correct_decision = decisions == correct_choice
         return np.mean(correct_decision)
+
+
+def reconstruct_interval(interval, tolerance):
+    """
+    splits an interval into sub-intervals
+    :param interval: dict with: dict['interval'] = (lower_bound, upper_bound) and dict['samples'] = numpy.array
+    :param tolerance: space between consecutive samples
+    :return: list of sub-intervals, possibly empty
+    """
+    interval_list = []
+
+    def appropriate_append(ivl):
+        if not interval_list:
+            interval_list.append(ivl)
+        else:
+            last_ivl = interval_list[-1]
+            if last_ivl[1] == ivl[0]:
+                interval_list[-1] = (last_ivl[0], ivl[1])
+            else:
+                interval_list.append(ivl)
+
+    last_lower_bound, last_upper_bound = interval['interval']
+    old_samples = interval['samples']
+    lower_bound = None  # new lower bound
+    last_up = 0 #last_lower_bound + tolerance  # new upper bound
+
+    for indx, g in enumerate(old_samples):
+        nan = np.isnan(g)
+        if (lower_bound is None) and nan:
+            continue
+        elif g <= last_up:  # <= ?
+            if g == last_lower_bound:
+                lower_bound = last_lower_bound
+            continue
+        elif lower_bound is None:
+            nlb = g - tolerance
+            if nlb >= max(last_lower_bound, last_up):
+                lower_bound = nlb
+            else:
+                lower_bound = max(last_lower_bound, last_up)
+            if g == old_samples[-1]:  # if last sample reached
+                appropriate_append((lower_bound, last_upper_bound))
+            # for debug purposes
+            if lower_bound < last_up:
+                print('WARNING: overlapping consecutive intervals')
+        elif nan:
+            gm1 = old_samples[max(indx - 1, 0)]
+            last_up = gm1 + tolerance
+            appropriate_append((lower_bound, last_up))
+            lower_bound = None
+        # list of samples ended without nan values, so inherit upper bound from prev. setting
+        elif g == old_samples[-1]:
+            last_up = last_upper_bound
+            appropriate_append((lower_bound, last_up))
+    return interval_list
+
+
+if __name__ == '__main__':
+    # test for reconstruct interval
+    nan_cases = [[0,1,2,3],
+                 [1,2,3,4],
+                 [0,1,3,4],
+                 [0,1,2,4],
+                 [0],
+                 [1],
+                 [3],
+                 [4],
+                 [0, 1],
+                 [0, 2],
+                 [0, 3],
+                 [0, 4],
+                 [1, 2],
+                 [1, 3],
+                 [1, 4],
+                 [2, 3],
+                 [2, 4],
+                 [3, 4],
+                 [0,1,2],
+                 [0,2,3],
+                 [0,2,4],
+                 [1,2,4],
+                 [1,2,2]]
+    for case_num in range(len(nan_cases)):
+        samples, tol = np.linspace(0, 1, 5, retstep=True)
+        samples[nan_cases[case_num]] = np.nan
+        d={'interval': (0, 1), 'samples': samples}
+        print(samples, reconstruct_interval(d, tol))
