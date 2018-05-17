@@ -1,25 +1,40 @@
 import pickle
+import matplotlib
 import matplotlib.pyplot as plt
+font = {'family': 'DejaVu Sans',
+        'weight': 'bold',
+        'size': 15}
+lw = 4  # linewidth
+matplotlib.rc('font', **font)
 
-results = pickle.load(open("data/test_mse.pkl", "rb"))
+results = pickle.load(open("data/mse.pkl", "rb"))
+
+f, ax_array = plt.subplots(2, 2, sharex='all', sharey='col', squeeze=False)
 
 # first file
-file = results[0]['file']
+fnum = 0
+file = results[fnum]['file']
 trial_numbers = file[1]
-# lin 2 lin fit
-data = results[0]['stats']['linlin']
 
-# MSE plot
-plt.subplot(1, 2, 1)
-plt.plot(trial_numbers, [x[0] for x in data])
-plt.xlabel('trial nb')
-plt.ylabel('MSE')
+row2modl_map = ['linnonlin', 'nonlinlin']
+# loop over rows of suplot
+for r in range(2):
+    # lin 2 lin fit
+    data = results[fnum]['stats'][row2modl_map[r]]
 
-# Width plot
-plt.subplot(1, 2, 2)
-plt.plot(trial_numbers, [x[1] for x in data])
-plt.xlabel('trial nb')
-plt.ylabel('width')
+    # MSE plot
+    ax = ax_array[r, 0]
+    ax.plot(trial_numbers, [x[0] for x in data], linewidth=lw)
+    ax.set_xlabel('trial nb')
+    ax.set_ylabel('MSE')
+    ax.set_title(row2modl_map[r])
 
+    # Width plot
+    ax = ax_array[r, 1]
+    ax.plot(trial_numbers, [x[1] for x in data], linewidth=lw)
+    ax.set_xlabel('trial nb')
+    ax.set_ylabel('width')
+    ax.set_title(row2modl_map[r])
+
+plt.tight_layout()
 plt.show()
-
