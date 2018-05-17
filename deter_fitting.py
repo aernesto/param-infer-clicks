@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import copy
 import time
 import sys
-import h5py
 from sympy import *
 from official_fcns import *
 
@@ -147,43 +146,38 @@ def dump_info(four_parameters, s, nt, nruns):
 
 
 if __name__ == '__main__':
-    """
-    1/ Define parameters for synthetic data to read
-    2/ Compute four sequences of admissible intervals for each trial (1 per model condition)
-    3/
-
-    
-    lr15hr36.5367250374h1T2
-    """
-
-    # 1/ Define parameters for synthetic data to read
-    params = {'S': 3,
-              'low_rate': 15,
-              'hazard_rate': 1,
+    file_list = [{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},
+                 {'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
+    trial_report_list = [50, 100, 200, 250, 400]
+    params = {'hazard_rate': 1,
               'T': 2,
-              'filename': '/storage/adrian/srvr_data_1.h5',
               'samples_params': {'start': 0, 'end': 40, 'number': 10000},
-              'tot_trials_db': 100000,
-              'block_number': 200,
-              'trial_number': 500,
-              'model_to_fit': 'nonlin',
-              'reference_model': 'nonlin'}
-    params['high_rate'] = get_lambda_high(params['low_rate'], params['S'])
-    if params['S'] in np.arange(0.5, 10.1, 0.5) and params['hazard_rate'] == 1:
-        pol = False
-    else:
-        pol = True
-    params['best_gamma'] = get_best_gamma(params['S'], params['hazard_rate'], polyfit=pol)
-    params['group_name'] = build_group_name((params['low_rate'],
-                                             params['high_rate'],
-                                             params['hazard_rate'],
-                                             params['T']))
-    if params['filename'] == '/storage/adrian/srvr_data_1.h5':
-        params['group_name'] = 'lr15hr36.5367250374h1T2'
-    print(params['filename'])
-    print(params['group_name'])
-    start_time = time.time()
-    MSE, AvgWidth = deter_fit(params)
-    print('--{} seconds'.format(time.time() - start_time))
-    print(MSE, AvgWidth)
+              'tot_trials_db': 100000}  # todo: read this off the db
+    results = []
+    for file in file_list:
+        params['filename'] = file['fname']
+        params['group_name'] = file['gname']
+        params['S'] = file['S']
+        params['low_rate'] = file['lr']
+        params['high_rate'] = get_lambda_high(params['low_rate'], params['S'])
+        if params['S'] in np.arange(0.5, 10.1, 0.5) and params['hazard_rate'] == 1:
+            pol = False
+        else:
+            pol = True
+        params['best_gamma'] = get_best_gamma(params['S'], params['hazard_rate'], polyfit=pol)
 
+        for trial_report in trial_report_list:
+            report_values = {'lin': [], 'nonlin': []}
+            params['block_number'] = 100000 // trial_report
+            params['trial_number'] = trial_report
+            for modl in ['lin', 'nonlin']:
+                params['model_to_fit'] = modl
+                params['reference_model'] = modl
+
+            # params['group_name'] = build_group_name((params['low_rate'],
+            #                                          params['high_rate'],
+            #                                          params['hazard_rate'],
+            #                                          params['T']))
+                report_values[modl].append(deter_fit(params))
+        results.append({'file': (file, trial_report_list), 'stats': report_values})
+    pickle.dump(results, open('/home/adrian/tosubmit_home/MSE.pkl', 'wb'))
