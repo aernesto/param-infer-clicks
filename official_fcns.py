@@ -270,7 +270,8 @@ def reconstruct_interval(interval, tolerance):
 
 if __name__ == '__main__':
     # test for reconstruct interval
-    nan_cases = [[0,1,2,3],
+    nan_cases = [[0,1,2,3,4],
+                 [0,1,2,3],
                  [1,2,3,4],
                  [0,1,3,4],
                  [0,1,2,4],

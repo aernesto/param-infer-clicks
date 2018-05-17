@@ -62,9 +62,11 @@ def deter_fit(p):
             curr_sq_err, curr_width = get_block_width(reference_dec, decision_data, all_sample_values, sp_tol,
                                                       (p['samples_params']['start'], p['samples_params']['end']),
                                                       true_param)
-            running_mse += curr_sq_err / N
-            running_avg_width += curr_width / N
-
+            if (curr_sq_err is not None) and (curr_width is not None):
+                running_mse += curr_sq_err / N
+                running_avg_width += curr_width / N
+        # if running_mse == 0 and running_avg_width == 0:
+        #
     return running_mse, running_avg_width
 
 
@@ -85,33 +87,43 @@ def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, samp
     bool_vec[synthetic_dec == 0] = True
 
     # perform 'and' operation column-wise to get end-block valid samples
-    valid_samples = np.prod(bool_vec, axis=0)
+    interm = np.cumprod(bool_vec, axis=0)  # this is to avoid depletion
+    nonzero_row_indices = np.nonzero(interm)[0]
+    if nonzero_row_indices.size > 0:
+        valid_samples = interm[np.max(nonzero_row_indices), :]  # last nonzero row
+        # add tolerances around edges
+        sample_array[np.logical_not(valid_samples)] = np.nan
+    else:
+        valid_samples = np.array([])
+        sample_array[:] = np.nan
 
-    # add tolerances around edges
-    sample_array[np.logical_not(valid_samples)] = np.nan
     interval_dict = {'interval': sample_edges, 'samples': sample_array}
     interval_list = reconstruct_interval(interval_dict, sample_tolerance)
 
     # compute squared error and total width
     def get_sqerr_width_from_intervs(list_of_intervals):
-        tot_width = 0
-        tot_intgl = 0
-        for ivl in list_of_intervals:
-            curr_width = ivl[1] - ivl[0]
-            curr_intgl = (ivl[1]**2-ivl[0]**2) / 2
-            tot_intgl += curr_intgl
-            tot_width += curr_width
-        try:
-            estimate = tot_intgl / tot_width
-        except ZeroDivisionError:
-            print('Warning: samples depleted')
-            estimate = 0
-        sqerr = (estimate - true_parameter)**2
-        return sqerr, tot_width
+        if not list_of_intervals:
+            # list is empty
+            return None, None
+        else:
+            tot_width = 0
+            tot_intgl = 0
+            for ivl in list_of_intervals:
+                curr_width = ivl[1] - ivl[0]
+                curr_intgl = (ivl[1]**2-ivl[0]**2) / 2
+                tot_intgl += curr_intgl
+                tot_width += curr_width
+            try:
+                estimate = tot_intgl / tot_width
+            except ZeroDivisionError:
+                print('Warning: samples depleted')
+                estimate = 0
 
-    squared_error, total_width = get_sqerr_width_from_intervs(interval_list)
+            sqerr = (estimate - true_parameter)**2
 
-    return squared_error, total_width
+            return sqerr, tot_width
+
+    return get_sqerr_width_from_intervs(interval_list)
 
 
 def build_sample_vec(samples_params_dict):
@@ -146,13 +158,13 @@ def dump_info(four_parameters, s, nt, nruns):
 
 
 if __name__ == '__main__':
-    file_list = [{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},
-                 {'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
-    trial_report_list = [50, 100, 200, 250, 400]
+    tot_trials = 5000
+    file_list = [{'fname': 'data/S3lr2h1T2tr5Ksp10K.h5', 'gname': 'lr2hr14h1T2', 'S': 3, 'lr': 2}]  #,{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},{'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
+    trial_report_list = [50, 150, 300]#[50, 100, 150, 200, 250, 300, 350, 400]
     params = {'hazard_rate': 1,
               'T': 2,
               'samples_params': {'start': 0, 'end': 40, 'number': 10000},
-              'tot_trials_db': 100000}  # todo: read this off the db
+              'tot_trials_db': tot_trials}  # 100000}  # todo: read this off the db
     results = []
     for file in file_list:
         params['filename'] = file['fname']
@@ -166,18 +178,19 @@ if __name__ == '__main__':
             pol = True
         params['best_gamma'] = get_best_gamma(params['S'], params['hazard_rate'], polyfit=pol)
 
+        report_values = {'linlin': [], 'nonlinnonlin': [], 'linnonlin': [], 'nonlinlin': []}
         for trial_report in trial_report_list:
-            report_values = {'lin': [], 'nonlin': []}
-            params['block_number'] = 100000 // trial_report
+            # print('trial {}'.format(trial_report))
+            params['block_number'] = tot_trials // trial_report
             params['trial_number'] = trial_report
-            for modl in ['lin', 'nonlin']:
-                params['model_to_fit'] = modl
-                params['reference_model'] = modl
+            for model_pair in [('lin', 'lin'), ('nonlin', 'nonlin'), ('lin', 'nonlin'), ('nonlin', 'lin')]:
+                # print(''.join(model_pair))
+                params['model_to_fit'], params['reference_model'] = model_pair
 
-            # params['group_name'] = build_group_name((params['low_rate'],
-            #                                          params['high_rate'],
-            #                                          params['hazard_rate'],
-            #                                          params['T']))
-                report_values[modl].append(deter_fit(params))
+                mse, avgwidth = deter_fit(params)
+                # print(mse, avgwidth)
+                report_values[''.join(model_pair)].append((mse, avgwidth))
+                # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
-    pickle.dump(results, open('/home/adrian/tosubmit_home/MSE.pkl', 'wb'))
+    # pickle.dump(results, open('/home/adrian/tosubmit_home/MSE.pkl', 'wb'))
+    pickle.dump(results, open('data/test_mse.pkl', 'wb'))

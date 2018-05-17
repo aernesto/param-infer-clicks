@@ -1,13 +1,13 @@
 import pickle
 import matplotlib.pyplot as plt
 
-results = pickle.load(open("data/mse.pkl", "rb"))
+results = pickle.load(open("data/test_mse.pkl", "rb"))
 
 # first file
 file = results[0]['file']
 trial_numbers = file[1]
 # lin 2 lin fit
-data = results[0]['stats']['lin']
+data = results[0]['stats']['linlin']
 
 # MSE plot
 plt.subplot(1, 2, 1)
