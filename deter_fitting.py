@@ -158,9 +158,9 @@ def dump_info(four_parameters, s, nt, nruns):
 
 
 if __name__ == '__main__':
-    tot_trials = 5000
-    file_list = [{'fname': 'data/S3lr2h1T2tr5Ksp10K.h5', 'gname': 'lr2hr14h1T2', 'S': 3, 'lr': 2}]  #,{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},{'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
-    trial_report_list = [50, 150, 300]#[50, 100, 150, 200, 250, 300, 350, 400]
+    tot_trials = 100000
+    file_list = [{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},{'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
+    trial_report_list = [50, 100, 150, 200, 250, 300, 350, 400]
     params = {'hazard_rate': 1,
               'T': 2,
               'samples_params': {'start': 0, 'end': 40, 'number': 10000},
@@ -192,5 +192,5 @@ if __name__ == '__main__':
                 report_values[''.join(model_pair)].append((mse, avgwidth))
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
-    # pickle.dump(results, open('/home/adrian/tosubmit_home/MSE.pkl', 'wb'))
-    pickle.dump(results, open('data/test_mse.pkl', 'wb'))
+    pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
+    #pickle.dump(results, open('data/test_mse.pkl', 'wb'))
