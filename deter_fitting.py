@@ -19,7 +19,7 @@ def deter_fit(p):
         ['S','low_rate','high_rate','hazard_rate','T','best_gamma',
         'filename','samples_params','tot_trials_db','block_number',
         'trial_number','model_to_fit','reference_model','group_name']
-    :return: 2-tuple containing the average MSE across blocks and average total admissible width across blocks
+    :return: average scalar error across blocks
     """
     with h5py.File(p['filename'], 'r') as db_file:
         group_name = p['group_name']
@@ -36,8 +36,7 @@ def deter_fit(p):
         else:
             raise ValueError("'model_to_fit' key in p argument has wrong value")
 
-        running_mse = 0
-        running_avg_width = 0
+        running_scalar_error = 0
         N = p['block_number']
         ntrials = p['trial_number']
 
@@ -59,21 +58,18 @@ def deter_fit(p):
             reference_dec = reference_dec[retrieved_indices['new_order']]
             decision_data = decision_data[retrieved_indices['new_order']]
 
-            curr_sq_err, curr_width = get_block_width(reference_dec, decision_data, all_sample_values, sp_tol,
-                                                      (p['samples_params']['start'], p['samples_params']['end']),
-                                                      true_param)
-            if (curr_sq_err is not None) and (curr_width is not None):
-                running_mse += curr_sq_err / N
-                running_avg_width += curr_width / N
-        # if running_mse == 0 and running_avg_width == 0:
-        #
-    return running_mse, running_avg_width
+            curr_err = get_block_width(reference_dec, decision_data, all_sample_values, sp_tol,
+                                       (p['samples_params']['start'], p['samples_params']['end']), true_param)
+            if curr_err is not None:
+                running_scalar_error += curr_err / N
+    return running_scalar_error
 
 
 def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, sample_edges, true_parameter):
     """
     :param ref_dec: value of reference decision for each trial
     :param synthetic_dec: matrix of decision per sample value
+    :param sample_array: array of samples for parameter to fit
     :param sample_tolerance: width to add around valid samples
     :param sample_edges: tuple with lowest and highest sample values
     :param true_parameter: true parameter to recover
@@ -87,6 +83,7 @@ def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, samp
     bool_vec[synthetic_dec == 0] = True
 
     # perform 'and' operation column-wise to get end-block valid samples
+    # todo: change this algo to deal with depletion better
     interm = np.cumprod(bool_vec, axis=0)  # this is to avoid depletion
     nonzero_row_indices = np.nonzero(interm)[0]
     if nonzero_row_indices.size > 0:
@@ -100,30 +97,26 @@ def get_block_width(ref_dec, synthetic_dec, sample_array, sample_tolerance, samp
     interval_dict = {'interval': sample_edges, 'samples': sample_array}
     interval_list = reconstruct_interval(interval_dict, sample_tolerance)
 
-    # compute squared error and total width
-    def get_sqerr_width_from_intervs(list_of_intervals):
+    # compute scalar error
+    def get_scalar_error_from_intervs(list_of_intervals):
         if not list_of_intervals:
             # list is empty
-            return None, None
+            return None
         else:
             tot_width = 0
             tot_intgl = 0
-            for ivl in list_of_intervals:
-                curr_width = ivl[1] - ivl[0]
-                curr_intgl = (ivl[1]**2-ivl[0]**2) / 2
+            for a, b in list_of_intervals:
+                curr_width = b - a
+                curr_intgl = (b**3 - a**3) / 3 + curr_width * true_parameter**2 + true_parameter * a**2 - b**2
                 tot_intgl += curr_intgl
                 tot_width += curr_width
             try:
-                estimate = tot_intgl / tot_width
+                scalar_err = tot_intgl / tot_width
             except ZeroDivisionError:
                 print('Warning: samples depleted')
-                estimate = 0
-
-            sqerr = (estimate - true_parameter)**2
-
-            return sqerr, tot_width
-
-    return get_sqerr_width_from_intervs(interval_list)
+                return None
+            return scalar_err
+    return get_scalar_error_from_intervs(interval_list)
 
 
 def build_sample_vec(samples_params_dict):
@@ -188,10 +181,10 @@ if __name__ == '__main__':
                 # print(''.join(model_pair))
                 params['model_to_fit'], params['reference_model'] = model_pair
 
-                mse, avgwidth = deter_fit(params)
+                scalar_error = deter_fit(params)
                 # print(mse, avgwidth)
-                report_values[''.join(model_pair)].append((mse, avgwidth))
+                report_values[''.join(model_pair)].append(scalar_error)
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
     # pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
-    pickle.dump(results, open('data/mse_local_sampling.pkl', 'wb'))
+    pickle.dump(results, open('data/mse_local_new_error.pkl', 'wb'))
