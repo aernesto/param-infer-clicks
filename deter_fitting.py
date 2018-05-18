@@ -1,30 +1,20 @@
 """
 The aim of this script is to infer the discounting & hazard rate used to produce simulated data.
 """
-
-import matplotlib
-matplotlib.use('Agg')  # required on server to forbid X-windows usage
 import pickle
-import matplotlib.pyplot as plt
-import copy
-import time
-import sys
+# import copy
+# import time
+# import sys
 from sympy import *
 from official_fcns import *
 
-font = {'family': 'DejaVu Sans',
-        'weight': 'bold',
-        'size': 15}
-
-matplotlib.rc('font', **font)
-
-
-# from fractions import Fraction
-# from math import gcd
 
 def deter_fit(p):
     """
-
+    computes the MSE and the average total admissible width for a given block size and block number.
+    If the "trial_number" parameter (i.e. the block size) is 50 and the block number is 100,
+    then the function will loop over a 100 blocks of size 50 and compute, across blocks, the MSE and
+    the average total admissible width.
     :param p: a dict of parameters with the following keys:
         ['S','low_rate','high_rate','hazard_rate','T','best_gamma',
         'filename','samples_params','tot_trials_db','block_number',
@@ -53,12 +43,21 @@ def deter_fit(p):
 
         # inline function definition
         def get_block(block_idx):
-            return slice(block_idx * ntrials, (block_idx + 1) * ntrials)
+            indices = np.random.choice(p['tot_trials_db'], size=ntrials, replace=False)  # sampling from bank
+            doubled_list = list(zip(indices, np.arange(ntrials), np.zeros(ntrials)))
+            return np.array(doubled_list, dtype=[('index', 'i4'), ('order', 'i4'), ('new_order', 'i4')])
+            # return slice(block_idx * ntrials, (block_idx + 1) * ntrials)
 
         for i in range(N):
-            block_slice = get_block(i)
-            reference_dec = dset_dec_ref[block_slice, 0]
-            decision_data = dset_dec_to_fit[block_slice, 1:]
+            block_slice = np.sort(get_block(i), order='index')  # sort is because h5py requires increasing order
+            reference_dec = dset_dec_ref[block_slice['index'], 0]
+            decision_data = dset_dec_to_fit[block_slice['index'], 1:]
+
+            # put trials back in order from sampling
+            retrieved_indices = np.sort(block_slice, order='order')
+            reference_dec = reference_dec[retrieved_indices['new_order']]
+            decision_data = decision_data[retrieved_indices['new_order']]
+
             curr_sq_err, curr_width = get_block_width(reference_dec, decision_data, all_sample_values, sp_tol,
                                                       (p['samples_params']['start'], p['samples_params']['end']),
                                                       true_param)
@@ -159,6 +158,7 @@ def dump_info(four_parameters, s, nt, nruns):
 
 if __name__ == '__main__':
     tot_trials = 100000
+    block_number = 500
     file_list = [{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},{'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
     trial_report_list = [50, 100, 150, 200, 250, 300, 350, 400]
     params = {'hazard_rate': 1,
@@ -181,7 +181,7 @@ if __name__ == '__main__':
         report_values = {'linlin': [], 'nonlinnonlin': [], 'linnonlin': [], 'nonlinlin': []}
         for trial_report in trial_report_list:
             # print('trial {}'.format(trial_report))
-            params['block_number'] = tot_trials // trial_report
+            params['block_number'] = block_number# tot_trials // trial_report
             params['trial_number'] = trial_report
             for model_pair in [('lin', 'lin'), ('nonlin', 'nonlin'), ('lin', 'nonlin'), ('nonlin', 'lin')]:
                 # print(''.join(model_pair))
