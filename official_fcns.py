@@ -268,34 +268,64 @@ def reconstruct_interval(interval, tolerance):
     return interval_list
 
 
+# todo: Fix function below
+def get_scalar_error_from_intervs(list_of_intervals, true_param):
+    if not list_of_intervals:
+        # list is empty
+        return None
+    else:
+        # tot_width = 0
+        tot_intgl = 0
+        for a, b in list_of_intervals:
+            curr_width = b - a
+            curr_intgl = (b**3 - a**3) / 3 + curr_width * true_param**2 + true_param * (a**2 - b**2)
+            tot_intgl += curr_intgl
+            # tot_width += curr_width
+        try:
+            scalar_err = tot_intgl  # / tot_width
+        except ZeroDivisionError:
+            print('Warning: samples depleted')
+            return None
+        return scalar_err
+
+
 if __name__ == '__main__':
     # test for reconstruct interval
-    nan_cases = [[0,1,2,3,4],
-                 [0,1,2,3],
-                 [1,2,3,4],
-                 [0,1,3,4],
-                 [0,1,2,4],
-                 [0],
-                 [1],
-                 [3],
-                 [4],
-                 [0, 1],
-                 [0, 2],
-                 [0, 3],
-                 [0, 4],
-                 [1, 2],
-                 [1, 3],
-                 [1, 4],
-                 [2, 3],
-                 [2, 4],
-                 [3, 4],
-                 [0,1,2],
-                 [0,2,3],
-                 [0,2,4],
-                 [1,2,4],
-                 [1,2,2]]
-    for case_num in range(len(nan_cases)):
-        samples, tol = np.linspace(0, 1, 5, retstep=True)
-        samples[nan_cases[case_num]] = np.nan
-        d={'interval': (0, 1), 'samples': samples}
-        print(samples, reconstruct_interval(d, tol))
+    # nan_cases = [[0,1,2,3,4],
+    #              [0,1,2,3],
+    #              [1,2,3,4],
+    #              [0,1,3,4],
+    #              [0,1,2,4],
+    #              [0],
+    #              [1],
+    #              [3],
+    #              [4],
+    #              [0, 1],
+    #              [0, 2],
+    #              [0, 3],
+    #              [0, 4],
+    #              [1, 2],
+    #              [1, 3],
+    #              [1, 4],
+    #              [2, 3],
+    #              [2, 4],
+    #              [3, 4],
+    #              [0,1,2],
+    #              [0,2,3],
+    #              [0,2,4],
+    #              [1,2,4],
+    #              [1,2,2]]
+
+    nan_cases = [range(4), range(8, 12), range(18, 22),range(28, 30)]
+    indices = []
+    for rr in nan_cases:
+        for idx in rr:
+            indices.append(idx)
+
+    # print(indices)
+    samples, tol = np.linspace(0, 10, 30, retstep=True)
+    print('tolerance {:.2f}'.format(tol))
+    samples[indices] = np.nan
+    d={'interval': (0, 10), 'samples': samples}
+    toprint = ['{:.2f}'.format(s) for s in samples]
+    print('{}; {}'.format(toprint, reconstruct_interval(d, tol)))
