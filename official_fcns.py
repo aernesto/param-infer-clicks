@@ -268,7 +268,6 @@ def reconstruct_interval(interval, tolerance):
     return interval_list
 
 
-# todo: Fix function below
 def get_scalar_error_from_intervs(list_of_intervals, true_param):
     if not list_of_intervals:
         # list is empty
@@ -281,12 +280,7 @@ def get_scalar_error_from_intervs(list_of_intervals, true_param):
             curr_intgl = (b**3 - a**3) / 3 + curr_width * true_param**2 + true_param * (a**2 - b**2)
             tot_intgl += curr_intgl
             # tot_width += curr_width
-        try:
-            scalar_err = tot_intgl  # / tot_width
-        except ZeroDivisionError:
-            print('Warning: samples depleted')
-            return None
-        return scalar_err
+        return tot_intgl
 
 
 if __name__ == '__main__':
