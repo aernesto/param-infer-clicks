@@ -42,18 +42,19 @@ def deter_fit(p):
         ntrials = p['trial_number']
 
         # inline function definition
-        def get_block(block_idx):
+        def get_block():
             indices = np.random.choice(p['tot_trials_db'], size=ntrials, replace=False)  # sampling from bank
             doubled_list = list(zip(indices, np.arange(ntrials), np.zeros(ntrials)))
             return np.array(doubled_list, dtype=[('index', 'i4'), ('order', 'i4'), ('new_order', 'i4')])
             # return slice(block_idx * ntrials, (block_idx + 1) * ntrials)
 
         for i in range(N):
-            block_slice = np.sort(get_block(i), order='index')  # sort is because h5py requires increasing order
+            block_slice = np.sort(get_block(), order='index')  # sort is because h5py requires increasing order
             reference_dec = dset_dec_ref[block_slice['index'], 0]
             decision_data = dset_dec_to_fit[block_slice['index'], 1:]
 
             # put trials back in order from sampling
+            block_slice['new_order'] = np.arange(ntrials)
             retrieved_indices = np.sort(block_slice, order='order')
             reference_dec = reference_dec[retrieved_indices['new_order']]
             decision_data = decision_data[retrieved_indices['new_order']]
@@ -157,13 +158,13 @@ def dump_info(four_parameters, s, nt, nruns):
 
 
 if __name__ == '__main__':
-    tot_trials = 100000
+    tot_trials = 10000
     block_number = 500
-    file_list = [{'fname': '/storage/adrian/srvr_data_1.h5', 'gname': 'lr15hr36.5367250374h1T2', 'S': 3, 'lr': 15},{'fname': '/storage/adrian/data_S_2_5.h5', 'gname': 'lr1hr6.46h1T2', 'S': 2, 'lr': 1}]
-    trial_report_list = [50, 100, 150, 200, 250, 300, 350, 400]
+    file_list = [{'fname': 'data/S3lr5h1T2tr10000sp1000.h5', 'gname': 'lr5hr20h1T2', 'S': 3, 'lr': 5}]
+    trial_report_list = [50, 100, 150, 200]
     params = {'hazard_rate': 1,
               'T': 2,
-              'samples_params': {'start': 0, 'end': 40, 'number': 10000},
+              'samples_params': {'start': 0, 'end': 10, 'number': 1000},
               'tot_trials_db': tot_trials}  # 100000}  # todo: read this off the db
     results = []
     for file in file_list:
@@ -192,5 +193,5 @@ if __name__ == '__main__':
                 report_values[''.join(model_pair)].append((mse, avgwidth))
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
-    pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
-    #pickle.dump(results, open('data/test_mse.pkl', 'wb'))
+    # pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
+    pickle.dump(results, open('data/mse_local_sampling.pkl', 'wb'))
