@@ -7,16 +7,16 @@ set -e
 # 4/ produces figures of proportion of compatible trials with MATLAB
 
 # SET PARAMETERS
-S=6
+S=3
 lowrate=30
 h=20
 T=2
-ntrials=100000
-nsamples=3
-gamma_init=0
-gamma_end=40
-h_init=0
-h_end=40
+ntrials=10000
+nsamples=1000
+gamma_init=39
+gamma_end=49
+h_init=15
+h_end=25
 highrate="`python3 get_lambda_high.py $lowrate $S`"
 kappa="`python3 get_kappa.py $lowrate $highrate`"
 file_substr="S$S""lr$lowrate""h$h""T$T""tr$ntrials""sp$nsamples"
@@ -42,10 +42,10 @@ echo "STEP 1-2" > $logfile
 python3 create_db.py "$lowrate" "$S" "$h" "$T" "$filename" "$ntrials" "$nsamples" "$gamma_init" "$gamma_end" &>> $logfile
 echo "STEP 3 -- AGAIN" >> $logfile
 matlab -nodisplay -r "fill_nonlin_dec($lowrate,$highrate,$kappa,$h,$T,'$filename',$ntrials,$nsamples,[$h_init,$h_end])" &>> $logfile &
-echo -n "`date`," >> status_db.txt
-echo -n "$filename," >> status_db.txt
-echo -n "$groupname," >> status_db.txt
-echo "hr$highrate" >> status_db.txt
+#echo -n "`date`," >> status_db.txt
+#echo -n "$filename," >> status_db.txt
+#echo -n "$groupname," >> status_db.txt
+#echo "hr$highrate" >> status_db.txt
 #echo "STEP 4" >> $logfile
 # following line doesn't work as such
 #matlab -nodisplay -r "produce_figs('$filename', '$groupname', $ntrials,$nsamples,0, 40, '$saveimfolder')" &>> $logfile &
