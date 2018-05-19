@@ -15,9 +15,9 @@ T = double(h5readatt(dbname, info_dset, 'T')); % trial duration
 true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
-hs=linspace(0,5,50)'; % values of h to try
-ntrials=400;
-npart=500;
+hs=linspace(0,5,100)'; % values of h to try
+ntrials=200;
+npart=2000;
 nsd=1;
 ncols=2; %nb of columns in db
 trial_data = h5read(dbname, dsetname, [1 1], [ncols ntrials]);
@@ -33,7 +33,7 @@ for num_trial = 1:ntrials
     end
 end
 toc
-filename=['/home/adrian/tosubmit_home/logpost_',...
+filename=['/scratch/adrian/logpost_',...
 		'tr',...
 		num2str(ntrials),...
 		'sd',...
