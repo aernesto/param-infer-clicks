@@ -3,10 +3,10 @@
 %logpost_tr200sd1part1000sp50.mat                                                            100% 2312   688.6KB/s   00:00    
 %logpost_tr400sd1part500sp50.mat
 clear
-file2load = 'data/logpost_tr400sd1part500sp50.mat';
+file2load = 'data/logpost_tr200sd1part2000sp100.mat';
 load(file2load)
 unnorm_post=exp(log_posterior);
-samples=linspace(0,5,50);
+samples=linspace(0,5,100);
 true_h = 1;
 
 % plotting parameters
