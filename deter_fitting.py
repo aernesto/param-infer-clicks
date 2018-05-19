@@ -173,11 +173,11 @@ def dump_info(four_parameters, s, nt, nruns):
 if __name__ == '__main__':
     tot_trials = 10000
     block_number = 500
-    file_list = [{'fname': 'data/S3lr5h1T2tr10000sp1000.h5', 'gname': 'lr5hr20h1T2', 'S': 3, 'lr': 5}]
-    trial_report_list = [50, 200]
-    params = {'hazard_rate': 1,
+    file_list = [{'fname': 'data/S3lr30h20T2tr10000sp1000.h5', 'gname': 'lr30hr58.17h20T2', 'S': 3, 'lr': 30}]
+    sple_dict = {'nonlin': {'start': 15, 'end': 25, 'number': 1000}, 'lin': {'start': 39, 'end': 49, 'number': 1000}}
+    trial_report_list = [50, 100, 150, 200]
+    params = {'hazard_rate': 20,
               'T': 2,
-              'samples_params': {'start': 0, 'end': 10, 'number': 1000},
               'tot_trials_db': tot_trials}  # 100000}  # todo: read this off the db
     results = []
     for file in file_list:
@@ -200,11 +200,11 @@ if __name__ == '__main__':
             for model_pair in [('lin', 'lin'), ('nonlin', 'nonlin'), ('lin', 'nonlin'), ('nonlin', 'lin')]:
                 # print(''.join(model_pair))
                 params['model_to_fit'], params['reference_model'] = model_pair
-
+                params['samples_params'] = sple_dict[model_pair[0]]
                 scalar_error, failures = deter_fit(params)
                 # print(mse, avgwidth)
                 report_values[''.join(model_pair)].append((scalar_error, failures))
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
     # pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
-    pickle.dump(results, open('data/mse_local_semivalid.pkl', 'wb'))
+    pickle.dump(results, open('data/mse_local_h20.pkl', 'wb'))
