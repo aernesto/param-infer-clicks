@@ -4,7 +4,7 @@ lw=3; % line width for plots
 ndiscount=50; % number of discounting parameter values to try
 hs=linspace(0,5,ndiscount)'; % values of h to try
 ntrials=50;
-filename = 'home/adrian/S3lr5h1T2tr10000sp1000.h5';
+filename = '/home/adrian/S3lr5h1T2tr10000sp1000.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 info_dset_name=[group_name,'/trial_info'];
@@ -30,7 +30,7 @@ parfor trn=1:ntrials
     llh=llh+log(lhd_AR(synthetic_decision, npart, lst, rst, T, k, hs, 0, nsd, Gaussian_bank));
 end
 toc
-save('/home/adrian/tosubmit_uh/sampling1.mat','llh')
+save('/home/adrian/tosubmit_home/sampling1.mat','llh')
 %plot(hs, exp(llh),'LineWidth',lw);
 %ylabel('likelihood')
 %xlabel('h values')
