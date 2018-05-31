@@ -26,6 +26,7 @@ nruns=500;
 mses=0;
 tic
 for run=1:nruns
+    all_trials = all_trials(:,randperm(tot_trials_db));
     llh = zeros(ndiscount,1);
     parfor trn=1:ntrials
         [lst, rst]=all_trials{:,trn};
@@ -36,7 +37,7 @@ for run=1:nruns
         Gaussian_bank = normrnd(k, nsd, [npart, total_clicks]);
         llh=llh+log(lhd_AR(synthetic_decision, npart, lst, rst, T, k, hs, 0, nsd, Gaussian_bank));
     end
-    density=llh2density(llh,dh);
+    density=llh2density_AR(llh,dh);
     mses=mses+dh*sum(((hs-true_h).^2).*density);
 end
 mses=mses/nruns;
