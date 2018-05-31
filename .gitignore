@@ -105,3 +105,5 @@ data/*
 logs/*
 figs/*
 *.bak
+sampling_srvr_*
+active_jobs.txt
