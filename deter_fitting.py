@@ -173,10 +173,10 @@ def dump_info(four_parameters, s, nt, nruns):
 if __name__ == '__main__':
     tot_trials = 10000
     block_number = 500
-    file_list = [{'fname': 'data/S3lr30h20T2tr10000sp1000.h5', 'gname': 'lr30hr58.17h20T2', 'S': 3, 'lr': 30}]
-    sple_dict = {'nonlin': {'start': 15, 'end': 25, 'number': 1000}, 'lin': {'start': 39, 'end': 49, 'number': 1000}}
-    trial_report_list = [50, 100, 150, 200]
-    params = {'hazard_rate': 20,
+    file_list = [{'fname': 'data/S3lr5h1T2tr10000sp1000.h5', 'gname': 'lr5hr20h1T2', 'S': 3, 'lr': 5}]
+    sple_dict = {'nonlin': {'start': 0, 'end': 10, 'number': 1000}, 'lin': {'start': 0, 'end': 10, 'number': 1000}}
+    trial_report_list = [50, 100, 150, 200, 250, 300]
+    params = {'hazard_rate': 1,
               'T': 2,
               'tot_trials_db': tot_trials}  # 100000}  # todo: read this off the db
     results = []
@@ -207,4 +207,4 @@ if __name__ == '__main__':
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
     # pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
-    pickle.dump(results, open('data/mse_local_h20.pkl', 'wb'))
+    pickle.dump(results, open('data/mse_local_S3lr5.pkl', 'wb'))

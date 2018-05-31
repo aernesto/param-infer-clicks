@@ -16,9 +16,7 @@ def get_proportion_lost(list_of_dicts):
     return plost / len(list_of_dicts)
 
 
-files = [{'filename': 'data/MSE_data_srvrs.pkl', 'num_files': 2, 'low_rate': [15, 1]},
-         {'filename': 'data/mse_local_h20.pkl', 'num_files': 1, 'low_rate': [30]},
-         {'filename': 'data/mse_new_local.pkl', 'num_files': 1, 'low_rate': [5]}]
+files = [{'filename': 'data/mse_local_S3lr5.pkl', 'num_files': 1, 'low_rate': [5]}]
 row2modl_map = ['linlin', 'nonlinnonlin', 'linnonlin', 'nonlinlin']
 proportions = {z: {} for z in row2modl_map}
 for file_info in files:
@@ -33,5 +31,5 @@ for file_info in files:
 
 # print proportions
 for t in row2modl_map:
-    for k in ['1', '5', '15', '30']:
+    for k in ['5']:
         print('{} {} {}'.format(t, k, proportions[t][k]))
