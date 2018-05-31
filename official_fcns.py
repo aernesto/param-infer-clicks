@@ -273,14 +273,13 @@ def get_scalar_error_from_intervs(list_of_intervals, true_param):
         # list is empty
         return None
     else:
-        # tot_width = 0
+        tot_width = 0
         tot_intgl = 0
         for a, b in list_of_intervals:
-            curr_width = b - a
-            curr_intgl = (b**3 - a**3) / 3 + curr_width * true_param**2 + true_param * (a**2 - b**2)
+            curr_intgl = ((b**2 + a**2 + a*b) / 3 + true_param**2 - true_param * (a + b))*(b-a)
             tot_intgl += curr_intgl
-            # tot_width += curr_width
-        return tot_intgl
+            tot_width += b-a
+        return tot_intgl / tot_width
 
 
 if __name__ == '__main__':
