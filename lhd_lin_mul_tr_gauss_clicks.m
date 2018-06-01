@@ -19,8 +19,7 @@ tic
 for i = 1:ntrials
     lst = trial_data{1,i}; % col vector
     rst = trial_data{2,i}; % col vector
-    seed = i;
-    dec_data = gauss_noise_lin_decide(lst, rst, true_gamma, kappa, noise_stdev, seed, init_cond);
+    dec_data = gauss_noise_lin_decide(lst, rst, true_gamma, kappa, noise_stdev, init_cond);
     try
         log_posterior = log_posterior + lhd_lin_sing_tr_gauss_clicks(dec_data, noise_stdev,...
             kappa, T, lst', rst', gammas);

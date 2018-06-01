@@ -2,10 +2,10 @@ clear
 dbname='data/S3lr2h1T2tr5Ksp10K.h5';
 gname='/lr2hr14h1T2';
 gammas=(0:.05:20)';
-noises=linspace(.1,3,4);
+noises=1.5;%linspace(.1,3,4);
 legend_s=cell(1,length(noises)+1);
 base_string = 'noise ';
-trialcounts=[50,200,500];
+trialcounts=[50];
 for j=1:length(trialcounts)
     ntrials=trialcounts(j);
     probs=zeros(length(noises),length(gammas));
@@ -14,7 +14,7 @@ for j=1:length(trialcounts)
         i=i+1;
         p = lhd_lin_mul_tr_gauss_clicks(dbname,...
             gname, ntrials, std, gammas);
-        probs(i,:)=exp(p')/max(exp(p));%p'/max(p);
+        probs(i,:)=exp(p');%p'/max(p);
         legend_s{i}=[base_string, num2str(std)];
     end
     figure(j)
