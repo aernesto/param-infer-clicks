@@ -1,4 +1,5 @@
 % plot MSE for nonlin-to-nonlin model fitting - using data from srvr
+clear
 lw=3;
 noise=1.5;
 trial_nb = [50:50:500,600];
@@ -21,7 +22,7 @@ for i = 1:M
 end
 plot(trial_nb, mse_vec,...
     'LineWidth',lw,... 
-    'LineStyle','-o-')
+    'LineStyle','-.')
 xlabel('trial nb')
 ylabel('MSE')
 title(['nonlinnonlin noise=',num2str(noise)])
