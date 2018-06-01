@@ -107,3 +107,4 @@ figs/*
 *.bak
 sampling_srvr_*
 active_jobs.txt
+nonlinlin_sampling_srvr_*
