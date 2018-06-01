@@ -146,20 +146,6 @@ def build_sample_vec(samples_params_dict):
     return np.linspace(start, end, nb, retstep=True)
 
 
-def get_best_gamma(skellam, h, polyfit=False):
-    if polyfit:
-        snr = skellam / np.sqrt(h)
-        # todo: correct the flawed polynomial below
-        return 1.45333 + 0.670241 * snr + 0.34324 * (snr ** 2) - 0.00275835 * (snr ** 3)
-    else:
-        corr = {'gamma': np.array([2.0848, 2.5828, 3.3143, 4.2789, 5.4162, 6.7457, 8.1371, 9.7199,
-                                   11.3937, 13.2381, 15.1327, 17.2771, 19.5909, 22.0435, 24.6947,
-                                   27.7241, 30.5711, 33.5354, 36.7966, 40.3143]),
-                'S/sqrt(h)': np.arange(0.5, 10.1, 0.5)}
-        iddx = np.where(corr['S/sqrt(h)'] == skellam / np.sqrt(h))[0][0]
-        return corr['gamma'][iddx]
-
-
 def dump_info(four_parameters, s, nt, nruns):
     print('S value: {}'.format(s))
     print('low click rate: {}'.format(four_parameters[0]))
