@@ -1,12 +1,13 @@
 clear
 rng('shuffle')
 lw=3; % line width for plots
+fs=15;%font size for plots
 ndiscount=200; % number of discounting parameter values to try
 hstart=0;hend=10; % range should be large enough for normalization
 hs=linspace(hstart,hend,ndiscount)'; % values of h to try
 dh=(hend-hstart)/(ndiscount-1);
-ntrials=150;
-filename = '/home/adrian/S3lr5h1T2tr10000sp1000.h5';
+ntrials=100;
+filename = 'data/S3lr5h1T2tr10000sp1000.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 info_dset_name=[group_name,'/trial_info'];
@@ -22,7 +23,7 @@ all_trials = all_trials(1:2,randperm(tot_trials_db));
 npart = 800;
 nsd=1.5; % Gaussian noise applied to click height
 
-nruns=500;
+nruns=1;
 mses=0;
 tic
 for run=1:nruns
@@ -40,11 +41,14 @@ for run=1:nruns
     density=llh2density_AR(llh,dh);
     mses=mses+dh*sum(((hs-true_h).^2).*density);
 end
-mses=mses/nruns;
+mses=mses/nruns
 toc
 fname=['mses',num2str(nruns),'runs',num2str(ntrials),'trials'];
-save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mses')
-%plot(hs, exp(llh),'LineWidth',lw);
-%ylabel('likelihood')
-%xlabel('h values')
-%title(['noise=',num2str(nsd)])
+%save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mses')
+plot(hs, density,'LineWidth',lw);
+hold on
+plot([1, 1], [0,max(density)], 'r', 'LineWidth', lw)
+hold off
+ylabel('likelihood','FontSize',fs)
+xlabel('h values','FontSize',fs)
+title(['noise=',num2str(nsd)],'FontSize',fs)
