@@ -5,7 +5,7 @@
 clear
 rng('shuffle')
 lw=3;               % line width for plots
-ndiscount=20;       % number of discounting parameter values to try
+ndiscount=200;       % number of discounting parameter values to try
 hstart=0;hend=10;   % range should be large enough for normalization
 hs=linspace(hstart,hend,ndiscount)'; % values of h to try
 dh=(hend-hstart)/(ndiscount-1);
@@ -24,7 +24,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 tot_trials_db = size(all_trials,2);
 all_trials = all_trials(1:2,:);
 npart = 800;
-nsd=1.5;  % stdev of Gaussian noise applied to click height
+nsd=0.01;  % stdev of Gaussian noise applied to click height
 
 nruns=1;
 
