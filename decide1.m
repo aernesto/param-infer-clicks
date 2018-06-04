@@ -1,4 +1,14 @@
 function decision = decide1(trial_duration, left_clicks, right_clicks, kappa, hh, init_cond)
+%DESCR: 
+%
+%ARGS:
+%   trial_duration: 
+%   left_clicks:
+%   right_clicks:
+%   kappa:
+%   hh:
+%   init_cond
+%RETURNS:
     y = init_cond;
     t = 0;
     right_clicks_left = size(right_clicks, 1);

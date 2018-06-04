@@ -1,6 +1,18 @@
 function decision = gauss_noise_nonlin_decide(trial_duration,...
     left_clicks, right_clicks, kappa, hh, init_cond, noise_sd, noise)
-% rng('shuffle') should be called before function call
+%DESCR: 
+%
+%ARGS:
+%   trial_duration: 
+%   left_clicks:
+%   right_clicks:
+%   kappa:
+%   hh:
+%   init_cond:
+%   noise_sd:
+%   noise:
+%RETURNS:
+%NOTES: rng('shuffle') should be called before function call
     y = init_cond;
     t = 0;
     right_clicks_left = size(right_clicks, 1);

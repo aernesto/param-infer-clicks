@@ -1,6 +1,16 @@
 function decision = decide_AR(trial_duration,...
     left_clicks, right_clicks, ~, hh, init_cond, ~, noise)
-% rng('shuffle') should be called before function call
+%DESCR: 
+%
+%ARGS:
+%   trial_duration: 
+%   left_clicks:
+%   right_clicks:
+%   hh:
+%   init_cond:
+%   noise:
+%RETURNS:
+%NOTES: rng('shuffle') should be called before function call
     y = init_cond*ones(size(hh));
     t = 0;
     right_clicks_left = size(right_clicks, 1);

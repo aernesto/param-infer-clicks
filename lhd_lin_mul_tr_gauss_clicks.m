@@ -1,4 +1,14 @@
 function log_posterior = lhd_lin_mul_tr_gauss_clicks(dbname, grp_name, ntrials, noise_stdev, gammas)
+%DESCR: 
+%
+%ARGS:
+%   dbname: 
+%   grp_name:
+%   ntrials:
+%   noise_stdev:
+%   gammas:
+%RETURNS:
+%NOTES: 
 ncols=2;
 dsetname = [grp_name,'/trials'];
 info_dset = [grp_name,'/trial_info'];
