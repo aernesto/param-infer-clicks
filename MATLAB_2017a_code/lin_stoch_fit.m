@@ -2,13 +2,13 @@
 clear
 rng('shuffle')
 lw=3;   % line width for plots
-fs=15;  %font size for plots
+fs=25;fs2=20;  %font size for plots
 ndiscount=800; % number of discounting parameter values to try
 % sample space (vector of samples to use. 1 sample = 1 discounting rate)
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrials=1;      % number of trials to use in fitting procedure (for each block)
+ntrials=50;      % number of trials to use in fitting procedure (for each block)
 
 % database info (where the clicks data and other parameter values reside)
 filename = '../data/S3lr5h1T2tr10000sp1000.h5';
@@ -27,7 +27,7 @@ tot_trials_db = size(all_trials,2);                 % total number of trials in 
 
 all_trials = all_trials(1:2,:);
 
-nsd=1.5; % Gaussian noise applied to click height
+nsd=.5; % Gaussian noise applied to click height
 
 nruns=1; % number of blocks of trials. MSE is computed across blocks
 mses=0;  % MSE computed as running average
@@ -36,16 +36,16 @@ mses=0;  % MSE computed as running average
 tic
 for run=1:nruns
     llh = zeros(ndiscount,1);
-    for trn=1:ntrials
+    parfor trn=1:ntrials
         [lst, rst]=all_trials{:,trn};
         total_clicks = length(lst)+length(rst);
         refdec_noise = normrnd(k,nsd, [total_clicks,1]);
         
         % generate synthetic decision with nonlinear model
-        %synthetic_decision = decide_AR(T, lst, rst, k, true_h, 0, nsd, refdec_noise);
+        synthetic_decision = decide_AR(T, lst, rst, k, true_h, 0, nsd, refdec_noise);
 
         % generate synthetic decision with linear model
-        synthetic_decision = gauss_noise_lin_decide(lst, rst, true_g, k, nsd, 0);
+        %synthetic_decision = gauss_noise_lin_decide(lst, rst, true_g, k, nsd, 0);
         
         % flip a coin if decision was 0
         if synthetic_decision == 0
@@ -77,4 +77,5 @@ plot([true_g, true_g], [0,max(density)], 'r', 'LineWidth', lw)
 hold off
 ylabel('likelihood','FontSize',fs)
 xlabel('gamma values','FontSize',fs)
-title(['noise=',num2str(nsd), 'synthet. dec=',num2str(synthetic_decision)],'FontSize',fs)
+title(['noise=',num2str(nsd)],'FontSize',fs)
+ax=gca;ax.FontSize=fs2;
