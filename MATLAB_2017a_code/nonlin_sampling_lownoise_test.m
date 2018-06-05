@@ -24,7 +24,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 tot_trials_db = size(all_trials,2);
 all_trials = all_trials(1:2,:);
 npart = 800;
-nsd=0.01;  % stdev of Gaussian noise applied to click height
+nsd=0.05;  % stdev of Gaussian noise applied to click height
 
 nruns=1;
 
@@ -37,9 +37,11 @@ parfor trn=1:ntrials
     
     % synthetic decision computed with linear model
     % to compute it with nonlinear model, change fcn below
-    synthetic_decision = gauss_noise_lin_decide(lst, rst,...
-        true_gamma, k, nsd, 0);
+    %synthetic_decision = gauss_noise_lin_decide(lst, rst,...
+    %    true_gamma, k, nsd, 0);
     
+    synthetic_decision = gauss_noise_nonlin_decide(T,...
+    lst, rst, k, hs, 0, nsd, ref_noise);
     % flip a coin if decision was 0
     if synthetic_decision == 0
         synthetic_decision = sign(rand-0.5);

@@ -13,6 +13,7 @@ function decision = gauss_noise_nonlin_decide(trial_duration,...
 %   noise:
 %RETURNS:
 %NOTES: rng('shuffle') should be called before function call
+%   Called by: nonlin_sampling_lownoise_test.m
     y = init_cond;
     t = 0;
     right_clicks_left = size(right_clicks, 1);

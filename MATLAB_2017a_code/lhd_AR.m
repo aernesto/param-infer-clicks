@@ -21,7 +21,7 @@ function lklh=lhd_AR(dec_data, npart, left_clicks, right_clicks, td,...
 %
 % RETURNS: col vector of likelihoods
 % NOTES: 
-%   Called by: nonlinlin_sampling_srvr_lownoise_test.m
+%   Called by: nonlin_sampling_lownoise_test.m
 
 ncorrect = zeros(size(h_sample));
 for part_nb = 1:npart
