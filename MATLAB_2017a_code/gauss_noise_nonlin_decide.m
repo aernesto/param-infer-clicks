@@ -1,16 +1,14 @@
 function decision = gauss_noise_nonlin_decide(trial_duration,...
-    left_clicks, right_clicks, kappa, hh, init_cond, noise_sd, noise)
-%DESCR: 
+    left_clicks, right_clicks, ~, hh, init_cond, ~, noise)
+%DEPRECATED as decide_AR.m covers its use.
 %
 %ARGS:
 %   trial_duration: 
 %   left_clicks:
 %   right_clicks:
-%   kappa:
-%   hh:
+%   hh:             scalar value
 %   init_cond:
-%   noise_sd:
-%   noise:
+%   noise:          col vector of noise to apply to clicks  
 %RETURNS:
 %NOTES: rng('shuffle') should be called before function call
 %   Called by: nonlin_sampling_lownoise_test.m
