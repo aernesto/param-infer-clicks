@@ -16,7 +16,7 @@ function decision = decide_AR(trial_duration,...
 %                   dim2=discounting value.
 % RETURNS: a column vector of size size(hh)
 % NOTES: rng('shuffle') should be called before function call
-%   Called by: lhd_AR.m
+%   Called by: lhd_AR.m; lin_stoch_fit.m
 
     y = init_cond*ones(size(hh));
     t = 0;

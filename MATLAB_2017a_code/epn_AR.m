@@ -9,7 +9,7 @@ function yy = epn_AR(init_cond, end_time, hr)
 %   end_time:  scalar
 %   hr:        column vector of discounting parameter values to use
 % RETURNS: column vector of evidence values
-% NOTES:
+% NOTES: 
 %   Called by decide_AR.m
     yy=zeros(size(init_cond));
     % we can only use the closed-form solution when evidence is nonzero
