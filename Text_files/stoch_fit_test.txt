@@ -23,5 +23,8 @@ linnonlin       [(5.6556556556556554, 6.4664664664664668),
 nonlinlin       [(0.41041041041041043, 0.99099099099099097), 
                  (0.99099099099099108, 1.0110110110110111), 
                  (1.4014014014014013, 2.2822822822822824)]
+---------
+Nonlinlin plots of converging likelihoods (done with
+nonlinlin_sampling_srvr_lownoise_text.m commit 35d26bd) are in figs/ folder.
 
-
+Nonlinnonlin plots done with nonlin_sampling_lownoise_test.m commit a3c38a2.
