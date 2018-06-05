@@ -25,21 +25,18 @@ k=log(high_rate/low_rate);                          % jump in evidence at clicks
 all_trials = h5read(filename, [group_name,'/trials']); % clicks data
 tot_trials_db = size(all_trials,2);                 % total number of trials in DB
 
-% shuffle trial order
-all_trials = all_trials(1:2,randperm(tot_trials_db));
+all_trials = all_trials(1:2,:);
 
 nsd=1.5; % Gaussian noise applied to click height
 
 nruns=1; % number of blocks of trials. MSE is computed across blocks
 mses=0;  % MSE computed as running average
-infs=zeros(1,ntrials);  % will store where log-likelihood = -Inf
+%infs=zeros(1,ntrials);  % will store where log-likelihood = -Inf
 
 tic
 for run=1:nruns
-    % reshuffle trials at each run
-    all_trials = all_trials(:,randperm(tot_trials_db));
     llh = zeros(ndiscount,1);
-    parfor trn=1:ntrials
+    for trn=1:ntrials
         [lst, rst]=all_trials{:,trn};
         total_clicks = length(lst)+length(rst);
         refdec_noise = normrnd(k,nsd, [total_clicks,1]);
@@ -54,18 +51,19 @@ for run=1:nruns
         if synthetic_decision == 0
             synthetic_decision = sign(rand-0.5);
         end
-        
+
         % compute log-lh of each sample
+        % PB HERE!
         lhd=lhd_lin_sing_tr_gauss_clicks(synthetic_decision,...
             nsd, k, T, lst', rst', gs'); % already log-likelihood
-        infs(trn)=sum(lhd == -Inf);      % check whether log-lh is -Inf
+        %infs(trn)=sum(lhd == -Inf);      % check whether log-lh is -Inf
         llh=llh+lhd;
     end
     density=llh2density_AR(llh,dg);                % convert log-lh to density
     mses=mses+dg*sum(((gs-true_g).^2).*density');  % running average
 end
 
-%sum(infs);
+%sum(infs)
 
 mses=mses/nruns;
 
@@ -79,4 +77,4 @@ plot([true_g, true_g], [0,max(density)], 'r', 'LineWidth', lw)
 hold off
 ylabel('likelihood','FontSize',fs)
 xlabel('gamma values','FontSize',fs)
-title(['noise=',num2str(nsd)],'FontSize',fs)
+title(['noise=',num2str(nsd), 'synthet. dec=',num2str(synthetic_decision)],'FontSize',fs)
