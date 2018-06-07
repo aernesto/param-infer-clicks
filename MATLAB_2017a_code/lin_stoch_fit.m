@@ -27,11 +27,11 @@ tot_trials_db = size(all_trials,2);                 % total number of trials in 
 
 all_trials = all_trials(1:2,:);
 
-nsd=.5; % Gaussian noise applied to click height
+nsd=.01; % Gaussian noise applied to click height
 
 nruns=1; % number of blocks of trials. MSE is computed across blocks
 mses=0;  % MSE computed as running average
-%infs=zeros(1,ntrials);  % will store where log-likelihood = -Inf
+infs=zeros(1,ntrials);  % will store where log-likelihood = -Inf
 
 tic
 for run=1:nruns
@@ -49,21 +49,23 @@ for run=1:nruns
         
         % flip a coin if decision was 0
         if synthetic_decision == 0
-            synthetic_decision = sign(rand-0.5);
+            synthetic_decision = sign(rand-0.05);
         end
 
         % compute log-lh of each sample
         % PB HERE!
         lhd=lhd_lin_sing_tr_gauss_clicks(synthetic_decision,...
             nsd, k, T, lst', rst', gs'); % already log-likelihood
-        %infs(trn)=sum(lhd == -Inf);      % check whether log-lh is -Inf
+        infs(trn)=sum(lhd == -Inf);      % check whether log-lh is -Inf
         llh=llh+lhd;
     end
     density=llh2density_AR(llh,dg);                % convert log-lh to density
     mses=mses+dg*sum(((gs-true_g).^2).*density');  % running average
 end
-
-%sum(infs)
+figure(1)
+plot(infs)
+xlabel('trial number in block')
+ylabel('number of -Inf in log-probs vector')
 
 mses=mses/nruns;
 
@@ -71,6 +73,7 @@ toc
 
 %fname=['mses',num2str(nruns),'runs',num2str(ntrials),'trials'];
 %save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mses')
+figure(2)
 plot(gs, density,'LineWidth',lw);
 hold on
 plot([true_g, true_g], [0,max(density)], 'r', 'LineWidth', lw)
