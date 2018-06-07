@@ -54,7 +54,7 @@ fileID = fopen('../Text_files/log_linnonlin.txt','a');
 fprintf(fileID,'\nmin varTerm %.6f occurred %.2d times\n',min_val,sum(indices));
 fprintf(fileID,'max varTerm %.6f occurred %.2d times\n',max_val,sum(idx));
 prob=normcdf(meanTerm ./ sqrt(varTerm));
-[min_val2, idxx]=min(sqrt(varTerm));
+[min_val2, idxx]=min(prob);
 fprintf(fileID,'min prob %.6f occurred %.2d times\n',min_val2,sum(idxx));
 fclose(fileID);
 lklh = log(prob);
