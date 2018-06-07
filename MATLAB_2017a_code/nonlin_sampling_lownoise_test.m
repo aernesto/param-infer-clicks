@@ -36,11 +36,11 @@ parfor trn=1:ntrials
     total_clicks = length(lst)+length(rst);
     
     % synthetic decision computed with linear model
-    %synthetic_decision = gauss_noise_lin_decide(lst, rst,...
-    %    true_gamma, k, nsd, 0);
+    synthetic_decision = gauss_noise_lin_decide(lst, rst,...
+        true_gamma, k, nsd, 0);
     % compute reference decision with nonlinear model
-    synthetic_decision = decide_AR(T,...
-    lst, rst, NaN, true_h, 0, NaN, normrnd(k, nsd, [total_clicks, 1]));
+    %synthetic_decision = decide_AR(T,...
+    %lst, rst, NaN, true_h, 0, NaN, normrnd(k, nsd, [total_clicks, 1]));
     % flip a coin if decision was 0
     if synthetic_decision == 0
         synthetic_decision = sign(rand-0.5);
@@ -48,8 +48,10 @@ parfor trn=1:ntrials
     
     % generate upfront all the Gaussian r.v. needed
     Gaussian_bank = normrnd(k, nsd, [npart, total_clicks, ndiscount]);
-    llh=llh+log(lhd_AR(synthetic_decision, npart, lst, rst, T, k,...
-        hs, 0, nsd, Gaussian_bank));
+    lhv=lhd_AR(synthetic_decision, npart, lst, rst, T, k,...
+        hs, 0, nsd, Gaussian_bank);
+    lhv(lhv<eps) = eps;
+    llh=llh+log(lhv);
 end
 density=llh2density_AR(llh,dh);
 
