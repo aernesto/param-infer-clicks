@@ -1,8 +1,10 @@
 function lklh = lhd_lin_sing_tr_gauss_clicks(dec, noise_stdev, kappa,...
     T, left_clicks, right_clicks, gammas)
-%   computes the log-likelihood of choosing dec (+1 or -1), given the click trains,
-%   the discounting rate gamma, and the stdev of the Gaussian noise applied
-%   to each click
+% computes the log-likelihood of choosing dec (+1 or -1), given the click
+% trains, the discounting rate gamma, and the stdev of the Gaussian noise 
+% applied to each click. Code based on appendix D.2 from file
+% clicks_ZK3.pdf
+%
 % ARGS:
 %   dec: 1 or -1; synthetic decision
 %   noise_stdev:  stdev of Gaussian jump height at clicks
@@ -17,7 +19,8 @@ function lklh = lhd_lin_sing_tr_gauss_clicks(dec, noise_stdev, kappa,...
 % NOTES:
 %   Called by: lin_stoch_fit.m
 
-% not sure if following two lines make a difference
+% Somehow, without the following two lines, log-likelihood is constant for
+% high values of gamma (above 22 roughly)
 right_clicks=double(right_clicks);
 left_clicks=double(left_clicks);
 
@@ -45,5 +48,14 @@ else
 end
 meanTerm = single(dec) * kappa * exp(-gammas*T) .* (pos1 - neg1);
 varTerm = noise_stdev^2 * exp(-2*gammas*T) .* (pos2 + neg2);
-lklh = log(normcdf(meanTerm ./ sqrt(varTerm)));
+[min_val, indices]=min(sqrt(varTerm));
+[max_val, idx] = max(sqrt(varTerm));
+fileID = fopen('../Text_files/log_linnonlin.txt','a');
+fprintf(fileID,'\nmin varTerm %.6f occurred %.2d times\n',min_val,sum(indices));
+fprintf(fileID,'max varTerm %.6f occurred %.2d times\n',min_val,sum(idx));
+prob=normcdf(meanTerm ./ sqrt(varTerm));
+[min_val2, idxx]=min(sqrt(varTerm));
+fprintf(fileID,'min prob %.6f occurred %.2d times\n',min_val2,sum(idxx));
+fclose(fileID);
+lklh = log(prob);
 end
