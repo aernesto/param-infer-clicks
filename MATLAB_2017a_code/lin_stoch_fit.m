@@ -62,7 +62,7 @@ for run=1:nruns
     density=llh2density_AR(llh,dg);                % convert log-lh to density
     mses=mses+dg*sum(((gs-true_g).^2).*density');  % running average
 end
-figure(1)
+figure()
 plot(infs)
 xlabel('trial number in block')
 ylabel('number of -Inf in log-probs vector')
@@ -73,7 +73,7 @@ toc
 
 %fname=['mses',num2str(nruns),'runs',num2str(ntrials),'trials'];
 %save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mses')
-figure(2)
+figure()
 plot(gs, density,'LineWidth',lw);
 hold on
 plot([true_g, true_g], [0,max(density)], 'r', 'LineWidth', lw)
