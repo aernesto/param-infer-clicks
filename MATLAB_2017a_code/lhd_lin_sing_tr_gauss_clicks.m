@@ -52,7 +52,7 @@ varTerm = noise_stdev^2 * exp(-2*gammas*T) .* (pos2 + neg2);
 [max_val, idx] = max(sqrt(varTerm));
 fileID = fopen('../Text_files/log_linnonlin.txt','a');
 fprintf(fileID,'\nmin varTerm %.6f occurred %.2d times\n',min_val,sum(indices));
-fprintf(fileID,'max varTerm %.6f occurred %.2d times\n',min_val,sum(idx));
+fprintf(fileID,'max varTerm %.6f occurred %.2d times\n',max_val,sum(idx));
 prob=normcdf(meanTerm ./ sqrt(varTerm));
 [min_val2, idxx]=min(sqrt(varTerm));
 fprintf(fileID,'min prob %.6f occurred %.2d times\n',min_val2,sum(idxx));

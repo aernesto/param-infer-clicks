@@ -1,200 +1,200 @@
 
 min varTerm 0.001779 occurred 800 times
-max varTerm 0.001779 occurred 01 times
+max varTerm 0.070711 occurred 01 times
 min prob 0.001779 occurred 800 times
 
 min varTerm 0.008000 occurred 800 times
-max varTerm 0.008000 occurred 01 times
+max varTerm 0.074833 occurred 01 times
 min prob 0.008000 occurred 800 times
 
 min varTerm 0.000083 occurred 800 times
-max varTerm 0.000083 occurred 01 times
+max varTerm 0.069282 occurred 01 times
 min prob 0.000083 occurred 800 times
 
 min varTerm 0.000556 occurred 800 times
-max varTerm 0.000556 occurred 01 times
+max varTerm 0.079373 occurred 01 times
 min prob 0.000556 occurred 800 times
 
 min varTerm 0.014189 occurred 800 times
-max varTerm 0.014189 occurred 01 times
+max varTerm 0.074162 occurred 01 times
 min prob 0.014189 occurred 800 times
 
 min varTerm 0.006398 occurred 800 times
-max varTerm 0.006398 occurred 01 times
+max varTerm 0.070000 occurred 01 times
 min prob 0.006398 occurred 800 times
 
 min varTerm 0.002610 occurred 800 times
-max varTerm 0.002610 occurred 01 times
+max varTerm 0.068557 occurred 01 times
 min prob 0.002610 occurred 800 times
 
 min varTerm 0.006508 occurred 800 times
-max varTerm 0.006508 occurred 01 times
+max varTerm 0.076158 occurred 01 times
 min prob 0.006508 occurred 800 times
 
 min varTerm 0.009739 occurred 800 times
-max varTerm 0.009739 occurred 01 times
+max varTerm 0.069282 occurred 01 times
 min prob 0.009739 occurred 800 times
 
 min varTerm 0.004024 occurred 800 times
-max varTerm 0.004024 occurred 01 times
+max varTerm 0.061644 occurred 01 times
 min prob 0.004024 occurred 800 times
 
 min varTerm 0.007596 occurred 800 times
-max varTerm 0.007596 occurred 01 times
+max varTerm 0.057446 occurred 01 times
 min prob 0.007596 occurred 800 times
 
 min varTerm 0.002697 occurred 800 times
-max varTerm 0.002697 occurred 01 times
+max varTerm 0.059161 occurred 01 times
 min prob 0.002697 occurred 800 times
 
 min varTerm 0.000047 occurred 800 times
-max varTerm 0.000047 occurred 01 times
+max varTerm 0.060828 occurred 01 times
 min prob 0.000047 occurred 800 times
 
 min varTerm 0.004927 occurred 800 times
-max varTerm 0.004927 occurred 01 times
+max varTerm 0.074162 occurred 01 times
 min prob 0.004927 occurred 800 times
 
 min varTerm 0.009084 occurred 800 times
-max varTerm 0.009084 occurred 01 times
+max varTerm 0.073485 occurred 01 times
 min prob 0.009084 occurred 800 times
 
 min varTerm 0.002155 occurred 800 times
-max varTerm 0.002155 occurred 01 times
+max varTerm 0.062450 occurred 01 times
 min prob 0.002155 occurred 800 times
 
 min varTerm 0.007795 occurred 800 times
-max varTerm 0.007795 occurred 01 times
+max varTerm 0.074162 occurred 01 times
 min prob 0.007795 occurred 800 times
 
 min varTerm 0.004289 occurred 800 times
-max varTerm 0.004289 occurred 01 times
+max varTerm 0.076811 occurred 01 times
 min prob 0.004289 occurred 800 times
 
 min varTerm 0.002879 occurred 800 times
-max varTerm 0.002879 occurred 01 times
+max varTerm 0.071414 occurred 01 times
 min prob 0.002879 occurred 800 times
 
 min varTerm 0.002916 occurred 800 times
-max varTerm 0.002916 occurred 01 times
+max varTerm 0.074162 occurred 01 times
 min prob 0.002916 occurred 800 times
 
 min varTerm 0.001959 occurred 800 times
-max varTerm 0.001959 occurred 01 times
+max varTerm 0.070711 occurred 01 times
 min prob 0.001959 occurred 800 times
 
 min varTerm 0.009280 occurred 800 times
-max varTerm 0.009280 occurred 01 times
+max varTerm 0.068557 occurred 01 times
 min prob 0.009280 occurred 800 times
 
 min varTerm 0.007336 occurred 800 times
-max varTerm 0.007336 occurred 01 times
+max varTerm 0.077460 occurred 01 times
 min prob 0.007336 occurred 800 times
 
 min varTerm 0.007268 occurred 800 times
-max varTerm 0.007268 occurred 01 times
+max varTerm 0.071414 occurred 01 times
 min prob 0.007268 occurred 800 times
 
 min varTerm 0.005368 occurred 800 times
-max varTerm 0.005368 occurred 01 times
+max varTerm 0.069282 occurred 01 times
 min prob 0.005368 occurred 800 times
 
 min varTerm 0.010171 occurred 800 times
-max varTerm 0.010171 occurred 01 times
+max varTerm 0.072801 occurred 01 times
 min prob 0.010171 occurred 800 times
 
 min varTerm 0.001067 occurred 800 times
-max varTerm 0.001067 occurred 01 times
+max varTerm 0.067823 occurred 01 times
 min prob 0.001067 occurred 800 times
 
 min varTerm 0.009139 occurred 800 times
-max varTerm 0.009139 occurred 01 times
+max varTerm 0.064031 occurred 01 times
 min prob 0.009139 occurred 800 times
 
 min varTerm 0.002603 occurred 800 times
-max varTerm 0.002603 occurred 01 times
+max varTerm 0.064807 occurred 01 times
 min prob 0.002603 occurred 800 times
 
 min varTerm 0.000621 occurred 800 times
-max varTerm 0.000621 occurred 01 times
+max varTerm 0.060828 occurred 01 times
 min prob 0.000621 occurred 800 times
 
 min varTerm 0.001932 occurred 800 times
-max varTerm 0.001932 occurred 01 times
+max varTerm 0.070000 occurred 01 times
 min prob 0.001932 occurred 800 times
 
 min varTerm 0.007876 occurred 800 times
-max varTerm 0.007876 occurred 01 times
+max varTerm 0.070000 occurred 01 times
 min prob 0.007876 occurred 800 times
 
 min varTerm 0.004627 occurred 800 times
-max varTerm 0.004627 occurred 01 times
+max varTerm 0.074162 occurred 01 times
 min prob 0.004627 occurred 800 times
 
 min varTerm 0.000351 occurred 800 times
-max varTerm 0.000351 occurred 01 times
+max varTerm 0.070711 occurred 01 times
 min prob 0.000351 occurred 800 times
 
 min varTerm 0.002444 occurred 800 times
-max varTerm 0.002444 occurred 01 times
+max varTerm 0.070711 occurred 01 times
 min prob 0.002444 occurred 800 times
 
 min varTerm 0.008064 occurred 800 times
-max varTerm 0.008064 occurred 01 times
+max varTerm 0.072801 occurred 01 times
 min prob 0.008064 occurred 800 times
 
 min varTerm 0.006150 occurred 800 times
-max varTerm 0.006150 occurred 01 times
+max varTerm 0.083066 occurred 01 times
 min prob 0.006150 occurred 800 times
 
 min varTerm 0.005080 occurred 800 times
-max varTerm 0.005080 occurred 01 times
+max varTerm 0.072801 occurred 01 times
 min prob 0.005080 occurred 800 times
 
 min varTerm 0.000137 occurred 800 times
-max varTerm 0.000137 occurred 01 times
+max varTerm 0.067823 occurred 01 times
 min prob 0.000137 occurred 800 times
 
 min varTerm 0.002398 occurred 800 times
-max varTerm 0.002398 occurred 01 times
+max varTerm 0.080623 occurred 01 times
 min prob 0.002398 occurred 800 times
 
 min varTerm 0.000998 occurred 800 times
-max varTerm 0.000998 occurred 01 times
+max varTerm 0.068557 occurred 01 times
 min prob 0.000998 occurred 800 times
 
 min varTerm 0.009495 occurred 800 times
-max varTerm 0.009495 occurred 01 times
+max varTerm 0.067082 occurred 01 times
 min prob 0.009495 occurred 800 times
 
 min varTerm 0.006827 occurred 800 times
-max varTerm 0.006827 occurred 01 times
+max varTerm 0.064031 occurred 01 times
 min prob 0.006827 occurred 800 times
 
 min varTerm 0.004080 occurred 800 times
-max varTerm 0.004080 occurred 01 times
+max varTerm 0.068557 occurred 01 times
 min prob 0.004080 occurred 800 times
 
 min varTerm 0.005328 occurred 800 times
-max varTerm 0.005328 occurred 01 times
+max varTerm 0.064031 occurred 01 times
 min prob 0.005328 occurred 800 times
 
 min varTerm 0.002932 occurred 800 times
-max varTerm 0.002932 occurred 01 times
+max varTerm 0.075498 occurred 01 times
 min prob 0.002932 occurred 800 times
 
 min varTerm 0.010709 occurred 800 times
-max varTerm 0.010709 occurred 01 times
+max varTerm 0.068557 occurred 01 times
 min prob 0.010709 occurred 800 times
 
 min varTerm 0.002917 occurred 800 times
-max varTerm 0.002917 occurred 01 times
+max varTerm 0.069282 occurred 01 times
 min prob 0.002917 occurred 800 times
 
 min varTerm 0.002226 occurred 800 times
-max varTerm 0.002226 occurred 01 times
+max varTerm 0.063246 occurred 01 times
 min prob 0.002226 occurred 800 times
 
 min varTerm 0.007208 occurred 800 times
-max varTerm 0.007208 occurred 01 times
+max varTerm 0.070000 occurred 01 times
 min prob 0.007208 occurred 800 times
