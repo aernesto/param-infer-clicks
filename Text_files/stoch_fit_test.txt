@@ -1,0 +1,30 @@
+dbname: S3lr5h1T2tr10000sp1000.h5
+gpname: lr5hr20h1T2
+trials: 1-50
+
+Params
+------
+best g: 6.47
+true h: 1
+S     : 3
+low r : 5
+high r: 20
+n samp: 1000
+
+Intervals with deterministic fit: (done with intervs_minimal.py commit f667aeb)
+---------
+linlin          [(6.4564564564564568, 7.6476476476476476)]
+
+nonlinnonlin    [(0.99099099099099108, 1.0110110110110111)]
+
+linnonlin       [(5.6556556556556554, 6.4664664664664668), 
+                 (7.6376376376376376, 8.0880880880880888)]
+
+nonlinlin       [(0.41041041041041043, 0.99099099099099097), 
+                 (0.99099099099099108, 1.0110110110110111), 
+                 (1.4014014014014013, 2.2822822822822824)]
+---------
+Nonlinlin plots of converging likelihoods (done with
+nonlinlin_sampling_srvr_lownoise_text.m commit 35d26bd) are in figs/ folder.
+
+Nonlinnonlin plots done with nonlin_sampling_lownoise_test.m commit a3c38a2.
