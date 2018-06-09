@@ -1,12 +1,11 @@
 clear
+ntrials=100;
 rng('shuffle')
-lw=3; % line width for plots
-ndiscount=20;%200; % number of discounting parameter values to try
+ndiscount=200; % number of discounting parameter values to try
 hstart=0;hend=10; % range should be large enough for normalization
 hs=linspace(hstart,hend,ndiscount)'; % values of h to try
 dh=(hend-hstart)/(ndiscount-1);
-ntrials=10;%50;
-filename = '../data/S3lr5h1T2tr10000sp1000.h5';%'/home/adrian/S3lr5h1T2tr10000sp1000.h5';
+filename = '/home/adrian/S3lr5h1T2tr10000sp1000.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 info_dset_name=[group_name,'/trial_info'];
@@ -19,7 +18,7 @@ k=log(high_rate/low_rate);
 all_trials = h5read(filename, [group_name,'/trials']);
 tot_trials_db = size(all_trials,2);
 all_trials = all_trials(1:2,:);
-npart = 8;%800;
+npart = 800;
 nsd=1; % Gaussian noise applied to click height
 
 nruns=500;
@@ -72,6 +71,6 @@ end
 mse_nonlinnonlin=mse_nonlinnonlin/nruns;
 mse_nonlinlin=mse_nonlinlin/nruns;
 toc
-%fname=['mses',num2str(nruns),'runs',num2str(ntrials),'trials'];
-%save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_nonlinnonlin',...
-    %'mse_nonlinlin')
+fname=['mse_nonlin_fig4_iteration1',num2str(ntrials),'trials'];
+save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_nonlinnonlin',...
+     'mse_nonlinlin')
