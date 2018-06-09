@@ -7,7 +7,7 @@ font = {'family': 'DejaVu Sans',
 lw = 4  # linewidth
 matplotlib.rc('font', **font)
 
-results = pickle.load(open("data/mse_local_S3lr5.pkl", "rb"))
+results = pickle.load(open("../data/fig4_deter_local_S3lr5.pkl", "rb"))
 
 row2modl_map = ['linlin', 'nonlinnonlin', 'linnonlin', 'nonlinlin']
 
@@ -19,13 +19,15 @@ f, ax_array = plt.subplots(4, 1, sharex='all', sharey='col', squeeze=False)
 for r in range(4):
     # lin 2 lin fit
     data = results[0]['stats'][row2modl_map[r]]
+    for idx, x in enumerate(data):
+        print('5ccccab,deter,{},{},{:.10f}'.format(row2modl_map[r], trial_numbers[idx], x[0]))
     # explore failures
     # fail_dicts = [x[1] for x in data]
     # MSE plot
-    ax = ax_array[r, 0]
-    ax.plot(trial_numbers, [x[0] for x in data], 'o--', markersize=10, linewidth=lw)
-    ax.set_xlabel('trial nb')
-    ax.set_ylabel('scalar error')
-    ax.set_title(row2modl_map[r])
-plt.tight_layout()
-plt.show()
+    # ax = ax_array[r, 0]
+    # ax.plot(trial_numbers, [x[0] for x in data], 'o--', markersize=10, linewidth=lw)
+    # ax.set_xlabel('trial nb')
+    # ax.set_ylabel('scalar error')
+    # ax.set_title(row2modl_map[r])
+# plt.tight_layout()
+# plt.show()
