@@ -31,16 +31,19 @@ all_trials = all_trials(1:2,:);
 
 nsd=1; % Gaussian noise applied to click height
 
-nruns=5; % number of blocks of trials. MSE is computed across blocks
+nruns=10; % number of blocks of trials. MSE is computed across blocks
 
 
 tic
 for ntrials=ntrial_vec
-    mse_linlin=0;mse_linnonlin=0;  % MSE computed as running average
+    mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
+    
     for run=1:nruns
         % shuffle trial order
         all_trials = all_trials(:,randperm(tot_trials_db));
         llh = zeros(ndiscount,2);%col1=linlin; col2=linnonlin
+        
+        %%% LOOP OVER TRIALS
         parfor trn=1:ntrials
             [lst, rst]=all_trials{:,trn};
             total_clicks = length(lst)+length(rst);
@@ -66,14 +69,24 @@ for ntrials=ntrial_vec
             lhdnl=lhd_lin_sing_tr_gauss_clicks(synthetic_decision,...
                 nsd, k, T, lst', rst', gs'); % already log-likelihood
 
-            llh=llh+[lhdl,lhdnl];
+            % adding log-likelihoods, after renormalizing
+            % NOTE: I AM NOT SURE I AM RENORMALIZING CORRECTLY
+            llh=llh+log([llh2density_AR(lhdl,dg), llh2density_AR(lhdnl,dg)]);
         end
+                
+        % fitting to linear model
         density_lin=llh2density_AR(llh(:,1),dg);                % convert log-lh to density
+        
         toadd_lin=dg*sum(((gs-true_g).^2).*density_lin');
-        mse_linlin=mse_linlin+toadd_lin;  % running average
+        
+        mse_linlin=mse_linlin+toadd_lin;  % running average across blocks
+        
+        % fitting to nonlinear model
         density=llh2density_AR(llh(:,2),dg);                % convert log-lh to density
+        
         toadd_nonlin=dg*sum(((gs-true_g).^2).*density');
-        mse_linnonlin=mse_linnonlin+toadd_nonlin;  % running average
+        
+        mse_linnonlin=mse_linnonlin+toadd_nonlin;  % running average across blocks
         
         % DEBUG
         if sum(isnan(density_lin))
