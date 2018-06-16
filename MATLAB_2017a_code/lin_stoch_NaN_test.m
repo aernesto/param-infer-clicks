@@ -9,7 +9,7 @@ ndiscount=800; % number of discounting parameter values to try
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrial_vec=400;      % number of trials to use in fitting procedure 
+ntrial_vec=500;      % number of trials to use in fitting procedure 
                              %(for each block)
 
 % database info (where the clicks data and other parameter values reside)
@@ -31,11 +31,11 @@ all_trials = all_trials(1:2,:);
 
 nsd=1; % Gaussian noise applied to click height
 
-nruns=10; % number of blocks of trials. MSE is computed across blocks
-running_min_linlin=zeros(nruns,ntrial_vec);
-running_max_linlin=running_min_linlin;
-running_min_linnonlin=zeros(nruns,ntrial_vec);
-running_max_linnonlin=running_min_linnonlin;
+nruns=30; % number of blocks of trials. MSE is computed across blocks
+min_linlin=zeros(nruns,1);
+max_linlin=min_linlin;
+min_linnonlin=zeros(nruns,1);
+max_linnonlin=min_linnonlin;
 tic
 for ntrials=ntrial_vec
     mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
@@ -75,12 +75,21 @@ for ntrials=ntrial_vec
             llh=llh+[lhdl,lhdnl];
             
             % computing running extreme vals for debugging
-            running_min_linlin(run, trn)=min(llh(:,1));
-            running_min_linnonlin(run,trn)=min(llh(:,2));
-            running_max_linlin(run, trn)=max(llh(:,1));
-            running_max_linnonlin(run,trn)=max(llh(:,2));
+%             running_min_linlin(run, trn)=min(llh(:,1));
+%             running_min_linnonlin(run,trn)=min(llh(:,2));
+%             running_max_linlin(run, trn)=max(llh(:,1));
+%             running_max_linnonlin(run,trn)=max(llh(:,2));
             
         end
+        
+        % shift log-likelihood up to avoid numerical errors
+        llh(:,1)=llh(:,1)+abs(max(llh(:,1)));
+        llh(:,2)=llh(:,2)+abs(max(llh(:,2)));
+        
+        min_linlin(run)=min(llh(:,1));
+        min_linnonlin(run)=min(llh(:,2));
+        max_linlin(run)=max(llh(:,1));
+        max_linnonlin(run)=max(llh(:,2));
                 
         % fitting to linear model
         density_lin=llh2density_AR(llh(:,1),dg);% convert log-lh to density
@@ -118,24 +127,26 @@ end
 
 
 toc
-figure()
-subplot(1,2,1)
-plot(1:ntrial_vec,running_min_linlin','LineWidth',lw)
-title('running min linlin')
-ax=gca;ax.FontSize=fs2;
-subplot(1,2,2)
-plot(1:ntrial_vec, running_min_linnonlin','LineWidth',lw)
-title('running min linnonlin')
-ax=gca;ax.FontSize=fs2;
-figure()
-subplot(1,2,1)
-plot(1:ntrial_vec,running_max_linlin', 'LineWidth',lw)
-title('running max linlin')
-ax=gca;ax.FontSize=fs;
-subplot(1,2,2)
-plot(1:ntrial_vec, running_max_linnonlin','LineWidth',lw)
-title('running max linnonlin')
-ax=gca;ax.FontSize=fs;
+% 
+% figure()
+% subplot(1,2,1)
+% boxplot(min_linlin')
+% title('running min linlin')
+% ax=gca;ax.FontSize=fs2;
+% subplot(1,2,2)
+% boxplot(min_linnonlin)
+% title('running min linnonlin')
+% ax=gca;ax.FontSize=fs2;
+% figure()
+% subplot(1,2,1)
+% boxplot(max_linlin)
+% title('running max linlin')
+% ax=gca;ax.FontSize=fs;
+% subplot(1,2,2)
+% boxplot(max_linnonlin')
+% title('running max linnonlin')
+% ax=gca;ax.FontSize=fs;
+
 % 
 % fname=['mse_lin_fig4_iteration1_',num2str(ntrials),'trials'];
 % save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_linnonlin',...
