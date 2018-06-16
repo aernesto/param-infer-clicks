@@ -8,7 +8,7 @@ ndiscount=800; % number of discounting parameter values to try
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrial_vec=100:100:500;      % number of trials to use in fitting procedure 
+ntrial_vec=[400,500];      % number of trials to use in fitting procedure 
                              %(for each block)
 
 % database info (where the clicks data and other parameter values reside)
@@ -35,7 +35,7 @@ nruns=500; % number of blocks of trials. MSE is computed across blocks
 
 tic
 for ntrials=ntrial_vec
-    mse_linlin=0;mse_linnonlin=0;  % MSE computed as running average
+    mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
     for run=1:nruns
         % shuffle trial order
         all_trials = all_trials(:,randperm(tot_trials_db));
@@ -67,6 +67,11 @@ for ntrials=ntrial_vec
 
             llh=llh+[lhdl,lhdnl];
         end
+        
+        % shift log-likelihood up to avoid numerical errors
+        llh(:,1)=llh(:,1)+abs(max(llh(:,1)));
+        llh(:,2)=llh(:,2)+abs(max(llh(:,2)));
+
         density_lin=llh2density_AR(llh(:,1),dg);                % convert log-lh to density
         mse_linlin=mse_linlin+dg*sum(((gs-true_g).^2).*density_lin');  % running average
         density=llh2density_AR(llh(:,2),dg);                % convert log-lh to density
