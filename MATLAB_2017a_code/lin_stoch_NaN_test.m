@@ -32,8 +32,10 @@ all_trials = all_trials(1:2,:);
 nsd=1; % Gaussian noise applied to click height
 
 nruns=10; % number of blocks of trials. MSE is computed across blocks
-
-
+running_min_linlin=zeros(nruns,ntrial_vec);
+running_max_linlin=running_min_linlin;
+running_min_linnonlin=zeros(nruns,ntrial_vec);
+running_max_linnonlin=running_min_linnonlin;
 tic
 for ntrials=ntrial_vec
     mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
@@ -44,7 +46,7 @@ for ntrials=ntrial_vec
         llh = zeros(ndiscount,2);%col1=linlin; col2=linnonlin
         
         %%% LOOP OVER TRIALS
-        parfor trn=1:ntrials
+        for trn=1:ntrials
             [lst, rst]=all_trials{:,trn};
             total_clicks = length(lst)+length(rst);
             refdec_noise = normrnd(k,nsd, [total_clicks,1]);
@@ -68,25 +70,31 @@ for ntrials=ntrial_vec
                 nsd, k, T, lst', rst', gs');
             lhdnl=lhd_lin_sing_tr_gauss_clicks(synthetic_decision,...
                 nsd, k, T, lst', rst', gs'); % already log-likelihood
-
-            % adding log-likelihoods, after renormalizing
-            % NOTE: I AM NOT SURE I AM RENORMALIZING CORRECTLY
-            llh=llh+log([llh2density_AR(lhdl,dg), llh2density_AR(lhdnl,dg)]);
+            
+            % adding unscaled log-likelihoods
+            llh=llh+[lhdl,lhdnl];
+            
+            % computing running extreme vals for debugging
+            running_min_linlin(run, trn)=min(llh(:,1));
+            running_min_linnonlin(run,trn)=min(llh(:,2));
+            running_max_linlin(run, trn)=max(llh(:,1));
+            running_max_linnonlin(run,trn)=max(llh(:,2));
+            
         end
                 
         % fitting to linear model
-        density_lin=llh2density_AR(llh(:,1),dg);                % convert log-lh to density
+        density_lin=llh2density_AR(llh(:,1),dg);% convert log-lh to density
         
         toadd_lin=dg*sum(((gs-true_g).^2).*density_lin');
         
-        mse_linlin=mse_linlin+toadd_lin;  % running average across blocks
+        mse_linlin=mse_linlin+toadd_lin;    % running average across blocks
         
         % fitting to nonlinear model
-        density=llh2density_AR(llh(:,2),dg);                % convert log-lh to density
+        density=llh2density_AR(llh(:,2),dg);    % convert log-lh to density
         
         toadd_nonlin=dg*sum(((gs-true_g).^2).*density');
         
-        mse_linnonlin=mse_linnonlin+toadd_nonlin;  % running average across blocks
+        mse_linnonlin=mse_linnonlin+toadd_nonlin;% running average across blocks
         
         % DEBUG
         if sum(isnan(density_lin))
@@ -110,7 +118,24 @@ end
 
 
 toc
-
+figure()
+subplot(1,2,1)
+plot(1:ntrial_vec,running_min_linlin','LineWidth',lw)
+title('running min linlin')
+ax=gca;ax.FontSize=fs2;
+subplot(1,2,2)
+plot(1:ntrial_vec, running_min_linnonlin','LineWidth',lw)
+title('running min linnonlin')
+ax=gca;ax.FontSize=fs2;
+figure()
+subplot(1,2,1)
+plot(1:ntrial_vec,running_max_linlin', 'LineWidth',lw)
+title('running max linlin')
+ax=gca;ax.FontSize=fs;
+subplot(1,2,2)
+plot(1:ntrial_vec, running_max_linnonlin','LineWidth',lw)
+title('running max linnonlin')
+ax=gca;ax.FontSize=fs;
 % 
 % fname=['mse_lin_fig4_iteration1_',num2str(ntrials),'trials'];
 % save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_linnonlin',...
