@@ -1,3 +1,4 @@
+# setwd("/home/radillo/Git/GitHub/work/param-infer-clicks/R_code/")
 library(ggplot2)
 fig4_data <- read.csv(file="../data/fig4_data.csv", header=TRUE, sep=",")
 
