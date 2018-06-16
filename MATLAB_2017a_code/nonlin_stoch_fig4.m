@@ -23,6 +23,8 @@ nsd=1; % Gaussian noise applied to click height
 
 nruns=500;
 mse_nonlinnonlin=0; mse_nonlinlin=0;
+% store the modes of posteriors
+modes_nonlinlin=zeros(1,nruns); modes_nonlinnonlin=modes_nonlinlin;
 tic
 for run=1:nruns
     % shuffle trial order
@@ -63,6 +65,15 @@ for run=1:nruns
         
         llh=llh+[log(lhv_nonlinnonlin), log(lhv_nonlinlin)];
     end
+    
+    % shift log-likelihood up to avoid numerical errors
+    [max_nonlinlin,idx1]=max(llh(:,2));
+    modes_nonlinlin(run)=hs(idx1);
+    [max_nonlinnonlin,idx2]=max(llh(:,1));
+    modes_nonlinnonlin(run)=hs(idx2);
+    llh(:,1)=llh(:,1)+abs(max_nonlinnonlin);
+    llh(:,2)=llh(:,2)+abs(max_nonlinlin);
+    
     density_nonlinnonlin=llh2density_AR(llh(:,1),dh);
     mse_nonlinnonlin=mse_nonlinnonlin+dh*sum(((hs-true_h).^2).*density_nonlinnonlin);
     density_nonlinlin=llh2density_AR(llh(:,2),dh);
@@ -71,6 +82,6 @@ end
 mse_nonlinnonlin=mse_nonlinnonlin/nruns;
 mse_nonlinlin=mse_nonlinlin/nruns;
 toc
-fname=['mse_nonlin_fig4_iteration1',num2str(ntrials),'trials'];
+fname=['mse_nonlin_fig4_iteration2_',num2str(ntrials),'trials'];
 save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_nonlinnonlin',...
-     'mse_nonlinlin')
+      'mse_nonlinlin', 'modes_nonlinlin', 'modes_nonlinnonlin')

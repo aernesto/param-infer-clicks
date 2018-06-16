@@ -67,6 +67,8 @@ def deter_fit(p):
                                                    true_param)
             if curr_err is not None:
                 running_scalar_error += curr_err / bn
+                if p['model_to_fit'] == 'lin':
+                    running_scalar_error /= true_param**2
             list_of_failure_dicts.append(failure_dict)
     return running_scalar_error, list_of_failure_dicts
 
@@ -159,9 +161,9 @@ def dump_info(four_parameters, s, nt, nruns):
 if __name__ == '__main__':
     tot_trials = 10000
     block_number = 500
-    file_list = [{'fname': 'data/S3lr5h1T2tr10000sp1000.h5', 'gname': 'lr5hr20h1T2', 'S': 3, 'lr': 5}]
+    file_list = [{'fname': '../data/S3lr5h1T2tr10000sp1000.h5', 'gname': 'lr5hr20h1T2', 'S': 3, 'lr': 5}]
     sple_dict = {'nonlin': {'start': 0, 'end': 10, 'number': 1000}, 'lin': {'start': 0, 'end': 10, 'number': 1000}}
-    trial_report_list = [50, 100, 150, 200, 250, 300]
+    trial_report_list = [100, 200, 300, 400, 500]
     params = {'hazard_rate': 1,
               'T': 2,
               'tot_trials_db': tot_trials}  # 100000}  # todo: read this off the db
@@ -193,4 +195,4 @@ if __name__ == '__main__':
                 # print(report_values[''.join(model_pair)])
         results.append({'file': (file, trial_report_list), 'stats': report_values})
     # pickle.dump(results, open('/home/adrian/tosubmit_home/mse.pkl', 'wb'))
-    pickle.dump(results, open('data/mse_local_S3lr5.pkl', 'wb'))
+    pickle.dump(results, open('../data/fig4_deter_local_S3lr5.pkl', 'wb'))
