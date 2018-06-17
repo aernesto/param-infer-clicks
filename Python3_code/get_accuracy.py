@@ -27,7 +27,7 @@ if __name__ == '__main__':
             accuracies[0, col] = get_accuracy(fname, gname, models[0], sample_col=col+1)
             accuracies[1, col] = get_accuracy(fname, gname, models[1], sample_col=col+1)
 
-        plt.plot(np.linspace(0, 10, ncols), accuracies[1, :],
+        plt.plot(np.linspace(0, 40, ncols), accuracies[1, :],
                  np.linspace(0, 40, ncols)/get_best_gamma(3, 1, polyfit=False), accuracies[0, :],
                  linewidth=3)
         plt.plot([1, 1], [.5, 1])
