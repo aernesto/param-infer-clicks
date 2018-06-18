@@ -8,7 +8,7 @@ ndiscount=800; % number of discounting parameter values to try
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrial_vec=[400,500];      % number of trials to use in fitting procedure 
+ntrial_vec=100:100:500;      % number of trials to use in fitting procedure 
                              %(for each block)
 
 % database info (where the clicks data and other parameter values reside)
@@ -36,6 +36,8 @@ nruns=500; % number of blocks of trials. MSE is computed across blocks
 tic
 for ntrials=ntrial_vec
     mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
+    % store the modes of posteriors
+    modes_linlin=zeros(1,nruns); modes_linnonlin=modes_linlin;
     for run=1:nruns
         % shuffle trial order
         all_trials = all_trials(:,randperm(tot_trials_db));
@@ -69,8 +71,12 @@ for ntrials=ntrial_vec
         end
         
         % shift log-likelihood up to avoid numerical errors
-        llh(:,1)=llh(:,1)+abs(max(llh(:,1)));
-        llh(:,2)=llh(:,2)+abs(max(llh(:,2)));
+        [max_linlin,idx1]=max(llh(:,1));
+        modes_linlin(run)=gs(idx1);
+        [max_linnonlin,idx2]=max(llh(:,2));
+        modes_linnonlin(run)=gs(idx2);
+        llh(:,1)=llh(:,1)+abs(max_linlin);
+        llh(:,2)=llh(:,2)+abs(max_linnonlin);
 
         density_lin=llh2density_AR(llh(:,1),dg);                % convert log-lh to density
         mse_linlin=mse_linlin+dg*sum(((gs-true_g).^2).*density_lin');  % running average
@@ -81,12 +87,10 @@ for ntrials=ntrial_vec
     mse_linnonlin=(mse_linnonlin/nruns)/(true_g^2);
     fprintf(',stoch,linlin,%d,%.10f\n,stoch,linnonlin,%d,%.10f\n',ntrials,...
         mse_linlin,ntrials,mse_linnonlin)
+    fname=['mse_lin_fig4_iteration2_',num2str(ntrials),'trials'];
+    save(['../data/',fname,'.mat'],'mse_linnonlin',...
+      'mse_linlin', 'modes_linlin', 'modes_linnonlin')
 end
-
 
 toc
 
-% 
-% fname=['mse_lin_fig4_iteration1_',num2str(ntrials),'trials'];
-% save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_linnonlin',...
-%      'mse_linlin')

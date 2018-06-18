@@ -9,8 +9,8 @@ lw = 3  # linewidth
 ncols = [1000, 10000, 10000]
 accuracies = pickle.load(open("../data/accuracies_S3.pkl", "rb"))
 
-for c in range(ncols[0]):
-    print('{:.6f}'.format(accuracies[0][0, c]))
+for c in range(ncols[1]):
+    print('{:.6f}'.format(accuracies[1][0, c]))
 
 
 # plt.plot(np.linspace(0, 10, ncols[0]), accuracies[0][1, :],  # S3lr5
