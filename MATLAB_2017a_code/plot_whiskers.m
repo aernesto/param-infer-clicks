@@ -1,28 +1,38 @@
 % test
 clear
-
-% nonlin
-% load modes
-load('../data/mse_nonlin_fig4_iteration2_400trials.mat')
-load('../data/mse_lin_fig4_iteration2_400trials.mat')
-% load accuracy values
-%load('../data/linacc.csv','-ascii')  % loads linacc
-load('../data/linacc_S3lr2.csv','-ascii')  % loads linacc for db S3lr2
-linacc=linacc_S3lr2;
-load('../data/nonlinacc.csv','-ascii')  % loads nonlinacc
-accuracy_nonlinlin = mapmode2acc(modes_nonlinlin, linspace(0,10,1000),...
-    nonlinacc');
-accuracy_nonlinnonlin = mapmode2acc(modes_nonlinnonlin,...
-    linspace(0,10,1000), nonlinacc');
-accuracy_linlin = mapmode2acc(modes_linlin, linspace(0,40,10000),...
-    linacc');
-accuracy_linnonlin = mapmode2acc(modes_linnonlin,...
-    linspace(0,40,10000), linacc');
-%g=['NLL','NLNL','LL','LNL'];%[ones(500,1),2*ones(500,1),3*ones(500,1),4*ones(500,1)];
-boxplot([accuracy_nonlinlin;...
-         accuracy_nonlinnonlin;...
-         accuracy_linlin;...
-         accuracy_linnonlin]')
+for TN=100:100:500
+    % nonlin
+    % load modes
+    load(['../data/mse_nonlin_fig4_iteration2_',num2str(TN),'trials.mat'])
+    load(['../data/mse_lin_fig4_iteration2_',num2str(TN),'trials.mat'])
+    % load accuracy values
+    %load('../data/linacc.csv','-ascii')  % loads linacc
+    load('../data/linacc_S3lr2.csv','-ascii')  % loads linacc for db S3lr2
+    linacc=linacc_S3lr2;
+    load('../data/nonlinacc.csv','-ascii')  % loads nonlinacc
+    accuracy_nonlinlin = mapmode2acc(modes_nonlinlin, linspace(0,10,1000),...
+        nonlinacc');
+    accuracy_nonlinnonlin = mapmode2acc(modes_nonlinnonlin,...
+        linspace(0,10,1000), nonlinacc');
+    accuracy_linlin = mapmode2acc(modes_linlin, linspace(0,40,10000),...
+        linacc');
+    accuracy_linnonlin = mapmode2acc(modes_linnonlin,...
+        linspace(0,40,10000), linacc');
+    %g=['NLL','NLNL','LL','LNL'];%[ones(500,1),2*ones(500,1),3*ones(500,1),4*ones(500,1)];
+    lw=4;
+    ms=8;
+    fs=20;
+    boxplot([accuracy_nonlinlin;...
+        accuracy_nonlinnonlin;...
+        accuracy_linlin;...
+        accuracy_linnonlin]')
+    set(findobj(gca,'type','line'),'linew',lw)
+    set(gca,'linew',lw/2)
+    ylim([.85,.9])
+    ylabel('acc')
+    ax=gca;ax.FontSize=fs;
+    saveas(gcf, ['whisker_',num2str(TN),'.png'])
+end
 
 function acc = mapmode2acc(modes, samples, sample_acc)
 % map mode data to accuracy data
