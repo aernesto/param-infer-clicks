@@ -28,7 +28,7 @@ tot_trials_db = size(all_trials,2);                 % total number of trials in 
 
 all_trials = all_trials(1:2,:);
 
-nsd=1; % Gaussian noise applied to click height
+nsd=2; % Gaussian noise applied to click height
 
 nruns=500; % number of blocks of trials. MSE is computed across blocks
 
@@ -87,7 +87,7 @@ for ntrials=ntrial_vec
     mse_linnonlin=(mse_linnonlin/nruns)/(true_g^2);
     fprintf(',stoch,linlin,%d,%.10f\n,stoch,linnonlin,%d,%.10f\n',ntrials,...
         mse_linlin,ntrials,mse_linnonlin)
-    fname=['mse_lin_fig4_iteration2_',num2str(ntrials),'trials'];
+    fname=['err_lin_fig4_noise_',num2str(nsd),'_trials_',num2str(ntrials)];
     save(['../data/',fname,'.mat'],'mse_linnonlin',...
       'mse_linlin', 'modes_linlin', 'modes_linnonlin')
 end
