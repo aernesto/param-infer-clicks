@@ -1,7 +1,10 @@
 # setwd("/home/radillo/Git/GitHub/work/param-infer-clicks/R_code/")
 library(ggplot2)
 fig4_data <- read.csv(file="../data/fig4_data.csv", header=TRUE, sep=",")
-
+fig4_data$model_pair = factor(
+  fig4_data$model_pair, levels = c("linlin","linnonlin","nonlinlin","nonlinnonlin"),
+  labels = c("L-L", "L-NL", "NL-L","NL-NL")
+)
 gg <- ggplot(fig4_data,aes(x=trial_nb,y=error)) +
              geom_point(aes(col=model_pair, shape=method),size=3) +
              labs(y="Relative Error", 
@@ -12,7 +15,9 @@ plot(gg +
   facet_grid(method~model_pair) + 
     scale_x_discrete(expand=c(0.16, 0.16),
                      labels=c("","100","300","","500"),
-                     limits=unique(fig4_data$trial_nb)))
+                     limits=unique(fig4_data$trial_nb)) +
+    theme(legend.position="top"))
   # theme(text = element_text(size=30)
 #gg + theme_bw()  # change whole theme
 #gg)e
+
