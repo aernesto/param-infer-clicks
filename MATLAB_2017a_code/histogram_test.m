@@ -3,7 +3,7 @@ clear
 rng('shuffle')
 lw=3;   % line width for plots
 fs=25;fs2=20;  %font size for plots
-ndiscount=4; % number of discounting parameter values to try
+ndiscount=2; % number of discounting parameter values to try
 % sample space (vector of samples to use. 1 sample = 1 discounting rate)
 gstart=0.5;gend=25;
 gs=linspace(gstart, gend, ndiscount);
@@ -70,22 +70,17 @@ for iii=1:2
                                      0,...
                                      Gaussian_bank);
     figure()
-    for ii=1:4
-        ax=subplot(4,1,ii);
+    for ii=1:2
+        ax=subplot(2,1,ii);
         histogram(landing_heights(:,ii),'Normalization','pdf')
         xrange=xlim();x=xrange(1):.01:xrange(2);
+        yrange=ylim;
         hold on
         plot(x,normpdf(x,linlin_theo(1,ii),linlin_theo(2,ii)),...
             'LineWidth',4)
         hold off
-        title(['gamma=',num2str(gs(ii))])
-        if ii==1
-            title(['part filter vs. theory; gamma=',num2str(gs(ii))])
-        end
-        if ii==4
-            xlabel('evidence')
-        end
-        ylabel('pdf hist')
+        xlim(xrange)
+        ylim(yrange)
         ax.FontSize=20;
     end
 end
