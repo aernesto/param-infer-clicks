@@ -17,21 +17,21 @@ true_h = double(h5readatt(dbname, info_dset, 'h')); % true hazard rate
 k=log(hr/lr); % kappa for mean jump size in LLR at click
 
 %%%% TO CHANGE
-hs=.1;%linspace(0,5,50)'; % values of h to try
+hs=6;%linspace(0,5,50)'; % values of h to try
 %%%%
 
 ntrials=1;
 ncols=2; %nb of columns in db
 
 %%%%% TO CHANGE
-trial_data = h5read(dbname, dsetname, [1 330], [ncols ntrials]);
+trial_data = h5read(dbname, dsetname, [1 6091], [ncols ntrials]);
 %%%%%
 
 lst = trial_data{1,1}; 
 rst = trial_data{2,1}; 
 nclicks=length(lst)+length(rst);
-parts = 100:100:1600;
-noises = 1;
+parts = 100:200:5000;
+noises = 2;
 likelihoods = zeros(length(parts), length(noises));
 tic
 for kk = 1:length(noises)
@@ -60,11 +60,11 @@ for kk = 1:length(noises)
     hold on
     plot([800,800],[0,1],'r','LineWidth',2)
     hold off
-    ylim([0,1])
-    xlim([100,1600])
+    ylim([0.5,1])
+    xlim([100,4800])
     ax=gca; 
-    ax.YTick=[0,0.5,1];
-    ax.XTick=[100,800,1600];
+    ax.YTick=[0.5,1];
+    ax.XTick=[800,4000];
     ax.FontSize=16;
 end
 toc
