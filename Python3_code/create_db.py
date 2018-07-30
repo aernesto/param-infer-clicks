@@ -120,6 +120,8 @@ if __name__ == '__main__':
     5. db filename
     6. num_trials
     7. num_samples
+    8. lower bound on gamma samples
+    9. upper bound on gamma samples
     """
     if len(sys.argv) == 10:
         # low click rate
@@ -163,7 +165,7 @@ if __name__ == '__main__':
             print('\nError msg: sixth command line arg corresponding to number of trials should be an integer\n')
             exit(1)
 
-        # Number of Trials
+        # Number of Samples
         try:
             nsamples = int(sys.argv[7])
         except ValueError:
