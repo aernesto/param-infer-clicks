@@ -1,6 +1,7 @@
-% test
+% plot whiskers of accuracy recovered from modes of posteriors for
+% fits of stochastic models
 clear
-for TN=100:100:500
+for TN=100:100:500  % loop over block size (in trial numbers)
     % nonlin
     % load modes
     load(['../data/mse_nonlin_fig4_iteration2_',num2str(TN),'trials.mat'])
