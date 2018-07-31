@@ -79,7 +79,7 @@ end
     % compute and store decision of 4 combinations
 
 nblocks = 500;  % number of blocks = number of points for single whisker
-block_size=100; % block size = number of trials used for the fits
+block_size=500; % block size = number of trials used for the fits
 match = zeros(nblocks,4); % percentage of decision match
                     % COL 1 = LL
                     % COL 2 = L-NL
@@ -156,4 +156,4 @@ for block=1:nblocks
 end
 match = match / tot_num_trials;
 toc
-save('choice_match_100_1.mat')
+save(['choice_match_',num2str(block_size),'_1.mat'])
