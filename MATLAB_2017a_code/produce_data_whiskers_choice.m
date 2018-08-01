@@ -5,7 +5,7 @@
 %4. compute and plot % match
 
 clear
-rng(1) % for script to be reproducible
+
 tic
 
 
@@ -44,7 +44,7 @@ decisions = zeros(tot_num_trials,2);
 
 k=log(high_rate/low_rate);
 nsd=1; % Gaussian noise applied to click height
-
+rng(1) % for reference choice data to be reproducible
 for trn=1:tot_num_trials
     [lst, rst]=all_trials{1:2,trn};
     total_clicks = length(lst)+length(rst);
@@ -69,7 +69,7 @@ for trn=1:tot_num_trials
     % store decisions
     decisions(trn,:)=[synthetic_decision_lin, synthetic_decision_nonlin];
 end
-
+rng('shuffle')
 
 
 
@@ -156,4 +156,4 @@ for block=1:nblocks
 end
 match = match / tot_num_trials;
 toc
-save(['choice_match_',num2str(block_size),'_1.mat'])
+save(['../data/choice_match_',num2str(block_size),'_2.mat'])
