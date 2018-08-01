@@ -32,6 +32,29 @@ def create_hfd5_data_structure(hdf5file, groupname, num_trials, max_trials=10000
     return group
 
 
+def create_light_hfd5_data_structure(hdf5file, groupname, num_trials):
+    """
+    As of now, decision datasets contain 10001 columns because first col contains
+    decision for true parameter and the remaining 10,000 correspond to decision data
+    parameter samples
+    Current max nb of trials per dataset = 100,000
+    :param hdf5file: h5py.File
+    :param groupname:
+    :param num_trials: nb of trials
+    :param max_trials: for db decision datasets max nb of rows
+    :param num_samples: for db decision datasets nb of cols
+    :return: created group
+    """
+#    max_trials = 100000
+#    num_samples = 10000
+    group = hdf5file.create_group(groupname)
+    dt = h5py.special_dtype(vlen=np.dtype('f'))
+    group.create_dataset('trials', (num_trials, 3), dtype=dt)
+    group.create_dataset('trial_info', (num_trials, 3), dtype='f')
+
+    return group
+
+
 def populate_hfd5_db(fname, four_par, num_of_trials,
                      group_name=None, create_nonlin_db=False, number_of_samples=10000):
     """generate stimulus data and store as hdf5 file"""
@@ -66,6 +89,68 @@ def populate_hfd5_db(fname, four_par, num_of_trials,
     else:  # if dataset doesn't exist, create it
         print('creating dataset with group name {}'.format(group_name))
         grp = create_hfd5_data_structure(f, group_name, num_of_trials, num_samples=number_of_samples)
+
+        # get trials dataset
+        trials_data = grp['trials']
+        # get row indices of new data to insert
+        row_indices = np.r_[:num_of_trials]
+
+        # create info on data
+        info_data = grp['trial_info']  # info dataset
+        info_data.attrs['h'] = h
+        info_data.attrs['T'] = t
+        info_data.attrs['low_click_rate'] = ll
+        info_data.attrs['high_click_rate'] = lh
+        info_data.attrs['S'] = (lh - ll) / np.sqrt(ll + lh)
+        data_version = 1  # version number of new data to insert
+
+    # populate database
+    for row_idx in row_indices:
+        # vector of CP times
+        cptimes = gen_cp(t, h)
+        trials_data[row_idx, 2] = cptimes
+
+        # stimulus (left clicks, right clicks)
+        (left_clicks, right_clicks), init_state, end_state = gen_stim(cptimes, ll, lh, t)
+        trials_data[row_idx, :2] = left_clicks, right_clicks
+
+        # populate info dataset
+        info_data[row_idx, :] = init_state, end_state, data_version
+
+    info_data.attrs['last_version'] = data_version
+    f.flush()
+    f.close()
+
+
+def populate_light_hfd5_db(fname, four_par, num_of_trials, group_name=None):
+    """generate pure stimulus data and store as hdf5 file"""
+    # open/create file
+    f = h5py.File(fname, 'a')
+    ll, lh, h, t = four_par
+    # get/create group corresponding to parameters
+    if group_name is None:
+        group_name = build_group_name(four_par)
+    if group_name in f:  # if dataset already exists, only expand it with new data
+        grp = f[group_name]
+
+        # get datasets
+        trials_data = grp['trials']
+        info_data = grp['trial_info']
+
+        # resizing operation before inserting new data:
+        old_size = trials_data.len()
+        new_size = old_size + num_of_trials
+        trials_data.resize(new_size, axis=0)
+        info_data.resize(new_size, axis=0)
+
+        # get row indices of new data to insert
+        row_indices = np.r_[old_size:new_size]
+
+        # version number of new data to insert
+        data_version = info_data.attrs['last_version'] + 1
+    else:  # if dataset doesn't exist, create it
+        print('creating dataset with group name {}'.format(group_name))
+        grp = create_light_hfd5_data_structure(f, group_name, num_of_trials)
 
         # get trials dataset
         trials_data = grp['trials']
@@ -186,8 +271,7 @@ if __name__ == '__main__':
         grp_name = build_group_name(fp)
         true_g = get_best_gamma(S, hazard)
 
-        populate_hfd5_db(filename, fp, number_of_trials, number_of_samples=nsamples)
-        update_linear_decision_data(filename, grp_name, nsamples, gamma_range)
+        populate_light_hfd5_db(filename, fp, number_of_trials)
 
         print("--- {} seconds ---".format(time.time() - start_time))
     else:
