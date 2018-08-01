@@ -20,7 +20,7 @@ info_dset_name=[group_name,'/trial_info'];
 lin_decision_dset_name=[group_name,'/decision_lin'];
 trial_info = h5info(filename, trials_dset_name);
 %tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
-tot_num_trials = 500;
+tot_num_trials = 1000;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
 T = h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
 low_rate = h5readatt(filename, info_dset_name,'low_click_rate'); 
@@ -156,4 +156,4 @@ for block=1:nblocks
 end
 match = match / tot_num_trials;
 toc
-save(['../data/choice_match_',num2str(block_size),'_2.mat'])
+save(['../data/choice_match_',num2str(block_size),'_3.mat'])
