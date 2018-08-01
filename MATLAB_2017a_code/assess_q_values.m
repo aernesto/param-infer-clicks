@@ -7,7 +7,7 @@ clear
 
 %1. -------------Get a bank of clicks data---------------------------------
 
-filename = '../data/validation1.h5';
+filename = '../data/S3lr5h1T2tr10000sp1000.h5';%'../data/validation1.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 trials_dset_name=[group_name,'/trials'];
@@ -33,7 +33,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 %2. -------------For each trial, compute the q-value-----------------------
 
 k=log(high_rate/low_rate);
-nsd=1; % Gaussian noise applied to click height
+nsd=2; % Gaussian noise applied to click height
 q=zeros(1,tot_num_trials); % store q-values
 
 for trn=1:tot_num_trials
@@ -42,4 +42,4 @@ for trn=1:tot_num_trials
     q(trn)=exp(lhd_lin_sing_tr_gauss_clicks(1, nsd, k,...
     T, lst', rst', true_g));
 end
-histogram(q,'Normalization','pdf')
+histogram(q)
