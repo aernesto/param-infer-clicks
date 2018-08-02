@@ -7,32 +7,32 @@ clear
 
 %1. -----------bin q------------------------------------------------------%
 
-nbins=100;  % actual number of bins for histogram and density
+nbins=10000;  % actual number of bins for histogram and density
 qbins=linspace(0,1,nbins+1);  % really bin edges as needed by histogram()
 qvalues=zeros(1,nbins); % mid-points of bins
 for i=1:nbins
-    qvalues(i)=(qbins(i+1)-qbins(i))/2;
+    qvalues(i)=(qbins(i+1)+qbins(i))/2;
 end
     
 
 %2. -----------get density of q across trials-----------------------------%
 %%%2a. -------------Get a bank of clicks data-----------------------------%
 
-filename = '../data/S3lr5h1T2tr10000sp1000.h5';%'../data/validation1.h5';
+filename = '../data/validation2.h5';%'../data/validation1.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 trials_dset_name=[group_name,'/trials'];
 info_dset_name=[group_name,'/trial_info'];
 % nonlin_decision_dset_name=[group_name,'/decision_nonlin'];
-lin_decision_dset_name=[group_name,'/decision_lin'];
+%lin_decision_dset_name=[group_name,'/decision_lin'];
 trial_info = h5info(filename, trials_dset_name);
 tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
 %tot_num_trials = 500;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
-T = h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
-low_rate = h5readatt(filename, info_dset_name,'low_click_rate'); 
+T = 2;%h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
+low_rate = 5;%h5readatt(filename, info_dset_name,'low_click_rate'); 
 high_rate = h5readatt(filename, info_dset_name,'high_click_rate'); 
-true_g = h5readatt(filename, lin_decision_dset_name, 'best_gamma');
+true_g = 6.7457;%h5readatt(filename, lin_decision_dset_name, 'best_gamma');
 all_trials = h5read(filename, [group_name,'/trials']);
 % all_envt = h5read(filename, [group_name,'/trial_info'], [1 1], [2 Inf]);
 
@@ -53,6 +53,8 @@ for trn=1:tot_num_trials
     q(trn)=exp(lhd_lin_sing_tr_gauss_clicks(1, nsd, k,...
     T, lst', rst', true_g));
 end
+fig=figure();
+fig.Visible='off';
 hist=histogram(q,'Normalization','pdf',...
     'NumBins',nbins,...
     'BinEdges',qbins);
