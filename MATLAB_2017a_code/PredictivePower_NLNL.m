@@ -1,4 +1,4 @@
-% compute predictive power according to the methodology described below:
+% compute predictive power NL-NL according to methodology described below:
 % https://paper.dropbox.com/doc/Stochastic-model-fitting-URuXW5PKABizdbMJB4Bkb#:uid=862179754392750879685852&h2=Definition-of-predictive-power
 
 % Only focus on NL-NL, with m_f and m_d using true discounting param

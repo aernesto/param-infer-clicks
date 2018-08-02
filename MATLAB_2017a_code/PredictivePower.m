@@ -1,4 +1,4 @@
-% compute predictive power according to the methodology described below:
+% compute predictive power L-L according to the methodology below:
 % https://paper.dropbox.com/doc/Stochastic-model-fitting-URuXW5PKABizdbMJB4Bkb#:uid=862179754392750879685852&h2=Definition-of-predictive-power
 
 % For now, only focus on L-L, with m_f and m_d using true discounting param
@@ -27,7 +27,7 @@ info_dset_name=[group_name,'/trial_info'];
 %lin_decision_dset_name=[group_name,'/decision_lin'];
 trial_info = h5info(filename, trials_dset_name);
 tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
-%tot_num_trials = 500;
+%tot_num_trials = 100000;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
 T = 2;%h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
 low_rate = 5;%h5readatt(filename, info_dset_name,'low_click_rate'); 
