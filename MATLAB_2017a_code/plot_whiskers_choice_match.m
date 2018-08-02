@@ -7,10 +7,14 @@ e=load('../data/choice_match_500_2.mat');
 lw=4;
 ms=8;
 fs=20;
-boxplot(e.match)
+boxplot(a.match)
 set(findobj(gca,'type','line'),'linew',lw)
 set(gca,'linew',lw/2)
+hold on
+ax=gca;
+plot([ax.XLim(1), ax.XLim(2)],[.8787,.8787])
+hold off
 ylim([.79,.92])
 ylabel('% match')
-ax=gca;ax.FontSize=fs;
+ax.FontSize=fs;
 %saveas(gcf, ['whisker_',num2str(TN),'.png'])
