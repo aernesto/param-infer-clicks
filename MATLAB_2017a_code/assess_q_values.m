@@ -35,7 +35,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 %2. -------------For each trial, compute the q-value-----------------------
 
 k=log(high_rate/low_rate);
-nsd=2; % Gaussian noise applied to click height
+nsd=4; % Gaussian noise applied to click height
 q=zeros(1,tot_num_trials); % store q-values
 
 for trn=1:tot_num_trials

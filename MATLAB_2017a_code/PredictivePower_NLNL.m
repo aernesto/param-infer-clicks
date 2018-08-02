@@ -6,7 +6,8 @@
 clear
 
 %1. -----------bin q------------------------------------------------------%
-load('../data/nonlin_q_density_10000trials.mat')
+%load('../data/nonlin_q_density_10000trials.mat')
+load('../data/nonlin_q_density_noise_4_10000trials.mat')
 nbins=hist.NumBins;  % actual number of bins for histogram and density
 qbins=hist.BinEdges;  % really bin edges as needed by histogram()
 qvalues=zeros(1,nbins); % mid-points of bins
