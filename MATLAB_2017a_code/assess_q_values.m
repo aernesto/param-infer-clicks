@@ -35,7 +35,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 %2. -------------For each trial, compute the q-value-----------------------
 
 k=log(high_rate/low_rate);
-nsd=1; % Gaussian noise applied to click height
+nsd=2; % Gaussian noise applied to click height
 q=zeros(1,tot_num_trials); % store q-values
 
 for trn=1:tot_num_trials
@@ -45,9 +45,9 @@ for trn=1:tot_num_trials
     % for linear model, uncomment the following
     %q(trn)=exp(lhd_lin_sing_tr_gauss_clicks(1,nsd,k,T,lst',rst',true_g));
     
-    
-    noise_bank = normrnd(k, nsd, [npart, total_clicks, 1]);
+       
     % for nonlinear model, uncomment the following
+    noise_bank = normrnd(k, nsd, [npart, total_clicks, 1]);
     q(trn)=lhd_AR(1, npart, lst, rst, 2, k, 1, 0, nsd, noise_bank);
 end
 
@@ -56,5 +56,5 @@ qbins=linspace(0,1,nbins+1);  % really bin edges as needed by histogram()
 fig=figure();
 fig.Visible='off';
 hist=histogram(q,'Normalization','pdf','NumBins',nbins,'BinEdges',qbins);
-save('../data/nonlin_q_density_10000trials.mat','hist', 'npart','tot_num_trials','nsd')
+save(['../data/nonlin_q_density_noise_',num2str(nsd),'_10000trials.mat'],'hist', 'npart','tot_num_trials','nsd')
 toc
