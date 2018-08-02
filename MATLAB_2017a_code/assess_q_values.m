@@ -16,8 +16,8 @@ info_dset_name=[group_name,'/trial_info'];
 % nonlin_decision_dset_name=[group_name,'/decision_nonlin'];
 lin_decision_dset_name=[group_name,'/decision_lin'];
 trial_info = h5info(filename, trials_dset_name);
-%tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
-tot_num_trials = 1000;
+tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
+%tot_num_trials = 1000;
 npart=800;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
 T = h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
@@ -51,8 +51,10 @@ for trn=1:tot_num_trials
     q(trn)=lhd_AR(1, npart, lst, rst, 2, k, 1, 0, nsd, noise_bank);
 end
 
+nbins=100;  % actual number of bins for histogram and density
+qbins=linspace(0,1,nbins+1);  % really bin edges as needed by histogram()
 fig=figure();
 fig.Visible='off';
-hist=histogram(q,'Normalization','pdf');
-save('../data/nonlin_q_density.mat','hist', 'npart','tot_num_trials','nsd')
+hist=histogram(q,'Normalization','pdf','NumBins',nbins,'BinEdges',qbins);
+save('../data/nonlin_q_density_10000trials.mat','hist', 'npart','tot_num_trials','nsd')
 toc
