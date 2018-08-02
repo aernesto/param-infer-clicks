@@ -18,6 +18,10 @@ function decision = decide_AR(trial_duration,...
 % NOTES: rng('shuffle') should be called before function call
 %   Called by: lhd_AR.m; lin_stoch_fit.m
 
+    if size(noise,2)>1 && size(noise,1)==1
+        noise=noise';
+    end
+
     y = init_cond*ones(size(hh));
     t = 0;
     right_clicks_left = size(right_clicks, 1);

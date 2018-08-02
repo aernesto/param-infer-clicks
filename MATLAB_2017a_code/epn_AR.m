@@ -1,7 +1,7 @@
 function yy = epn_AR(init_cond, end_time, hr)
 % evaluates evidence at the next click by solving nonlinear system.
 %
-% does this in vectorized form form several initial conditions and
+% does this in vectorized form for several initial conditions and
 % discounting parameter values
 %
 % ARGS:

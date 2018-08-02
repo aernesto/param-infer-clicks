@@ -20,7 +20,7 @@ info_dset_name=[group_name,'/trial_info'];
 lin_decision_dset_name=[group_name,'/decision_lin'];
 trial_info = h5info(filename, trials_dset_name);
 %tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
-tot_num_trials = 1000;
+tot_num_trials = 500;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
 T = h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
 low_rate = h5readatt(filename, info_dset_name,'low_click_rate'); 
@@ -44,35 +44,8 @@ decisions = zeros(tot_num_trials,2);
 
 k=log(high_rate/low_rate);
 nsd=1; % Gaussian noise applied to click height
-rng(1) % for reference choice data to be reproducible
-for trn=1:tot_num_trials
-    [lst, rst]=all_trials{1:2,trn};
-    total_clicks = length(lst)+length(rst);
-    refdec_noise = normrnd(k,nsd, [total_clicks,1]);
-    
-    % generate synthetic decision with nonlinear model
-    synthetic_decision_nonlin = decide_AR(T, lst, rst, k, 1, 0, nsd,...
-        refdec_noise);
-    
-    % generate synthetic decision with linear model
-    synthetic_decision_lin = gauss_noise_lin_decide(lst, rst, true_g, k,...
-        nsd, 0);
-    
-    % flip a coin if decision was 0
-    if synthetic_decision_nonlin == 0
-        synthetic_decision_nonlin = sign(rand-0.05);
-    end
-    if synthetic_decision_lin == 0
-        synthetic_decision_lin = sign(rand-0.05);
-    end
-    
-    % store decisions
-    decisions(trn,:)=[synthetic_decision_lin, synthetic_decision_nonlin];
-end
+
 rng('shuffle')
-
-
-
 
 %3&4. --------------------------------------------------------------------%
 %loop over 500 blocks (fix block size)
@@ -112,6 +85,32 @@ for block=1:nblocks
     for trn=1:tot_num_trials
         [lst, rst]=all_trials{1:2,trn};
         total_clicks = length(lst)+length(rst);
+        
+        % reference models
+        refdec_noise = normrnd(k,nsd, [total_clicks,1]);
+        
+        % generate synthetic decision with nonlinear model
+        synthetic_decision_nonlin = decide_AR(T, lst, rst, k, 1, 0, nsd,...
+            refdec_noise);
+        
+        % generate synthetic decision with linear model
+        synthetic_decision_lin = gauss_noise_lin_decide(lst, rst, true_g, k,...
+            nsd, 0);
+        
+        % flip a coin if decision was 0
+        if synthetic_decision_nonlin == 0
+            synthetic_decision_nonlin = sign(rand-0.05);
+        end
+        if synthetic_decision_lin == 0
+            synthetic_decision_lin = sign(rand-0.05);
+        end
+        
+        % store reference decisions
+        decisions(trn,:)=[synthetic_decision_lin, synthetic_decision_nonlin];
+               
+        
+        % fitted models
+        
         nonlin_noise_1 = normrnd(k,nsd, [total_clicks,1]);
         nonlin_noise_2 = normrnd(k,nsd, [total_clicks,1]);
         % generate decisions with nonlinear models
@@ -140,7 +139,7 @@ for block=1:nblocks
             dec_lin_2 = sign(rand-0.05);
         end
         
-        % store decisions
+        % store fitted models decisions
         fit_decisions(trn,:)=...
             [dec_lin_1,dec_lin_2,dec_nonlin_1,dec_nonlin_2];
     end
@@ -156,4 +155,4 @@ for block=1:nblocks
 end
 match = match / tot_num_trials;
 toc
-save(['../data/choice_match_',num2str(block_size),'_3.mat'])
+save(['../data/choice_match_',num2str(block_size),'_4.mat'])

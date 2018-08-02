@@ -1,3 +1,5 @@
+% main script used to compute the error of fit for stochastic nonlin model
+
 clear
 ntrials=100;
 rng('shuffle')
