@@ -35,7 +35,6 @@ gammas=6.8:0.005:7.1; num_gammas=length(gammas);
 Correct= zeros(tot_num_trials,num_gammas);
 for trn=1:tot_num_trials
     [lst, rst]=all_trials{1:2,trn};
-    correct_response = all_trials{3,trn};
     total_clicks = length(lst)+length(rst);
     
     % generate decisions with deterministic linear model
@@ -60,7 +59,6 @@ gammas=5:0.1:7; num_gammas=length(gammas);
 Correct= zeros(tot_num_trials,num_gammas);
 for trn=1:tot_num_trials
     [lst, rst]=all_trials{1:2,trn};
-    correct_response = all_trials{3,trn};
     total_clicks = length(lst)+length(rst);
     
     nsd = 1; % noise
