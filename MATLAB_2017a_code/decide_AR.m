@@ -8,13 +8,13 @@ function decision = decide_AR(trial_duration,...
 %
 % ARGS:
 %   trial_duration: 
-%   left_clicks:
-%   right_clicks:
+%   left_clicks:    col vec
+%   right_clicks:   col vec
 %   hh:             column vector of discounting parameter values to use
 %   init_cond:
 %   noise:          2D noise matrix, dim1=click location in trial; 
 %                   dim2=discounting value.
-% RETURNS: a column vector of size size(hh)
+% RETURNS: a column vector of size size(hh) with choice values
 % NOTES: rng('shuffle') should be called before function call
 %   Called by: lhd_AR.m; lin_stoch_fit.m
 

@@ -1,6 +1,8 @@
-% estimate best gamma for deterministic and stochastic models
-clear
+% estimate best gamma and best h for stochastic models
+% only section 1 and then the appropriate section should be run
+
 %% 1. get the trials
+clear
 filename = '../data/validation2.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
@@ -15,6 +17,7 @@ tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
 T = h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
 low_rate = h5readatt(filename, info_dset_name,'low_click_rate'); 
 high_rate = h5readatt(filename, info_dset_name,'high_click_rate'); 
+k=log(high_rate/low_rate); % kappa = jump size
 %true_g = h5readatt(filename, lin_decision_dset_name, 'best_gamma');
 all_trials = h5read(filename, [group_name,'/trials']);
 
@@ -51,7 +54,8 @@ Acc = sum(Correct,1)/tot_num_trials;
 [M,I]=max(Acc);
 gammas(I)
 plot(gammas,Acc)
-%toc
+toc
+
 %% 3. run stochastic linear model on trials
 rng('shuffle')
 tic
@@ -61,8 +65,8 @@ for trn=1:tot_num_trials
     [lst, rst]=all_trials{1:2,trn};
     total_clicks = length(lst)+length(rst);
     
-    nsd = 1; % noise
-    % generate decisions with deterministic linear model
+    nsd = 2; % noise
+    % generate decisions with stoch linear model
     if isempty(rst)
         rst = -Inf; right_noise=0; 
     else
@@ -87,4 +91,32 @@ Acc = sum(Correct,1)/tot_num_trials;
 [M,I]=max(Acc);
 gammas(I)
 plot(gammas,Acc)
+toc
+
+%% 4. run stochastic nonlinear model on trials
+rng('shuffle')
+tic
+h=0.3:0.01:.7; num_h=length(h);
+Correct= zeros(tot_num_trials,num_h);
+tot_num_trials = 100000;
+nsd = 1; % noise
+
+for trn=1:tot_num_trials
+    [lst, rst]=all_trials{1:2,trn};
+    total_clicks = length(lst)+length(rst);
+        
+    % generate decisions with stoch nonlinear model
+    decision_nonlin = decide_AR(T,...
+        lst, rst, NaN, h', 0, NaN, normrnd(k, nsd, [total_clicks, 1]))';
+   
+    % flip a coin if any decision was 0
+    num_zeros = length(find(~decision_nonlin));
+    decision_nonlin(decision_nonlin==0)=randsample([-1,1],num_zeros,true);
+
+    Correct(trn, :) = decision_nonlin == all_envt(2,trn);
+end
+Acc = sum(Correct,1)/tot_num_trials;
+[M,I]=max(Acc);
+h(I)
+plot(h,Acc)
 toc
