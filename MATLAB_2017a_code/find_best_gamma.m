@@ -1,6 +1,5 @@
 % estimate best gamma for deterministic and stochastic models
 clear
-tic
 %% 1. get the trials
 filename = '../data/validation2.h5';
 file_info = h5info(filename);
@@ -31,6 +30,7 @@ all_envt = h5read(filename, [group_name,'/trial_info'], [1 1], [2 Inf]);
 
 %% 2. run deterministic linear model on trials 
 
+tic
 gammas=6.8:0.005:7.1; num_gammas=length(gammas);
 Correct= zeros(tot_num_trials,num_gammas);
 for trn=1:tot_num_trials
@@ -52,5 +52,41 @@ Acc = sum(Correct,1)/tot_num_trials;
 [M,I]=max(Acc);
 gammas(I)
 plot(gammas,Acc)
-toc
+%toc
 %% 3. run stochastic linear model on trials
+rng('shuffle')
+tic
+gammas=5:0.1:7; num_gammas=length(gammas);
+Correct= zeros(tot_num_trials,num_gammas);
+for trn=1:tot_num_trials
+    [lst, rst]=all_trials{1:2,trn};
+    correct_response = all_trials{3,trn};
+    total_clicks = length(lst)+length(rst);
+    
+    nsd = 1; % noise
+    % generate decisions with deterministic linear model
+    if isempty(rst)
+        rst = -Inf; right_noise=0; 
+    else
+        right_noise=normrnd(log(high_rate/low_rate),nsd,...
+            [length(rst),num_gammas]);
+    end
+    if isempty(lst)
+        lst = -Inf; left_noise=0; 
+    else
+        left_noise=normrnd(log(high_rate/low_rate),nsd,...
+            [length(lst),num_gammas]);
+    end
+    
+    deter_dec = sign(sum(right_noise.*exp(rst*gammas),1)...
+                    -sum(left_noise.*exp(lst*gammas),1));
+    num_zeros = length(find(~deter_dec));
+    deter_dec(deter_dec==0)=randsample([-1,1],num_zeros,true);
+
+    Correct(trn, :) = deter_dec == all_envt(2,trn);
+end
+Acc = sum(Correct,1)/tot_num_trials;
+[M,I]=max(Acc);
+gammas(I)
+plot(gammas,Acc)
+toc
