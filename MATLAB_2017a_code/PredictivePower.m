@@ -1,13 +1,11 @@
+function PP=PredictivePower(nbins,db,tot_num_trials,true_g,nsd)
 % compute predictive power L-L according to the methodology below:
 % https://paper.dropbox.com/doc/Stochastic-model-fitting-URuXW5PKABizdbMJB4Bkb#:uid=862179754392750879685852&h2=Definition-of-predictive-power
-
 % For now, only focus on L-L, with m_f and m_d using true discounting param
-
-clear
 
 %1. -----------bin q------------------------------------------------------%
 
-nbins=10000;  % actual number of bins for histogram and density
+%nbins=1000;  % actual number of bins for histogram and density
 qbins=linspace(0,1,nbins+1);  % really bin edges as needed by histogram()
 qvalues=zeros(1,nbins); % mid-points of bins
 for i=1:nbins
@@ -18,22 +16,22 @@ end
 %2. -----------get density of q across trials-----------------------------%
 %%%2a. -------------Get a bank of clicks data-----------------------------%
 
-filename = '../data/validation2.h5';%'../data/validation1.h5';
-file_info = h5info(filename);
+%db = '../data/validation2.h5';%'../data/validation1.h5';
+file_info = h5info(db);
 group_name = file_info.Groups.Name;
 trials_dset_name=[group_name,'/trials'];
 info_dset_name=[group_name,'/trial_info'];
 % nonlin_decision_dset_name=[group_name,'/decision_nonlin'];
 %lin_decision_dset_name=[group_name,'/decision_lin'];
-trial_info = h5info(filename, trials_dset_name);
-tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
+trial_info = h5info(db, trials_dset_name);
+%tot_num_trials = trial_info.Dataspace.Size(2);  % nb of trials in dataset
 %tot_num_trials = 100000;
 % h = h5readatt(filename, info_dset_name,'h');  % hazard rate
-T = 2;%h5readatt(filename, info_dset_name,'T');  % Trial duration in sec
-low_rate = 5;%h5readatt(filename, info_dset_name,'low_click_rate'); 
-high_rate = h5readatt(filename, info_dset_name,'high_click_rate'); 
-true_g = 6.7457;%h5readatt(filename, lin_decision_dset_name, 'best_gamma');
-all_trials = h5read(filename, [group_name,'/trials']);
+T = h5readatt(db, info_dset_name,'T');  % Trial duration in sec
+low_rate = h5readatt(db, info_dset_name,'low_click_rate'); 
+high_rate = h5readatt(db, info_dset_name,'high_click_rate'); 
+%true_g = 6.9;%6.7457;%h5readatt(filename, lin_decision_dset_name, 'best_gamma');
+all_trials = h5read(db, [group_name,'/trials']);
 % all_envt = h5read(filename, [group_name,'/trial_info'], [1 1], [2 Inf]);
 
 % example of extracting click times for left and right streams (col vecs)
@@ -44,7 +42,7 @@ all_trials = h5read(filename, [group_name,'/trials']);
 %%%2b. -------------For each trial, compute the q-value-------------------%
 
 k=log(high_rate/low_rate);
-nsd=1; % Gaussian noise applied to click height
+%nsd=1; % Gaussian noise applied to click height
 q=zeros(1,tot_num_trials); % store q-values
 
 for trn=1:tot_num_trials
@@ -69,4 +67,5 @@ agreement=qvalues.^2+(1-qvalues).^2;
 
 bin_width=1/nbins; % equivalently bin_width=hist.BinWidth;
 
-PP=bin_width*sum(agreement.*q_density)
+PP=bin_width*sum(agreement.*q_density);
+end

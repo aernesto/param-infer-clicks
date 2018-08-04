@@ -96,10 +96,10 @@ toc
 %% 4. run stochastic nonlinear model on trials
 rng('shuffle')
 tic
-h=0.3:0.01:.7; num_h=length(h);
+h=0:0.01:.5; num_h=length(h);
 Correct= zeros(tot_num_trials,num_h);
 tot_num_trials = 100000;
-nsd = 1; % noise
+nsd = 2; % noise
 
 for trn=1:tot_num_trials
     [lst, rst]=all_trials{1:2,trn};
