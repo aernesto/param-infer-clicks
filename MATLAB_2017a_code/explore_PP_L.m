@@ -1,4 +1,4 @@
-% explore predictive power
+% explore predictive power (semi-analytic) of L model to itself
 clear
 tic
 nbins=1000;  % nb of bins to bin q (to estimate its prob. density)
