@@ -1,7 +1,7 @@
 % main script used to compute the error of fit for stochastic nonlin model
 
 clear
-ntrials=100;
+ntrials=1;
 rng('shuffle')
 ndiscount=200; % number of discounting parameter values to try
 hstart=0;hend=10; % range should be large enough for normalization
@@ -84,6 +84,6 @@ end
 mse_nonlinnonlin=mse_nonlinnonlin/nruns;
 mse_nonlinlin=mse_nonlinlin/nruns;
 toc
-fname=['mse_nonlin_fig4_iteration2_',num2str(ntrials),'trials'];
+fname=['fit_nonlin_stoch_',num2str(nsd),'_trials_',num2str(ntrials)];
 save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_nonlinnonlin',...
       'mse_nonlinlin', 'modes_nonlinlin', 'modes_nonlinnonlin')
