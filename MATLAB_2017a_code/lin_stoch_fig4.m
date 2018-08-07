@@ -8,7 +8,7 @@ ndiscount=800; % number of discounting parameter values to try
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrial_vec=100:100:500;      % number of trials to use in fitting procedure 
+ntrial_vec=[1,20:20:80];      % number of trials to use in fitting procedure 
                              %(for each block)
 
 % database info (where the clicks data and other parameter values reside)
@@ -28,7 +28,7 @@ tot_trials_db = size(all_trials,2);                 % total number of trials in 
 
 all_trials = all_trials(1:2,:);
 
-nsd=2; % Gaussian noise applied to click height
+nsd=1; % Gaussian noise applied to click height
 
 nruns=500; % number of blocks of trials. MSE is computed across blocks
 
@@ -87,7 +87,7 @@ for ntrials=ntrial_vec
     mse_linnonlin=(mse_linnonlin/nruns)/(true_g^2);
     fprintf(',stoch,linlin,%d,%.10f\n,stoch,linnonlin,%d,%.10f\n',ntrials,...
         mse_linlin,ntrials,mse_linnonlin)
-    fname=['err_lin_fig4_noise_',num2str(nsd),'_trials_',num2str(ntrials)];
+    fname=['fit_lin_stoch_',num2str(nsd),'_trials_',num2str(ntrials)];
     save(['../data/',fname,'.mat'],'mse_linnonlin',...
       'mse_linlin', 'modes_linlin', 'modes_linnonlin')
 end
