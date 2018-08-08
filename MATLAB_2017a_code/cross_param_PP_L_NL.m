@@ -2,10 +2,11 @@
 % assesses PP of L model to NL model for different (gamma,h) pairs.
 
 clear
+parpool([12,80])
 tic
 rng('shuffle')
 nsd=1; % noise
-ntrials=1000;
+ntrials=100000;
 gammas=0:0.1:10; num_gammas=length(gammas); 
 hs=0:0.1:2.5; num_h=length(hs);
 num_pairs=num_gammas*num_h;
@@ -20,12 +21,11 @@ end
 
 % ------------------Get a bank of clicks data-----------------------------%
 
-db = '../data/validation2.h5';%'/home/adrian/validation1.h5';
+db = '/scratch/adrian/validation2.h5';%'../data/validation2.h5';%'/home/adrian/validation1.h5';
 [trials,envt]=get_trials(db,ntrials);
 % remove problematic trials
 %size(trials)
-bad_trials=sort([272270,207048,229626,93737,555142,774387,666886,...
-    811388,961053,631387]);
+bad_trials=sort([93737]);
 trials(:,bad_trials)=[];
 left_clicks=trials(1,:);
 right_clicks=trials(2,:);
@@ -63,4 +63,4 @@ end
 toc
 savefile=['/home/adrian/joint_PP_ntrials_',num2str(ntrials),...
     '_noise_',num2str(nsd),'.mat'];
-save(savefile,'PP','gammas','hs','ntrials')
+save(savefile,'PP','gammas','hs','ntrials','-v7.3')
