@@ -10,15 +10,21 @@ zlabel('predictive power')
 
 
 [A,B]=max(PP);
-
-[C,D]=max(PP');
-
+hmax=zeros(size(B));
+for i=1:length(B)
+    hmax(i)=hs(B(i));
+end
+[C,D]=max(PP,[],2);
+gmax=zeros(size(D));
+for i=1:length(D)
+    gmax(i)=gammas(D(i));
+end
 figure()
 subplot(2,1,1)
-plot(gammas,A)
+plot(gammas,hmax)
 xlabel('gamma')
-ylabel('h - best choice match')
+ylabel('h_{max}')
 subplot(2,1,2)
-plot(hs,C)
+plot(hs,gmax)
 xlabel('h')
-ylabel('gamma - best choice match')
+ylabel('\gamma_{max}')
