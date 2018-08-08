@@ -5,11 +5,18 @@ L_data=load('../data/acc_L_corrected_1.mat');
 %a2=load('../data/acc_L_corrected_2.mat'); % alternative data
 
 % several plotting possibilities
+xNL=NL_data.hs; yNL=NL_data.acc;
+xL=L_data.gammas; yL=L_data.acc;
 
-% subplot(3,1,1)
+yyaxis left
+plot(yNL,xNL)
+yyaxis right
+plot(yL,xL)
+
+% subplot(2,1,1)
 % plot(NL_data.hs,NL_data.acc)
 % xlabel('h')
-% subplot(3,1,2)
+% subplot(2,1,2)
 % plot(L_data.gammas,L_data.acc)
 % subplot(3,1,3)
 
