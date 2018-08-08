@@ -6,7 +6,7 @@ parpool([12,80])
 tic
 rng('shuffle')
 nsd=1; % noise
-ntrials=1000;
+ntrials=100000;
 gammas=0:0.1:10; num_gammas=length(gammas); 
 hs=0:0.1:2.5; num_h=length(hs);
 
