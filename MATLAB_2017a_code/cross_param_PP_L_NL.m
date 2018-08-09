@@ -1,14 +1,20 @@
-% cross-param PP L-NL
-% assesses PP of L model to NL model for different (gamma,h) pairs.
+% cross-param PP: three model pairs are possible. L-L; L-NL; NL-NL
+% assesses PP for different (theta1,theta2) pairs.
 
 clear
+model_pair={'L','NL'};
 parpool([12,80])
 tic
 rng('shuffle')
 nsd=1; % noise
-ntrials=100000;
-gammas=0:0.1:10; num_gammas=length(gammas); 
-hs=0:0.1:2.5; num_h=length(hs);
+ntrials=100;
+
+if ismember('L',model_pair)
+    gammas=0:0.1:10; num_gammas=length(gammas); 
+end
+if ismember('NL',model_pair)
+    hs=0:0.1:2.5; num_h=length(hs);
+end
 
 % ------------------Get a bank of clicks data-----------------------------%
 
@@ -28,11 +34,28 @@ right_clicks=trials(2,:);
 
 high_rate=20; low_rate=5; k=log(high_rate/low_rate);
 
-PP=zeros(num_h,num_gammas);
-for idx_h=1:num_h
-    for idx_g=1:num_gammas
+if strcmp('L',model_pair{1})
+    thetas_1=gammas;
+    num_theta_1=num_gammas;
+elseif strcmp('NL',model_pair{1})
+    thetas_1=hs;
+    num_theta_1=num_h;
+end
+if strcmp('L',model_pair{2})
+    thetas_2=gammas;
+    num_theta_2=num_gammas;
+elseif strcmp('NL',model_pair{2})
+    thetas_2=hs;
+    num_theta_2=num_h;
+end
+
+pair1=model_pair{1}; pair2=model_pair{2};
+
+PP=zeros(num_theta_1,num_theta_2);
+for idx_theta_1=1:num_theta_1
+    for idx_theta_2=1:num_theta_2
         
-        h=hs(idx_h); g=gammas(idx_g);
+        theta_1=thetas_1(idx_theta_1); theta_2=thetas_2(idx_theta_2);
         
         match_count=0;
         
@@ -40,27 +63,36 @@ for idx_h=1:num_h
             lst=left_clicks{trn}; rst=right_clicks{trn};
             %         [lst, rst]=trials{1:2,trn};
             
-            total_clicks = length(lst)+length(rst);
-            
-            % generate decisions with stoch nonlinear model
-            dec_h = decide_AR(2,lst,rst,NaN,h,0,NaN,...
-                normrnd(k, nsd, [total_clicks, 1]));
-            
-            % generate decisions with stoch linear model
-            dec_g = gauss_noise_lin_decide(lst, rst, g, k, nsd, 0);
+            if strcmp('NL',pair1)
+                % generate decisions with stoch nonlinear model
+                total_clicks = length(lst)+length(rst);
+                dec_1 = decide_AR(2,lst,rst,NaN,theta_1,0,NaN,...
+                    normrnd(k, nsd, [total_clicks, 1]));
+            else
+                dec_1=gauss_noise_lin_decide(lst, rst, theta_1,k,nsd,0);
+            end
+            if strcmp('L',pair2)
+                % generate decisions with stoch linear model
+                dec_2 = gauss_noise_lin_decide(lst, rst, theta_2, k, nsd, 0);
+            else
+                % generate decisions with stoch nonlinear model
+                total_clicks = length(lst)+length(rst);
+                dec_2 = decide_AR(2,lst,rst,NaN,theta_2,0,NaN,...
+                    normrnd(k, nsd, [total_clicks, 1]));
+            end
             
             % flip a coin if any decision was 0
-            if dec_h == 0; dec_h = sign(rand-0.05); end
-            if dec_g == 0; dec_g = sign(rand-0.05); end
+            if dec_1 == 0; dec_1 = sign(rand-0.05); end
+            if dec_2 == 0; dec_2 = sign(rand-0.05); end
             
-            if dec_h==dec_g
+            if dec_1==dec_2
                 match_count=match_count+1;
             end
         end
-        PP(idx_h,idx_g)=match_count/ntrials;
+        PP(idx_theta_1,idx_theta_2)=match_count/ntrials;
     end
 end
 toc
-savefile=['/home/adrian/joint_PP_ntrials_',num2str(ntrials),...
-    '_noise_',num2str(nsd),'.mat'];
-save(savefile,'PP','gammas','hs','ntrials','-v7.3')
+savefile=['/home/adrian/joint_PP_',model_pair{1},model_pair{2},...
+    '_ntrials_',num2str(ntrials),'_noise_',num2str(nsd),'.mat'];
+save(savefile,'PP','model_pair','thetas_1','thetas_2','ntrials','-v7.3')
