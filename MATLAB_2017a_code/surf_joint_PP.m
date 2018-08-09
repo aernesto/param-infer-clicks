@@ -31,20 +31,104 @@ ylabel('\gamma_{max}')
 
 %% L-L
 clear
-load('../data/joint_PP_LL_ntrials_100_noise_1.mat')
+load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
+%load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
+
+
+[A,B]=max(PP);
+th1max=zeros(size(B));
+for i=1:length(B)
+    th1max(i)=thetas_1(B(i));
+end
+
+figure()
+plot(thetas_1,th1max)
+hold on
+plot(thetas_1,thetas_1,'--r')
+hold off
+xlabel('\theta_2')
+ylabel('\theta_1^{max}')
+
+
+figure()
 [X,Y]=meshgrid(thetas_1,thetas_2);
-%num_gammas=length(thetas_1);
+num_g=length(thetas_1);
+
+for i=1:num_g
+    for j=1:i-1
+        PP(i,j)=PP(j,i);
+    end
+end
 surf(X,Y,PP)
 xlabel('gamma')
-ylabel('h')
+ylabel('gamma')
 zlabel('predictive power')
+
+
+
+
+figure()
+for ii=1:3
+    ax=subplot(3,1,ii);
+    n=ii*floor(num_g/3);
+    plot(thetas_1,PP(n,:))
+    [~,mx]=max(PP(n,:));
+    hold on
+    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r','LineWidth',2)
+    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k')
+    hold off
+    title(['ref \theta = ',num2str(thetas_1(n))])
+    ylabel('PP')
+    legend('PP','\theta_1=\theta_2','max')
+end
+
 
 %% NL-NL
 clear
-load('../data/joint_PP_NLNL_ntrials_100_noise_1.mat')
+%load('../data/joint_PP_NLNL_ntrials_10000_noise_1.mat')
+load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
+
+[A,B]=max(PP);
+h1max=zeros(size(B));
+for i=1:length(B)
+    h1max(i)=thetas_1(B(i));
+end
+
+figure()
+plot(thetas_1,h1max)
+hold on
+plot(thetas_1,thetas_1,'--r')
+hold off
+xlabel('\theta_2')
+ylabel('\theta_1^{max}')
+
+
+figure()
+
 [X,Y]=meshgrid(thetas_1,thetas_2);
-%num_gammas=length(thetas_1);
+num_h=length(thetas_1);
+for i=1:num_h
+    for j=1:i-1
+        PP(i,j)=PP(j,i);
+    end
+end
 surf(X,Y,PP)
-xlabel('gamma')
+xlabel('h')
 ylabel('h')
 zlabel('predictive power')
+
+
+figure()
+for ii=1:3
+    ax=subplot(3,1,ii);
+    n=ii*floor(num_h/3);
+    plot(thetas_1,PP(n,:))
+    [~,mx]=max(PP(n,:));
+    hold on
+    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r','LineWidth',2)
+    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k')
+    hold off
+    title(['ref \theta = ',num2str(thetas_1(n))])
+    ylabel('PP')
+    legend('PP','\theta_1=\theta_2','max')
+end
