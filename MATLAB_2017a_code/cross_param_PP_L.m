@@ -1,6 +1,7 @@
 % cross-param PP L
 % assesses PP of L model to itself for different gamma pairs.
 clear
+parpool([12,80])
 rng('shuffle')
 tic
 %1. ---------------sanity check with same param---------------------------%
@@ -8,11 +9,11 @@ tic
 % with the semi-analytic way described here:
 % https://paper.dropbox.com/doc/Stochastic-model-fitting--AJgGggz4kkvbqatj~ozkcoInAg-URuXW5PKABizdbMJB4Bkb#:uid=256420129419350336086512&h2=Predictive-power
 
-gammas=0:.5:4; num_gammas=length(gammas);
+gammas=0:.1:10; num_gammas=length(gammas);
 nsd=1;
 % ------------------Get a bank of clicks data-----------------------------%
 
-db = '../data/validation2.h5';%'../data/validation1.h5';
+db = '/scratch/adrian/validation2.h5';%'../data/validation1.h5';
 file_info = h5info(db);
 group_name = file_info.Groups.Name;
 trials_dset_name=[group_name,'/trials'];
@@ -65,7 +66,7 @@ for idx1=1:num_gammas
     for idx2=idx1:num_gammas
         g1=gammas(idx1); g2=gammas(idx2);
         match_count=0;
-        for trn=1:tot_num_trials
+        parfor trn=1:tot_num_trials
             [lst, rst]=all_trials{1:2,trn};
             
             dec_1 = gauss_noise_lin_decide(lst, rst, g1, k, nsd, 0);
@@ -82,4 +83,6 @@ for idx1=1:num_gammas
     end  
 end
 toc
-surf(PP)
+savefile=['/home/adrian/joint_PP_L_ntrials_',num2str(ntrials),...
+    '_noise_',num2str(nsd),'.mat'];
+save(savefile,'PP','gammas','tot_num_trials','-v7.3')
