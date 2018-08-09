@@ -7,7 +7,7 @@ parpool([12,80])
 tic
 rng('shuffle')
 nsd=1; % noise
-ntrials=100;
+ntrials=10000;
 
 if ismember('L',model_pair)
     gammas=0:0.1:10; num_gammas=length(gammas); 
@@ -53,7 +53,14 @@ pair1=model_pair{1}; pair2=model_pair{2};
 
 PP=zeros(num_theta_1,num_theta_2);
 for idx_theta_1=1:num_theta_1
-    for idx_theta_2=1:num_theta_2
+    
+    if strcmp(pair1,pair2)
+        theta_2_start=idx_theta_1; % only triangular matrix for LL and NLNL
+    else
+        theta_2_start=1;
+    end
+    
+    for idx_theta_2=theta_2_start:num_theta_2
         
         theta_1=thetas_1(idx_theta_1); theta_2=thetas_2(idx_theta_2);
         
