@@ -31,6 +31,10 @@ ylabel('\gamma_{max}')
 
 %% L-L
 clear
+fs=20; % font size
+lw=3; % linewidth
+
+
 load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
 
@@ -42,15 +46,15 @@ for i=1:length(B)
 end
 
 figure()
-plot(thetas_1,th1max)
+plot(thetas_1,th1max,'LineWidth',lw)
 hold on
-plot(thetas_1,thetas_1,'--r')
+plot(thetas_1,thetas_1,'--r','LineWidth',lw-1)
 hold off
+title('max PP - LL')
 xlabel('\theta_2')
 ylabel('\theta_1^{max}')
+ax=gca; ax.FontSize=fs;
 
-
-figure()
 [X,Y]=meshgrid(thetas_1,thetas_2);
 num_g=length(thetas_1);
 
@@ -59,10 +63,12 @@ for i=1:num_g
         PP(i,j)=PP(j,i);
     end
 end
-surf(X,Y,PP)
-xlabel('gamma')
-ylabel('gamma')
-zlabel('predictive power')
+
+% figure()
+% surf(X,Y,PP)
+% xlabel('gamma')
+% ylabel('gamma')
+% zlabel('predictive power')
 
 
 
@@ -71,13 +77,16 @@ figure()
 for ii=1:3
     ax=subplot(3,1,ii);
     n=ii*floor(num_g/3);
-    plot(thetas_1,PP(n,:))
+    plot(thetas_1,PP(n,:),'LineWidth',lw)
     [~,mx]=max(PP(n,:));
     hold on
-    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r','LineWidth',2)
-    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k')
+    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r',...
+        'LineWidth',lw)
+    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k',...
+        'LineWidth',lw-1)
     hold off
-    title(['ref \theta = ',num2str(thetas_1(n))])
+    title(['ref \theta_1 = ',num2str(thetas_1(n))])
+    xlabel('\theta_2')
     ylabel('PP')
     legend('PP','\theta_1=\theta_2','max')
 end
@@ -85,6 +94,10 @@ end
 
 %% NL-NL
 clear
+fs=20; % font size
+lw=3; % linewidth
+
+
 %load('../data/joint_PP_NLNL_ntrials_10000_noise_1.mat')
 load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
 
@@ -95,15 +108,17 @@ for i=1:length(B)
 end
 
 figure()
-plot(thetas_1,h1max)
+plot(thetas_1,h1max,'LineWidth',lw)
 hold on
-plot(thetas_1,thetas_1,'--r')
+plot(thetas_1,thetas_1,'--r','LineWidth',lw-1)
 hold off
+
+title('max PP - NLNL')
 xlabel('\theta_2')
 ylabel('\theta_1^{max}')
+ax=gca; ax.FontSize=fs;
 
 
-figure()
 
 [X,Y]=meshgrid(thetas_1,thetas_2);
 num_h=length(thetas_1);
@@ -112,23 +127,28 @@ for i=1:num_h
         PP(i,j)=PP(j,i);
     end
 end
-surf(X,Y,PP)
-xlabel('h')
-ylabel('h')
-zlabel('predictive power')
+% figure()
+% surf(X,Y,PP)
+% xlabel('h')
+% ylabel('h')
+% zlabel('predictive power')
 
 
 figure()
 for ii=1:3
     ax=subplot(3,1,ii);
     n=ii*floor(num_h/3);
-    plot(thetas_1,PP(n,:))
+    plot(thetas_1,PP(n,:),'LineWidth',lw)
     [~,mx]=max(PP(n,:));
     hold on
-    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r','LineWidth',2)
-    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k')
+    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],'--r',...
+        'LineWidth',lw)
+    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k',...
+        'LineWidth',lw-1)
     hold off
-    title(['ref \theta = ',num2str(thetas_1(n))])
+    title(['ref \theta_1 = ',num2str(thetas_1(n))])
+    xlabel('\theta_2')
     ylabel('PP')
     legend('PP','\theta_1=\theta_2','max')
+    ax.FontSize=fs;
 end
