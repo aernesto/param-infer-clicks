@@ -2,7 +2,7 @@
 % assesses PP for different (theta1,theta2) pairs.
 
 clear
-model_pair={'L','NL'};
+model_pair={'L','L'};
 parpool([12,80])
 tic
 rng('shuffle')
