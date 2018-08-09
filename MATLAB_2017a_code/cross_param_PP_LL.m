@@ -2,7 +2,7 @@
 % assesses PP for different (theta1,theta2) pairs.
 
 clear
-model_pair={'NL','NL'};
+model_pair={'L','L'};
 parpool([12,80])
 tic
 rng('shuffle')
@@ -10,10 +10,10 @@ nsd=1; % noise
 ntrials=100000;
 
 if ismember('L',model_pair)
-    gammas=0:0.1:10; num_gammas=length(gammas); 
+    gammas=0:0.5:10; num_gammas=length(gammas); 
 end
 if ismember('NL',model_pair)
-    hs=0:0.05:2.5; num_h=length(hs);
+    hs=0:0.1:2.5; num_h=length(hs);
 end
 
 % ------------------Get a bank of clicks data-----------------------------%
