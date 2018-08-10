@@ -2,72 +2,67 @@
 clear
 fs=10; % font size
 lw=2; % linewidth
-p=load('../data/joint_PP_ntrials_99999_noise_1.mat');
-m=load(['../data/mse_nonlin_fig4_iteration2_',num2str(500),'trials.mat']);
-pp_NLL=mapmode2pp(m.modes_nonlinlin(m.modes_nonlinlin<=2.5), p.hs, p.PP(:,68));
+p_NLL=load('../data/joint_PP_ntrials_99999_noise_1.mat');
+m500=load(['../data/mse_nonlin_fig4_iteration2_',num2str(500),'trials.mat']);
+m100=load(['../data/mse_nonlin_fig4_iteration2_',num2str(100),'trials.mat']);
+
+fprintf('NLL 500 %d modes > 2.5\n',sum(m500.modes_nonlinlin>2.5))
+fprintf('NLL 100 %d modes > 2.5\n',sum(m100.modes_nonlinlin>2.5))
+pp_NLL_500=mapmode2pp(m500.modes_nonlinlin(m500.modes_nonlinlin<=2.5), p_NLL.hs, p_NLL.PP(:,68));
+pp_NLL_100=mapmode2pp(m100.modes_nonlinlin(m100.modes_nonlinlin<=2.5), p_NLL.hs, p_NLL.PP(:,68));
+
 figure()
-boxplot(pp_NLL)
-
-hold on
-ns=[68];
-
-for ii=1
-%     ax=subplot(2,1,ii);
-
-    n=ns(ii);
-%     plot(p.hs,p.PP(:,n),'LineWidth',lw)
+n=68; nt=[100,500];
+for ii=1:2
+    ax=subplot(1,2,ii);
+    if ii==1; boxplot(pp_NLL_100); else boxplot(pp_NLL_500); end
     ax=gca;
-    [MX,mx]=max(p.PP(:,n));
-%     hold on
-    if ii==1
-        c1='--b'; c2='-b';
-    else
-        c1='--r'; c2='-r';
-    end
+    [MX,mx]=max(p_NLL.PP(:,n));
+    hold on
+    c1='--b'; c2='-b';
+    c1='--r'; c2='-r';
     plot([.5,1.5],[MX,MX],'LineWidth',lw-1)
-%     hold off
-    title(['100K trials - \gamma = ',num2str(p.gammas(n))])
-    xlabel('h')
+    hold off
+    title(['NL-L ',num2str(nt(ii)),' trials'])
     ylabel('PP')
+    ylim([.84,.885])
 %     legend('PP','\theta_1=\theta_2','max')
-%     ax.FontSize=fs;
+    ax.FontSize=fs;
 end
-
-hold off
-
 
 %% L-NL
 clear
 fs=10; % font size
 lw=2; % linewidth
-load('../data/joint_PP_ntrials_99999_noise_1.mat')
+p_LNL=load('../data/joint_PP_ntrials_99999_noise_1.mat');
+m500=load(['../data/mse_lin_fig4_iteration2_',num2str(500),'trials.mat']);
+m100=load(['../data/mse_lin_fig4_iteration2_',num2str(100),'trials.mat']);
+
+fprintf('LNL 500 %d modes > 10\n',sum(m500.modes_linnonlin>10))
+fprintf('LNL 100 %d modes > 10\n',sum(m100.modes_linnonlin>10))
+pp_LNL_500=mapmode2pp(m500.modes_linnonlin(m500.modes_linnonlin<=10), p_LNL.gammas, p_LNL.PP(11,:));
+pp_LNL_100=mapmode2pp(m100.modes_linnonlin(m100.modes_linnonlin<=10), p_LNL.gammas, p_LNL.PP(11,:));
 
 figure()
-hold on
-
-
-%     ax=subplot(2,1,ii);
-
-n=11;
-plot(gammas,PP(n,:),'LineWidth',lw)
-ax=gca;
-[~,mx]=max(PP(n,:));
-%     hold on
-
-c1='--b'; c2='-b';
-
-plot([gammas(mx),gammas(mx)],[ax.YLim(1),ax.YLim(2)],c2,...
-    'LineWidth',lw-1)
-%     hold off
-title(['100K trials - h = ',num2str(hs(n))])
-xlabel('\gamma')
-ylabel('PP')
+n=11; nt=[100,500];
+for ii=1:2
+    ax=subplot(1,2,ii);
+    if ii==1; boxplot(pp_LNL_100); else boxplot(pp_LNL_500); end
+    ax=gca;
+    [MX,mx]=max(p_LNL.PP(n,:));
+    hold on
+    c1='--b'; c2='-b';
+    c1='--r'; c2='-r';
+    plot([.5,1.5],[MX,MX],'LineWidth',lw-1)
+    hold off
+    title(['L-NL ',num2str(nt(ii)),' trials'])
+    ylabel('PP')
+    ylim([.84,.885])
 %     legend('PP','\theta_1=\theta_2','max')
-%     ax.FontSize=fs;
+    ax.FontSize=fs;
+end
 
-hold off
-
-% L-L
+%% L-L
 clear
 fs=10; % font size
 lw=2; % linewidth
@@ -75,46 +70,45 @@ lw=2; % linewidth
 load('../data/joint_PP_LL_ntrials_999990_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
+m500=load(['../data/mse_lin_fig4_iteration2_',num2str(500),'trials.mat']);
+m100=load(['../data/mse_lin_fig4_iteration2_',num2str(100),'trials.mat']);
 
-[X,Y]=meshgrid(thetas_1,thetas_2);
-num_g=length(thetas_1);
+fprintf('LL 500 %d modes > 10\n',sum(m500.modes_linlin>10))
+fprintf('LL 100 %d modes > 10\n',sum(m100.modes_linlin>10))
 
-for i=1:num_g
+num_h=length(thetas_1);
+
+for i=1:num_h
     for j=1:i-1
         PP(i,j)=PP(j,i);
     end
 end
+hs=thetas_1;
+pp_NLNL_500=mapmode2pp(m500.modes_linlin(m500.modes_linlin<=10), hs, PP(68,:));
+pp_NLNL_100=mapmode2pp(m100.modes_linlin(m100.modes_linlin<=10), hs, PP(68,:));
 
 figure()
-hold on
-ns=[68,69];
+n=68; nt=[100,500];
 for ii=1:2
-%     ax=subplot(2,1,ii);
-
-    n=ns(ii);
-    plot(thetas_1,PP(n,:),'LineWidth',lw)
+    ax=subplot(1,2,ii);
+    if ii==1; boxplot(pp_NLNL_100); else boxplot(pp_NLNL_500); end
     ax=gca;
-    [~,mx]=max(PP(n,:));
-%     hold on
-    if ii==1
-        c1='--b'; c2='-b';
-    else
-        c1='--r'; c2='-r';
-    end
-    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],c1,...
-        'LineWidth',lw)
-    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],c2,...
-        'LineWidth',lw-1)
-%     hold off
-    title(['1M trials - ref \theta_1 = ',num2str(thetas_1(n))])
-    xlabel('\theta_2')
+    [MX,mx]=max(PP(n,:));
+    hold on
+    c1='--b'; c2='-b';
+    c1='--r'; c2='-r';
+    plot([.5,1.5],[MX,MX],'LineWidth',lw-1)
+    hold off
+    title(['L-L ',num2str(nt(ii)),' trials'])
     ylabel('PP')
+    ylim([.84,.885])
 %     legend('PP','\theta_1=\theta_2','max')
-%     ax.FontSize=fs;
+    ax.FontSize=fs;
 end
-hold off
 
-% NL-NL
+
+
+%% NL-NL
 clear
 fs=10; % font size
 lw=2; % linewidth
@@ -122,81 +116,39 @@ lw=2; % linewidth
 load('../data/joint_PP_NLNL_ntrials_999990_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
+m500=load(['../data/mse_nonlin_fig4_iteration2_',num2str(500),'trials.mat']);
+m100=load(['../data/mse_nonlin_fig4_iteration2_',num2str(100),'trials.mat']);
 
-[X,Y]=meshgrid(thetas_1,thetas_2);
-num_g=length(thetas_1);
+fprintf('NLNL 500 %d modes > 2.5\n',sum(m500.modes_nonlinnonlin>2.5))
+fprintf('NLNL 100 %d modes > 2.5\n',sum(m100.modes_nonlinnonlin>2.5))
 
-for i=1:num_g
+num_h=length(thetas_1);
+
+for i=1:num_h
     for j=1:i-1
         PP(i,j)=PP(j,i);
     end
 end
+hs=thetas_1;
+pp_NLNL_500=mapmode2pp(m500.modes_nonlinnonlin(m500.modes_nonlinnonlin<=2.5), hs, PP(11,:));
+pp_NLNL_100=mapmode2pp(m100.modes_nonlinnonlin(m100.modes_nonlinnonlin<=2.5), hs, PP(11,:));
 
 figure()
-hold on
-ns=[11];
-for ii=1
-%     ax=subplot(2,1,ii);
-
-    n=ns(ii);
-    plot(thetas_1,PP(n,:),'LineWidth',lw)
+n=11; nt=[100,500];
+for ii=1:2
+    ax=subplot(1,2,ii);
+    if ii==1; boxplot(pp_NLNL_100); else boxplot(pp_NLNL_500); end
     ax=gca;
-    [~,mx]=max(PP(n,:));
-%     hold on
-    if ii==1
-        c1='--b'; c2='-b';
-    else
-        c1='--r'; c2='-r';
-    end
-    plot([thetas_1(n),thetas_1(n)],[ax.YLim(1),ax.YLim(2)],c1,...
-        'LineWidth',lw)
-    plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],c2,...
-        'LineWidth',lw-1)
-%     hold off
-    title(['NLNL- 1M trials - ref \theta_1 = ',num2str(thetas_1(n))])
-    xlabel('\theta_2')
+    [MX,mx]=max(PP(n,:));
+    hold on
+    c1='--b'; c2='-b';
+    c1='--r'; c2='-r';
+    plot([.5,1.5],[MX,MX],'LineWidth',lw-1)
+    hold off
+    title(['NL-NL ',num2str(nt(ii)),' trials'])
     ylabel('PP')
+    ylim([.84,.885])
 %     legend('PP','\theta_1=\theta_2','max')
-%     ax.FontSize=fs;
-end
-hold off
-
-% NEW WHISKERS
-% plot whiskers of accuracy recovered from modes of posteriors for
-% fits of stochastic models
-clear
-for TN=[100,500]  % loop over block size (in trial numbers)
-    % nonlin
-    % load modes
-    load(['../data/mse_nonlin_fig4_iteration2_',num2str(TN),'trials.mat'])
-    load(['../data/mse_lin_fig4_iteration2_',num2str(TN),'trials.mat'])
-    % load accuracy values (obtained from my .h5 DBs)
-    %load('../data/linacc.csv','-ascii')  % loads linacc
-    load('../data/linacc_S3lr2.csv','-ascii')  % loads linacc for db S3lr2
-    linacc=linacc_S3lr2;
-    
-    load('../data/nonlinacc.csv','-ascii')  % loads nonlinacc
-    accuracy_nonlinlin = mapmode2pp(modes_nonlinlin, linspace(0,10,1000),...
-        nonlinacc');
-    accuracy_nonlinnonlin = mapmode2pp(modes_nonlinnonlin,...
-        linspace(0,10,1000), nonlinacc');
-    accuracy_linlin = mapmode2pp(modes_linlin, linspace(0,40,10000),...
-        linacc');
-    accuracy_linnonlin = mapmode2pp(modes_linnonlin,...
-        linspace(0,40,10000), linacc');
-    %g=['NLL','NLNL','LL','LNL'];%[ones(500,1),2*ones(500,1),3*ones(500,1),4*ones(500,1)];
-    lw=4;
-    ms=8;
-    fs=20;
-    boxplot([accuracy_nonlinlin;...
-        accuracy_nonlinnonlin;...
-        accuracy_linlin;...
-        accuracy_linnonlin]')
-    set(findobj(gca,'type','line'),'linew',lw)
-    set(gca,'linew',lw/2)
-%     ylim([.85,.9])
-    ylabel('PP')
-    ax=gca;ax.FontSize=fs;
-    saveas(gcf, ['whisker_PP_',num2str(TN),'.png'])
+    ax.FontSize=fs;
 end
 
