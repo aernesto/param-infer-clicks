@@ -34,8 +34,8 @@ clear
 fs=20; % font size
 lw=3; % linewidth
 
-
-load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
+load('../data/joint_PP_LL_ntrials_999990_noise_1.mat')
+%load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
 
 
@@ -50,7 +50,7 @@ plot(thetas_1,th1max,'LineWidth',lw)
 hold on
 plot(thetas_1,thetas_1,'--r','LineWidth',lw-1)
 hold off
-title('max PP - LL')
+title('max PP - LL - 1M trials')
 xlabel('\theta_2')
 ylabel('\theta_1^{max}')
 ax=gca; ax.FontSize=fs;
@@ -64,11 +64,12 @@ for i=1:num_g
     end
 end
 
-% figure()
-% surf(X,Y,PP)
-% xlabel('gamma')
-% ylabel('gamma')
-% zlabel('predictive power')
+figure()
+surf(X,Y,PP)
+title('1M trials')
+xlabel('gamma')
+ylabel('gamma')
+zlabel('predictive power')
 
 
 
@@ -85,7 +86,7 @@ for ii=1:3
     plot([thetas_1(mx),thetas_1(mx)],[ax.YLim(1),ax.YLim(2)],'-k',...
         'LineWidth',lw-1)
     hold off
-    title(['ref \theta_1 = ',num2str(thetas_1(n))])
+    title(['1M trials - ref \theta_1 = ',num2str(thetas_1(n))])
     xlabel('\theta_2')
     ylabel('PP')
     legend('PP','\theta_1=\theta_2','max')
@@ -99,8 +100,8 @@ lw=3; % linewidth
 
 
 %load('../data/joint_PP_NLNL_ntrials_10000_noise_1.mat')
-load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
-
+%load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
+load('../data/joint_PP_NLNL_ntrials_999990_noise_1.mat')
 [A,B]=max(PP);
 h1max=zeros(size(B));
 for i=1:length(B)
