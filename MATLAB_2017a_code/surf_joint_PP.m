@@ -55,6 +55,7 @@ for i=1:length(B)
 end
 
 figure()
+subplot(2,1,1)
 plot(thetas_1,th1max,'LineWidth',lw)
 hold on
 plot(thetas_1,thetas_1,'--r','LineWidth',lw-1)
@@ -63,6 +64,10 @@ title('max PP - LL - 1M trials')
 xlabel('\theta_2')
 ylabel('\theta_1^{max}')
 ax=gca; ax.FontSize=fs;
+
+subplot(2,1,2)
+plot(thetas_1,A)
+ylabel('max PP')
 
 figure()
 surf(X,Y,PP)
@@ -119,6 +124,7 @@ for i=1:length(B)
 end
 
 figure()
+subplot(2,1,1)
 plot(thetas_1,h1max,'LineWidth',lw)
 hold on
 plot(thetas_1,thetas_1,'--r','LineWidth',lw-1)
@@ -129,6 +135,9 @@ xlabel('\theta_2')
 ylabel('\theta_1^{max}')
 ax=gca; ax.FontSize=fs;
 
+subplot(2,1,2)
+plot(thetas_1,A)
+ylabel('max PP')
 
 
 % figure()
