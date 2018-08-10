@@ -38,6 +38,15 @@ load('../data/joint_PP_LL_ntrials_999990_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
 
+[X,Y]=meshgrid(thetas_1,thetas_2);
+num_g=length(thetas_1);
+
+for i=1:num_g
+    for j=1:i-1
+        PP(i,j)=PP(j,i);
+    end
+end
+
 
 [A,B]=max(PP);
 th1max=zeros(size(B));
@@ -54,15 +63,6 @@ title('max PP - LL - 1M trials')
 xlabel('\theta_2')
 ylabel('\theta_1^{max}')
 ax=gca; ax.FontSize=fs;
-
-[X,Y]=meshgrid(thetas_1,thetas_2);
-num_g=length(thetas_1);
-
-for i=1:num_g
-    for j=1:i-1
-        PP(i,j)=PP(j,i);
-    end
-end
 
 figure()
 surf(X,Y,PP)
@@ -102,6 +102,16 @@ lw=3; % linewidth
 %load('../data/joint_PP_NLNL_ntrials_10000_noise_1.mat')
 %load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
 load('../data/joint_PP_NLNL_ntrials_999990_noise_1.mat')
+
+
+[X,Y]=meshgrid(thetas_1,thetas_2);
+num_h=length(thetas_1);
+for i=1:num_h
+    for j=1:i-1
+        PP(i,j)=PP(j,i);
+    end
+end
+
 [A,B]=max(PP);
 h1max=zeros(size(B));
 for i=1:length(B)
@@ -121,13 +131,6 @@ ax=gca; ax.FontSize=fs;
 
 
 
-[X,Y]=meshgrid(thetas_1,thetas_2);
-num_h=length(thetas_1);
-for i=1:num_h
-    for j=1:i-1
-        PP(i,j)=PP(j,i);
-    end
-end
 % figure()
 % surf(X,Y,PP)
 % xlabel('h')
