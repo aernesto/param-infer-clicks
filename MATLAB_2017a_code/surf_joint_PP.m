@@ -141,10 +141,10 @@ ylabel('max PP')
 
 
 % figure()
-% surf(X,Y,PP)
-% xlabel('h')
-% ylabel('h')
-% zlabel('predictive power')
+surf(X,Y,PP)
+xlabel('h')
+ylabel('h')
+zlabel('predictive power')
 
 
 figure()

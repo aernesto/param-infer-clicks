@@ -6,7 +6,7 @@ model_pair={'L','L'};
 parpool([12,80])
 tic
 rng('shuffle')
-nsd=1; % noise
+nsd=2; % noise
 ntrials=1000000;
 
 if ismember('L',model_pair)
