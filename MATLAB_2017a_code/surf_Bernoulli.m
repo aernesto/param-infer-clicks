@@ -1,4 +1,4 @@
-q1=0:0.1:1; num_q=length(q1);
+q1=0:0.01:1; num_q=length(q1);
 q2=q1;
 [X,Y]=meshgrid(q1,q2);
 S=zeros(num_q);
@@ -9,3 +9,6 @@ for i=1:num_q
     end
 end
 surf(X,Y,S)
+hold on
+contour(X,Y,S)
+hold off
