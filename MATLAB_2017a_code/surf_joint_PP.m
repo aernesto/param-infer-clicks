@@ -1,20 +1,24 @@
 %% NL-L
 clear
-load('../data/joint_PP_ntrials_99999_noise_1.mat')
+%load('../data/joint_PP_ntrials_99999_noise_1.mat')
+%load('../data/joint_PP_LNL_ntrials_999990_noise_2.mat')
+load('../data/joint_PP_LNL_ntrials_999990_noise_0.1.mat')
+gammas=thetas_1; hs=thetas_2;
 [X,Y]=meshgrid(gammas,hs);
-%surf(X,Y,PP)
+figure()
+surf(X,Y,PP')
 xlabel('gamma')
 ylabel('h')
 zlabel('predictive power')
 % best gamma = 5.65
 % best h = 0.45
 
-[A,B]=max(PP);
+[A,B]=max(PP');
 hmax=zeros(size(B));
 for i=1:length(B)
     hmax(i)=hs(B(i));
 end
-[C,D]=max(PP,[],2);
+[C,D]=max(PP',[],2);
 gmax=zeros(size(D));
 for i=1:length(D)
     gmax(i)=gammas(D(i));
@@ -34,7 +38,8 @@ clear
 fs=20; % font size
 lw=3; % linewidth
 
-load('../data/joint_PP_LL_ntrials_999990_noise_1.mat')
+load('../data/joint_PP_LL_ntrials_999990_noise_0.1.mat')
+%load('../data/joint_PP_LL_ntrials_999990_noise_2.mat')
 %load('../data/joint_PP_LL_ntrials_99999_noise_1.mat')
 %load('../data/joint_PP_LL_ntrials_10000_noise_1.mat')
 
@@ -106,7 +111,8 @@ lw=3; % linewidth
 
 %load('../data/joint_PP_NLNL_ntrials_10000_noise_1.mat')
 %load('../data/joint_PP_NLNL_ntrials_99999_noise_1.mat')
-load('../data/joint_PP_NLNL_ntrials_999990_noise_1.mat')
+%load('../data/joint_PP_NLNL_ntrials_999990_noise_2.mat')
+load('../data/joint_PP_NLNL_ntrials_999990_noise_0.1.mat')
 
 
 [X,Y]=meshgrid(thetas_1,thetas_2);
