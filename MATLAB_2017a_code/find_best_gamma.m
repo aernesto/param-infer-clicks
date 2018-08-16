@@ -3,7 +3,7 @@ clear
 parpool([12,80])
 rng('shuffle')
 tic
-tot_num_trials=1000000;
+tot_num_trials=1000;%1000000;
 nsd=1;
 gammas=4:.01:9; num_gammas=length(gammas);
 h=0:.01:1; num_h=length(h);
@@ -72,16 +72,16 @@ parfor trn=1:tot_num_trials
 end
 Acc = sum(Correct,1)/tot_num_trials;
 [M,I]=max(Acc);
-gammas(I)
+[gammas(I),M]
 %subplot(1,2,1)
 %plot(gammas,Acc)
 
 Acc_h = sum(Correct_h,1)/tot_num_trials;
 [M_h,I_h]=max(Acc_h);
-h(I_h)
+[h(I_h),M_h]
 %subplot(1,2,2)
 %plot(h,Acc_h)
 toc
-README='this dset was produced with script find_best_gamma.m from commit 1d56e1d + 1';
-fsave=['/home/adrian/tosubmit_home/acc_noise_',num2str(nsd),'.mat'];
-save(fsave,'h','Acc_h','gammas','Acc','tot_num_trials','nsd','README')
+% README='this dset was produced with script find_best_gamma.m from commit 1d56e1d + 1';
+% fsave=['/home/adrian/tosubmit_home/acc_noise_',num2str(nsd),'.mat'];
+% save(fsave,'h','Acc_h','gammas','Acc','tot_num_trials','nsd','README')
