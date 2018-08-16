@@ -4,9 +4,9 @@ parpool([12,80])
 rng('shuffle')
 tic
 tot_num_trials=1000000;
-nsd=1;
-gammas=4:.01:9; num_gammas=length(gammas);
-h=0:.01:1; num_h=length(h);
+nsd=0.1;
+gammas=5.5:.01:8.5; num_gammas=length(gammas);
+h=0.5:.01:1.5; num_h=length(h);
 
 % ------------------Get a bank of clicks data-----------------------------%
 
