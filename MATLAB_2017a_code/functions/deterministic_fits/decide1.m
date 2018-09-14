@@ -1,5 +1,5 @@
 function decision = decide1(trial_duration, left_clicks, right_clicks, kappa, hh, init_cond)
-%DESCR: 
+%DESCR: returns decision of ideal obs model at end of trial, no noise on clicks heights 
 %
 %ARGS:
 %   trial_duration: 
