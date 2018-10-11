@@ -1,7 +1,7 @@
 % analysis script
 clear; clc;
 %% specify database with choice data
-dbname='~/programing/data/clicks/db1.h5';
+dbname='~/MATLAB/param-infer-clicks/db1.h5';
 % display parameters for current db
 fprintf('disc and noise params below are for linear model\n')
 p_lin=fetch_params(dbname,'lin')
@@ -11,7 +11,7 @@ p_nonlin.disc
 p_nonlin.noise
 
 %% specify training and validation datasets
-cutoff=.1; % percentage of trials to use for training
+cutoff=.9; % percentage of trials to use for training
 int_cutoff=floor(cutoff*p_lin.tot_db_trials);
 fprintf('about to use %i trials for the fits\n',int_cutoff)
 training_trials_range=[1,int_cutoff];
@@ -27,10 +27,10 @@ lin_prior_range=[0,40];
 nonlin_prior_range=[0,20];
 
 % number of points to use for support of posterior
-num_points_posterior_lin=600;
-num_points_posterior_nonlin=600;
+num_points_posterior_lin=800;
+num_points_posterior_nonlin=800;
 
-num_particles_lhd=400; % number of particles to use to estimate likelihood
+num_particles_lhd=700; % number of particles to use to estimate likelihood
 
 point_estimates= containers.Map;
 
@@ -150,3 +150,4 @@ shuffle_db=false;
             num_points_posterior_nonlin,num_particles_lhd,shuffle_db);
     end
 end
+save('~/results.mat','point_estimates','Results_Table','p_lin','p_nonlin')
