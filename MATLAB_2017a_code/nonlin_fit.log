@@ -1,0 +1,80 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2018 The MathWorks, Inc.
+                   R2018b (9.5.0.944444) 64-bit (glnxa64)
+                              August 28, 2018
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+Resetting path to factory state.
+Adding "ToolboxToolbox" to path at "/home/adrian/Documents/MATLAB/ToolboxToolbox".
+>> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> Starting parallel pool (parpool) using the 'local' profile ...
+connected to 4 workers.
+[Warning: A worker aborted during execution of the parfor loop. The parfor loop
+will now run again on the remaining workers.] 
+[> In parallel_function (line 605)] 
+[Warning: A worker aborted during execution of the parfor loop. The parfor loop
+will now run again on the remaining workers.] 
+[> In parallel_function (line 605)] 
+[Warning: A worker aborted during execution of the parfor loop. The parfor loop
+will now run again on the remaining workers.] 
+[> In parallel_function (line 605)] 
+[Warning: A worker aborted during execution of the parfor loop. The parfor loop
+will now run again on the remaining workers.] 
+[> In parallel_function (line 605)] 
+{Error using parallel_function (line 613)
+All workers aborted during execution of the parfor loop.
+} 
+>> {The client lost connection to worker 4. This might be due to network problems,
+or the interactive communicating job might have errored.
+} 
+>> Elapsed time is 85824.977775 seconds.
+>> >> >> 
+
+
+
+
+======================================
+
+What comes below was manually pasted from a MATLAB interactive session
+in which I manually fix the contents of the file produced by the code above.
+
+======================================
+
+>> clear
+>> load /home/adrian/programing/data/clicks/fits/mse_nonlin_fig4_iteration3_1000trials.mat
+>> nonznll=find(modes_nonlinlin);
+>> sum(nonznll == 1:84)
+
+ans =
+
+    84
+
+>> nonznlnl=find(modes_nonlinnonlin);
+>> sum(nonznlnl == 1:84)
+
+ans =
+
+    84
+
+>> modes_nonlinlin = modes_nonlinlin(1:84);
+>> modes_nonlinnonlin = modes_nonlinnonlin(1:84);
+>> format long
+>> mse_nonlinlin = 100 / 84 * mse_nonlinlin
+
+mse_nonlinlin =
+
+    0.074379783328750
+
+>> mse_nonlinnonlin = 100 / 84 * mse_nonlinnonlin
+
+mse_nonlinnonlin =
+
+    0.035405636195734
+
+>> save('/home/adrian/programing/data/clicks/fits/mse_nonlin_fig4_iteration3_1000trials.mat', 'modes_nonlinlin', 'modes_nonlinnonlin', 'mse_nonlinlin', 'mse_nonlinnonlin')
+
+
+
