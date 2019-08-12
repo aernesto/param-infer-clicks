@@ -8,11 +8,11 @@ ndiscount=800; % number of discounting parameter values to try
 gstart=0;gend=40;
 gs=linspace(gstart, gend, ndiscount);
 dg=(gend-gstart)/(ndiscount-1);  % step between consecutive samples
-ntrial_vec=[400,500];      % number of trials to use in fitting procedure 
+ntrial_vec=[1000];      % number of trials to use in fitting procedure 
                              %(for each block)
 
 % database info (where the clicks data and other parameter values reside)
-filename = '../data/S3lr5h1T2tr10000sp1000.h5';%'/home/adrian/S3lr5h1T2tr10000sp1000.h5';
+filename = '/home/adrian/Git/GitHub/work/param-infer-clicks/data/S3lr5h1T2tr10000sp1000.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 info_dset_name=[group_name,'/trial_info'];
@@ -30,12 +30,14 @@ all_trials = all_trials(1:2,:);
 
 nsd=1; % Gaussian noise applied to click height
 
-nruns=500; % number of blocks of trials. MSE is computed across blocks
+nruns=84; % number of blocks of trials. MSE is computed across blocks
 
 
 tic
 for ntrials=ntrial_vec
     mse_linlin=0; mse_linnonlin=0;  % MSE computed as running average
+    % store the modes of posteriors
+    modes_linlin=zeros(1,nruns); modes_linnonlin=modes_linlin;
     for run=1:nruns
         % shuffle trial order
         all_trials = all_trials(:,randperm(tot_trials_db));
@@ -69,6 +71,10 @@ for ntrials=ntrial_vec
         end
         
         % shift log-likelihood up to avoid numerical errors
+        [max_linlin,idx1]=max(llh(:,2));
+        modes_linlin(run)=gs(idx1);
+        [max_linnonlin,idx2]=max(llh(:,1));
+        modes_linnonlin(run)=gs(idx2);
         llh(:,1)=llh(:,1)+abs(max(llh(:,1)));
         llh(:,2)=llh(:,2)+abs(max(llh(:,2)));
 
@@ -85,7 +91,9 @@ end
 
 
 toc
-
+fname=['mse_lin_fig4_iteration3_',num2str(ntrials),'trials'];
+save(['/home/adrian/programing/data/clicks/fits/',fname,'.mat'],'mse_linnonlin',...
+      'mse_linlin', 'modes_linlin', 'modes_linnonlin')
 % 
 % fname=['mse_lin_fig4_iteration1_',num2str(ntrials),'trials'];
 % save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_linnonlin',...
