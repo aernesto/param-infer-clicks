@@ -1,11 +1,11 @@
 clear
-ntrials=100;
+ntrials=1000;
 rng('shuffle')
 ndiscount=200; % number of discounting parameter values to try
 hstart=0;hend=10; % range should be large enough for normalization
 hs=linspace(hstart,hend,ndiscount)'; % values of h to try
 dh=(hend-hstart)/(ndiscount-1);
-filename = '/home/adrian/S3lr5h1T2tr10000sp1000.h5';
+filename = '/home/adrian/Git/GitHub/work/param-infer-clicks/data/S3lr5h1T2tr10000sp1000.h5';
 file_info = h5info(filename);
 group_name = file_info.Groups.Name;
 info_dset_name=[group_name,'/trial_info'];
@@ -21,7 +21,7 @@ all_trials = all_trials(1:2,:);
 npart = 800;
 nsd=1; % Gaussian noise applied to click height
 
-nruns=500;
+nruns=100;
 mse_nonlinnonlin=0; mse_nonlinlin=0;
 % store the modes of posteriors
 modes_nonlinlin=zeros(1,nruns); modes_nonlinnonlin=modes_nonlinlin;
@@ -82,6 +82,6 @@ end
 mse_nonlinnonlin=mse_nonlinnonlin/nruns;
 mse_nonlinlin=mse_nonlinlin/nruns;
 toc
-fname=['mse_nonlin_fig4_iteration2_',num2str(ntrials),'trials'];
-save(['/home/adrian/tosubmit_home/',fname,'.mat'],'mse_nonlinnonlin',...
+fname=['mse_nonlin_fig4_iteration3_',num2str(ntrials),'trials'];
+save(['/home/adrian/programing/data/clicks/fits/',fname,'.mat'],'mse_nonlinnonlin',...
       'mse_nonlinlin', 'modes_nonlinlin', 'modes_nonlinnonlin')
